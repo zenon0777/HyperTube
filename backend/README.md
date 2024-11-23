@@ -42,6 +42,7 @@ conda activate hyper
 ### 3. Run Migrations
 
 ```bash
+python manage.py makemigrations
 python manage.py migrate
 ```
 
@@ -49,6 +50,12 @@ python manage.py migrate
 
 ```bash
 python manage.py createsuperuser
+```
+
+### 5. Run the Development Server
+
+```bash
+python3 manage.py runserver
 ```
 
 ## Install packages
