@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
           <video width="320" height="240" controls>
-          <source src="/VID-20241129-WA0009.mp4" type="video/mp4" />
+          <source src="http://0.0.0.0:8000/stream/?torrent_url=https://yts.mx/torrent/download/CFF266CF3D57E93409C7AD6B0134D7C499E1A0EB" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
     </div>
