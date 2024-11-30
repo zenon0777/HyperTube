@@ -1,6 +1,6 @@
 # from django.shortcuts import Response
 from django.http import JsonResponse
-from .services.download import Stream
+from .services.stream import Stream
 
 
 def stream_torrent(request):
