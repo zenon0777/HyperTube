@@ -17,4 +17,6 @@ def stream_torrent(request):
     vrange = request.headers.get('Range', None)
     data = ts.stream_torrent(vrange if vrange else 'bytes=0-')
 
-    return ts.create_response(data)
+    response = ts.create_response(data)
+    # ts.remove_stream()
+    return response
