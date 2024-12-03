@@ -19,3 +19,9 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.gradient-border {
+  border: 2px solid transparent;
+  border-image: linear-gradient(to left, #f97316, #fbbf24) 6;
+  border-radius: 1.25rem;
+}
