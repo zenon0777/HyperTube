@@ -48,7 +48,7 @@ const movies = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-black flex flex-col">
-      <div className="relative min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
+      <div className="relative min-h-screen max-w-screen-2xl mx-auto bg-gray-900 text-white w-full flex flex-col">
         {/* Header */}
         <header className="absolute top-0 left-0 w-full lg:px-4 px-0 lg:py-4 py-2 flex justify-between items-center bg-transparent z-50">
           <NavBar />
