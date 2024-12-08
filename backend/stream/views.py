@@ -10,9 +10,9 @@ def stream_torrent(request):
     ts = TorrentStream()
     ts.init_torrent_file(torrent_url)
     ts.add_torrent()
-    vrange = request.headers.get('Range', None)
-    data = ts.stream_torrent(vrange if vrange else 'bytes=0-')
+    # vrange = request.headers.get('Range', None)
+    # data = ts.stream_torrent(vrange if vrange else 'bytes=0-')
 
-    response = ts.create_response(data)
+    # response = ts.create_response(data)
     # ts.remove_stream()
-    return response
+    return JsonResponse({'status': 'success', 'message': 'Stream started successfully!'}, status=200)

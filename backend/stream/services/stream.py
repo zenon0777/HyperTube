@@ -3,6 +3,7 @@ import requests
 import libtorrent as lt
 import time
 import os
+import ffmpeg
 
 
 SAVE_PATH = './_Movies'
@@ -52,6 +53,7 @@ class TorrentStream:
 
         self.movie_path = os.path.join(SAVE_PATH, self.torrent_info.files().file_path(0))
         self.file_size = self.torrent_info.files().file_size(0)
+        self.handle.read_piece(0)
 
     def parse_chunk_range(self, vrange):
         start, end = vrange.replace('bytes=', '').split('-')
@@ -61,6 +63,31 @@ class TorrentStream:
         print(f"====> Piece size: {self.piece_size}")
         piece_index = start // self.piece_size
         return {'piece_index': piece_index, 'start': start, 'end': end}
+
+    def resize_video_chunk(self, video_chunk, width, height):
+        if not video_chunk:
+            print("Error: The input video chunk is empty.")
+            return b''
+
+        input_stream = ffmpeg.input('pipe:0')
+        output_stream = ffmpeg.output(input_stream, 'pipe:1', format='mp4', vf=f'scale={width}:{height}').global_args('-loglevel', 'error')
+        
+        process = output_stream.run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
+        
+        process.stdin.write(video_chunk)
+        process.stdin.close()
+        
+        resized_chunk = process.stdout.read()
+        stderr_output = process.stderr.read()
+        process.wait()
+        
+        # Check if the output chunk is not empty
+        if not resized_chunk:
+            print("Error: The resized video chunk is empty.")
+            print("FFmpeg stderr output:", stderr_output.decode())
+            return b''
+
+        return resized_chunk
 
     def stream_torrent(self, vrange):
         parsed_range = self.parse_chunk_range(vrange)
@@ -79,16 +106,28 @@ class TorrentStream:
 
         with open(video_path, 'rb') as f:
             f.seek(self.start_byte)
-            return f.read(self.piece_size)
+            data = f.read(self.piece_size)
+            print(f"====> Chunk size before: {len(data)}")
+            return self.resize_video_chunk(data, 640, 360)
 
     def create_response(self, data):
         response = HttpResponse(data, content_type="video/mp4", status=206)
         self.end_byte = self.start_byte + len(data) - 1
+        print(f"====> Chunk size after: {len(data)}")
         print(f"====> Start byte: {self.start_byte} - End byte: {self.end_byte} - File size: {self.file_size}")
-        response['Content-Range'] = f'bytes {self.start_byte}-{self.end_byte}/{self.file_size}'
+        response['Content-Range'] = f"bytes {self.start_byte}-{self.end_byte}/{self.file_size}"
         response['Accept-Ranges'] = 'bytes'
         response['Content-Length'] = len(data)
         return response
 
     def remove_stream(self):
         self.session.remove_torrent(self.handle)
+
+
+
+
+# keep TorrentStream class and create a new class for managing stored movies.
+# when a movie is downloaded process it into diffrent quality and store it in db. 
+# when a user request a movie check if it's already downloaded and the quality requested exists. then start streaming from the file. in this case you don't need to access the torrent at all reducing latency.
+
+# how to check if the movie is fully downloaded. (check the size with the first read size)
