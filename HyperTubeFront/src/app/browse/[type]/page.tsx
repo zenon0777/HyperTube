@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 import NavBar from "@/app/components/NavBar/NavBar";
 import {
   Add,
@@ -16,7 +17,8 @@ import { useEffect, useState } from "react";
 
 export default function Browse() {
   const [hoveredMovie, setHoveredMovie] = useState(null);
-  const [movies, setMovies] = useState([]);
+  const [movies, setMovies] = useState<any>([]);
+
   const [activeFilters, setActiveFilters] = useState({
     quality: null,
     years: null,
@@ -30,10 +32,10 @@ export default function Browse() {
     categories: false,
   });
 
-  const qualityOptions = ["480p", "720p", "1080p", "4K"];
+  const qualityOptions = ["480p", "720p", "1080p", "2160p"];
   const yearOptions = ["2020", "2021", "2022", "2023", "2024"];
-  const orderOptions = ["Ascending", "Descending"];
-  const categoryOptions: string[] = [
+  const orderOptions = ["asc", "desc"];
+  const categoryOptions = [
     "Action",
     "Comedy",
     "Drama",
@@ -45,6 +47,31 @@ export default function Browse() {
     "Horror",
     "Adventure",
   ];
+
+  useEffect(() => {
+    const getFiltredMovies = async () => {
+      // Fetch movies based on active filters
+      let baseUrl ="https://yts.mx/api/v2/list_movies.json/?limit=15";
+      let url = baseUrl;
+      if (activeFilters.quality.length > 0) {
+        url += `&quality=${activeFilters.quality.join(",")}`;
+      }
+      if (activeFilters.years.length > 0) {
+        url += `&query_term=${activeFilters.years.join(",")}`;
+      }
+      if (activeFilters.categories.length > 0) {
+        url += `&categories=${activeFilters.categories.join(",")}`;
+      }
+      if (activeFilters.orderBy) {
+        url += `&orderBy=${activeFilters.orderBy}`;
+      }
+      const response = await fetch(url);
+      const data = await response.json();
+      setMovies(data.data.movies);
+      console.log(data);
+    }
+    getFiltredMovies();
+  }, [activeFilters]);
 
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
@@ -321,7 +348,7 @@ export default function Browse() {
 
             {/* Placeholder for content grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {movies?.map((movie) => (
+              {movies.map((movie:any) => (
                 <div
                   key={movie.id}
                   className="relative group cursor-pointer"
