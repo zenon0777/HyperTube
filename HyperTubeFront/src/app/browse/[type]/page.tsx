@@ -1,25 +1,25 @@
 "use client";
-import { useState } from "react";
 import NavBar from "@/app/components/NavBar/NavBar";
 import {
   Add,
-  Remove,
-  FilterList,
-  Sort,
   CalendarMonth,
   Category,
+  FilterList,
+  InfoRounded,
   PlayCircle,
-  InfoOutlined,
+  Remove,
+  Sort,
   StarBorder,
 } from "@mui/icons-material";
-import { Button, Chip, Tooltip } from "@mui/material";
+import { Chip, Tooltip } from "@mui/material";
+import { useEffect, useState } from "react";
 
 export default function Browse() {
   const [hoveredMovie, setHoveredMovie] = useState(null);
-
+  const [movies, setMovies] = useState([]);
   const [activeFilters, setActiveFilters] = useState({
-    quality: [],
-    years: [],
+    quality: null,
+    years: null,
     orderBy: null,
     categories: [],
   });
@@ -33,7 +33,7 @@ export default function Browse() {
   const qualityOptions = ["480p", "720p", "1080p", "4K"];
   const yearOptions = ["2020", "2021", "2022", "2023", "2024"];
   const orderOptions = ["Ascending", "Descending"];
-  const categoryOptions = [
+  const categoryOptions: string[] = [
     "Action",
     "Comedy",
     "Drama",
@@ -46,44 +46,6 @@ export default function Browse() {
     "Adventure",
   ];
 
-  const movies = [
-    {
-      id: 1,
-      title: "Spider-Man: No Way Home",
-      year: 2021,
-      duration: "2 hours 28 minutes",
-      genre: "Sci-fi, Action",
-      description:
-        "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
-      background: "/imk.jpeg",
-      poster: "/imk.jpeg",
-    },
-    {
-      id: 2,
-      title: "DAIFI-2: No Way Home",
-      year: 2021,
-      duration: "2 hours 28 minutes",
-      genre: "Sci-fi, Action",
-      description:
-        "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
-      background: "/imk.jpeg",
-      poster: "/imk.jpeg",
-    },
-    {
-      id: 3,
-      title: "DAIFI-3: No Way Home",
-      year: 2021,
-      duration: "2 hours 28 minutes",
-      genre: "Sci-fi, Action",
-      description:
-        "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
-      background: "/imk.jpeg",
-      poster: "/imk.jpeg",
-    },
-
-    // Add other movies here...
-  ];
-
   const toggleSection = (section) => {
     setOpenSections((prev) => ({
       ...prev,
@@ -92,27 +54,79 @@ export default function Browse() {
   };
 
   const toggleFilter = (type, value) => {
-    if (type === "orderBy") {
-      // For order, it's a single selection
-      setActiveFilters((prev) => ({
-        ...prev,
-        orderBy: prev.orderBy === value ? null : value,
-      }));
-    } else {
-      // For quality, years, and categories, allow multiple selections
-      setActiveFilters((prev) => {
-        const currentFilters = prev[type];
+    setActiveFilters((prev) => {
+      // For quality, years, and order, only allow one selection at a time
+      if (type === "quality" || type === "years" || type === "orderBy") {
+        return {
+          ...prev,
+          [type]: prev[type] === value ? null : value,
+        };
+      }
+
+      // For categories, allow multiple selections
+      if (type === "categories") {
+        const currentFilters = prev.categories;
         const newFilters = currentFilters.includes(value)
           ? currentFilters.filter((f) => f !== value)
           : [...currentFilters, value];
 
         return {
           ...prev,
-          [type]: newFilters,
+          categories: newFilters,
         };
-      });
-    }
+      }
+
+      return prev;
+    });
   };
+
+  useEffect(() => {
+    const filteredMovies = async () => {
+      try {
+        let baseUrl = "https://yts.mx/api/v2/list_movies.json/?limit=15";
+        let filterUrl = "";
+        if (activeFilters.quality) {
+          activeFilters.quality === "4K"
+            ? (baseUrl += `&quality=2160p`)
+            : (baseUrl += `&quality=${activeFilters.quality}`);
+        }
+
+        if (activeFilters.years) {
+          baseUrl += `&query_term=${activeFilters.years}`;
+        }
+
+        if (activeFilters.categories.length > 0) {
+          baseUrl += `&genre=${activeFilters.categories.join(",")}`;
+        }
+
+        if (activeFilters.orderBy) {
+          activeFilters.orderBy === "Ascending"
+            ? (baseUrl += "&order_by=asc")
+            : (baseUrl += "&order_by=desc");
+        }
+
+        const response = await fetch(baseUrl);
+        const data = await response.json();
+        setMovies(data.data.movies);
+      } catch (error) {
+        console.error("Error fetching movies:", error);
+      }
+    };
+
+    filteredMovies();
+  }, [activeFilters]);
+
+  useEffect(() => {
+    const getMovies = async () => {
+      const response = await fetch(
+        "https://yts.mx/api/v2/list_movies.json/?limit=15"
+      );
+      const data = await response.json();
+      console.log("yoyo ; ", data);
+      setMovies(data.data.movies);
+    };
+    getMovies();
+  }, []);
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-black via-[#0a0a0a] to-[#1a1a1a] flex flex-col">
@@ -124,6 +138,7 @@ export default function Browse() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 px-6 py-8">
           <div className="col-span-1 space-y-6 sticky top-20">
+            {/* Quality Filter */}
             <div className="bg-[#1e1e1e] rounded-2xl shadow-lg overflow-hidden">
               <div
                 className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors group"
@@ -148,7 +163,7 @@ export default function Browse() {
                         key={quality}
                         label={quality}
                         variant={
-                          activeFilters.quality.includes(quality)
+                          activeFilters.quality === quality
                             ? "filled"
                             : "outlined"
                         }
@@ -187,9 +202,7 @@ export default function Browse() {
                         key={year}
                         label={year}
                         variant={
-                          activeFilters.years.includes(year)
-                            ? "filled"
-                            : "outlined"
+                          activeFilters.years === year ? "filled" : "outlined"
                         }
                         color="secondary"
                         onClick={() => toggleFilter("years", year)}
@@ -260,7 +273,7 @@ export default function Browse() {
               {openSections.categories && (
                 <div className="p-4 space-y-2">
                   <div className="flex flex-wrap gap-2">
-                    {categoryOptions.map((category) => (
+                    {categoryOptions.map((category: string) => (
                       <Chip
                         key={category}
                         label={category}
@@ -284,14 +297,14 @@ export default function Browse() {
           <div className="col-span-3 rounded-2xl pl-6 pb-6 min-h-[100vh]">
             <h1 className="text-2xl font-bold mb-6">
               Showing results for:
-              {activeFilters.quality.length > 0 && (
+              {activeFilters.quality && (
                 <span className="ml-4 text-sm text-gray-400">
-                  Quality: {activeFilters.quality.join(", ")}
+                  Quality: {activeFilters.quality}
                 </span>
               )}
-              {activeFilters.years.length > 0 && (
+              {activeFilters.years && (
                 <span className="ml-4 text-sm text-gray-400">
-                  Years: {activeFilters.years.join(", ")}
+                  Years: {activeFilters.years}
                 </span>
               )}
               {activeFilters.categories.length > 0 && (
@@ -308,7 +321,7 @@ export default function Browse() {
 
             {/* Placeholder for content grid */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {movies.map((movie) => (
+              {movies?.map((movie) => (
                 <div
                   key={movie.id}
                   className="relative group cursor-pointer"
@@ -318,7 +331,7 @@ export default function Browse() {
                   {/* Movie Poster */}
                   <div className="relative overflow-hidden rounded-lg shadow-lg">
                     <img
-                      src={movie.poster}
+                      src={movie.large_cover_image}
                       alt={movie.title}
                       className="w-full h-[350px] object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -334,7 +347,7 @@ export default function Browse() {
                           </Tooltip>
                           <Tooltip title="More Info" arrow>
                             <button className="bg-gray-700 text-white p-2 rounded-full hover:bg-gray-600 transition-colors">
-                              <InfoOutlined fontSize="large" />
+                              <InfoRounded fontSize="large" />
                             </button>
                           </Tooltip>
                         </div>
@@ -353,7 +366,7 @@ export default function Browse() {
                         {movie.title}
                       </h3>
                       <p className="text-sm text-gray-400">
-                        {movie.year} • {movie.duration.split(" ")[0]} hrs
+                        {movie.year} • {movie.runtime} min
                       </p>
                     </div>
                     <Tooltip title="Add to Watchlist" arrow>

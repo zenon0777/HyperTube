@@ -8,7 +8,7 @@ export const elements = [
   },
   {
     name: "Movies",
-    path: "/movies",
+    path: "/browse/movies",
     icon: <Movie />,
   },
   {
