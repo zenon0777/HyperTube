@@ -40,7 +40,7 @@ export default function Footer() {
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="relative bg-black text-white py-8 sm:py-12"
+      className="relative bg-black text-white py-5"
     >
       {/* Background Image */}
       <div className="absolute inset-0 z-0">

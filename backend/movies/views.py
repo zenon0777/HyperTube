@@ -1,39 +1,79 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-import json
-from movies.models import Movie
+import requests
+import environ
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+env = environ.Env()
+environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
 
-# Disable CSRF protection for this example (use cautiously in production)
 @csrf_exempt
-def list(request):
-    if request.method == 'GET':
+def tmdb_movie_list(request):
+    if request.method == "GET":
         try:
-            # data = json.loads(request.body)
-            movies = Movie.objects.all().values('id', 'title', 'genre')
-            movies_list = []
-            for movie in movies:
-                movies_list.append(movie)
-            response_data = {"data": movies_list}
-            return JsonResponse(response_data, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
+            base_url = "https://api.themoviedb.org/3/discover/movie"
+
+            query_params = (
+                request.GET.dict()
+            )
+            query_params["api_key"] = env("TMDB_API_KEY", default="Key not found")
+            query_string = "&".join(
+                f"{key}={value}" for key, value in query_params.items()
+            )
+            url = f"{base_url}?{query_string}"
+            headers = {
+                "accept": "application/json",
+                "Authorization": f"Bearer {env('TMDB_API_KEY')}",
+            }
+
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            movies = data
+            if not movies:
+                return JsonResponse(
+                    {"error": "No movies found in the response"}, status=404
+                )
+            return JsonResponse({"movies": movies}, status=200)
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"TMDB API error: {str(e)}"}, status=500)
+        except environ.ImproperlyConfigured:
+            return JsonResponse(
+                {"error": "Environment variable TMDB_API_KEY is not set"}, status=500
+            )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     else:
-        return JsonResponse({"error": "Only GET requests are allowed"},
-                            status=405)
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 
-def add(request):
-    if request.method == 'POST':
+def yts_movie_search(request):
+    if request.method == "GET":
         try:
-            data = json.loads(request.body)  # Parse JSON body
-            # Process the data
-            response_data = {"message": "Data received", "data": data}
-            return JsonResponse(response_data, status=200)
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
+            base_url = "https://yts.mx/api/v2/list_movies.json"
+            query_params = request.GET.dict()
+            query_string = "&".join(
+                f"{key}={value}" for key, value in query_params.items()
+            )
+            url = f"{base_url}?{query_string}"
+
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            movies = data.get("data", {})
+            if not movies:
+                return JsonResponse(
+                    {"error": "No movies found in the response"}, status=404
+                )
+            return JsonResponse({"data": movies}, status=200)
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"YTS API error: {str(e)}"}, status=500)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
     else:
-        return JsonResponse({"error": "Only POST requests are allowed"},
-                            status=405)
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
