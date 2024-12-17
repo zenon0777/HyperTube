@@ -16,9 +16,7 @@ def tmdb_movie_list(request):
         try:
             base_url = "https://api.themoviedb.org/3/discover/movie"
 
-            query_params = (
-                request.GET.dict()
-            )
+            query_params = request.GET.dict()
             query_params["api_key"] = env("TMDB_API_KEY", default="Key not found")
             query_string = "&".join(
                 f"{key}={value}" for key, value in query_params.items()
@@ -51,7 +49,7 @@ def tmdb_movie_list(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 
-def yts_movie_search(request):
+def yts_movie_list(request):
     if request.method == "GET":
         try:
             base_url = "https://yts.mx/api/v2/list_movies.json"
@@ -65,7 +63,8 @@ def yts_movie_search(request):
             response.raise_for_status()
             data = response.json()
             movies = data.get("data", {})
-            if not movies:
+            movie_list = movies.get("movies", [])
+            if not movie_list:
                 return JsonResponse(
                     {"error": "No movies found in the response"}, status=404
                 )
@@ -77,3 +76,36 @@ def yts_movie_search(request):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+@csrf_exempt
+def tmdb_multi_search(request):
+    try:
+        #  ?query=={query}
+        base_url = "https://api.themoviedb.org/3/search/multi?include_adult=false&language=en-US&page=1"
+        query_params = request.GET.dict()
+        query_params["api_key"] = env("TMDB_API_KEY", default="Key not found")
+        query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+        url = f"{base_url}&{query_string}"
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {env('TMDB_API_KEY')}",
+        }
+        print("here is the url ", url)
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        movies = data
+        movie_list = movies.get("results", [])
+        if not movie_list:
+            return JsonResponse(
+                {"error": "No movies found in the response"}, status=404
+            )
+        return JsonResponse({"movies": movies}, status=200)
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({"error": f"TMDB API error: {str(e)}"}, status=500)
+    except environ.ImproperlyConfigured:
+        return JsonResponse(
+            {"error": "Environment variable TMDB_API_KEY is not set"}, status=500
+        )
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
