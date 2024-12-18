@@ -64,31 +64,6 @@ class TorrentStream:
         piece_index = start // self.piece_size
         return {'piece_index': piece_index, 'start': start, 'end': end}
 
-    def resize_video_chunk(self, video_chunk, width, height):
-        if not video_chunk:
-            print("Error: The input video chunk is empty.")
-            return b''
-
-        input_stream = ffmpeg.input('pipe:0')
-        output_stream = ffmpeg.output(input_stream, 'pipe:1', format='mp4', vf=f'scale={width}:{height}').global_args('-loglevel', 'error')
-        
-        process = output_stream.run_async(pipe_stdin=True, pipe_stdout=True, pipe_stderr=True)
-        
-        process.stdin.write(video_chunk)
-        process.stdin.close()
-        
-        resized_chunk = process.stdout.read()
-        stderr_output = process.stderr.read()
-        process.wait()
-        
-        # Check if the output chunk is not empty
-        if not resized_chunk:
-            print("Error: The resized video chunk is empty.")
-            print("FFmpeg stderr output:", stderr_output.decode())
-            return b''
-
-        return resized_chunk
-
     def stream_torrent(self, vrange):
         parsed_range = self.parse_chunk_range(vrange)
         piece_index = parsed_range['piece_index']
@@ -98,17 +73,14 @@ class TorrentStream:
         print(f"====> Reading piece: {piece_index}")
         self.handle.read_piece(piece_index)
         while not self.handle.have_piece(piece_index):
-            time.sleep(.1)
+            time.sleep(.5)
         
         
 
         video_path = os.path.join(SAVE_PATH, self.torrent_info.files().file_path(0))
-
         with open(video_path, 'rb') as f:
             f.seek(self.start_byte)
-            data = f.read(self.piece_size)
-            print(f"====> Chunk size before: {len(data)}")
-            return self.resize_video_chunk(data, 640, 360)
+            return f.read(self.piece_size)
 
     def create_response(self, data):
         response = HttpResponse(data, content_type="video/mp4", status=206)
@@ -122,6 +94,9 @@ class TorrentStream:
 
     def remove_stream(self):
         self.session.remove_torrent(self.handle)
+
+    async def convert_video(self):
+        print("====> Converting video to mkv...")
 
 
 

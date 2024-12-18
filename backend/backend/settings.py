@@ -113,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 CORS_ORIGIN_ALLOW_ALL = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['http://localhost:3000', "localhost"]
 
 LANGUAGE_CODE = 'en-us'
 
