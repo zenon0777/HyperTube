@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from datetime import timedelta
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'movies',
-    'users'
+    'users',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -141,4 +145,23 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+# Authentication settings
 AUTH_USER_MODEL = 'users.User'
+
+load_dotenv()
+
+SIMPLE_JWT = {
+   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+   'REFRESH_TOKEN_LIFETIME': timedelta(minutes=4),
+   'SIGNING_KEY': os.getenv('JWT_SIGNING_KEY'),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.authentication.CustomJWTAuthentication',
+    ),
+
+	'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
