@@ -6,6 +6,11 @@ from .serializers import UserRegistrationSerializer, UserLoginSerializer
 from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework import generics
+from django.contrib.auth import get_user_model
+
+
+from rest_framework.parsers import JSONParser
 
 class UserRegistrationView(APIView):
     permission_classes = (AllowAny,)
@@ -145,3 +150,63 @@ class CookieTokenRefreshView(APIView):
             response = Response({'message': 'Invalid token'}, status=401)
             response.delete_cookie('access_token')
             response.delete_cookie('refresh_token', path='/auth/token/')
+
+
+User = get_user_model()
+
+class UserListView(APIView):
+
+    def get(self, request):
+        users = User.objects.all().values('id', 'username')
+        return Response(users, status=status.HTTP_200_OK)
+
+
+class UserManagementView(APIView):
+    parser_classes = [JSONParser]
+
+    def get(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+            data = {
+                'username': user.username,
+                'email': user.email,
+                'profile_picture': user.profile_picture.url if hasattr(user, 'profile_picture') and user.profile_picture else None
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def patch(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+            if request.user != user:
+                return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+            data = request.data
+            if 'username' in data:
+                user.username = data['username']
+            if 'email' in data:
+                user.email = data['email']
+            if 'password' in data:
+                user.set_password(data['password'])
+            if 'profile_picture' in data:
+                user.profile_picture = data['profile_picture']
+
+            user.save()
+            return Response({'message': 'User updated successfully'}, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id):
+        try:
+            user = User.objects.get(id=id)
+            if request.user != user and not request.user.is_staff:
+                return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+            user.delete()
+            return Response({'message': 'User deleted successfully'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
