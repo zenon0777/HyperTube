@@ -43,11 +43,12 @@ class TorrentStream:
 
     def add_torrent(self, magnet_link):
         print(f"====> Adding torrent from: {self.torrent_file_path}")
-        if (magnet_link):
+        if magnet_link:
             print(f"====> Adding torrent from magnet link: {magnet_link}")
-            self.handle = lt.add_magnet_uri(
-                self.session, magnet_link, {'save_path': SAVE_PATH, 'storage_mode': lt.storage_mode_t.storage_mode_sparse})
-            self.torrent_info = self.handle.get_torrent_info()
+            params = lt.parse_magnet_uri(magnet_link)
+            params.save_path = SAVE_PATH
+            params.storage_mode = lt.storage_mode_t.storage_mode_sparse
+            self.handle = self.session.add_torrent(params)
         else:
             print(f"====> Adding torrent from file: {self.torrent_file_path}")
             self.torrent_info = lt.torrent_info(self.torrent_file_path)
@@ -59,10 +60,12 @@ class TorrentStream:
             time.sleep(.5)
         print("====> Metadata received successfully.")
 
-        self.movie_path = os.path.join(
-            SAVE_PATH, self.torrent_info.files().file_path(0))
+        # Get torrent info from handle after metadata is received
+        self.torrent_info = self.handle.torrent_file()
+        self.movie_path = os.path.join(SAVE_PATH, self.torrent_info.files().file_path(0))
         self.file_size = self.torrent_info.files().file_size(0)
         self.handle.read_piece(0)
+        print(f"====> File size: {self.file_size}")
 
     def parse_chunk_range(self, vrange):
         start, end = vrange.replace('bytes=', '').split('-')
