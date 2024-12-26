@@ -13,8 +13,14 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from datetime import datetime
+import uuid
+from django.conf import settings
+from django.core.files.storage import default_storage
 
 class UserRegistrationView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
     permission_classes = (AllowAny,)
     
     def post(self, request):
@@ -164,7 +170,7 @@ class UserListView(APIView):
 
 
 class UserManagementView(APIView):
-    parser_classes = [JSONParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request, id):
         try:
@@ -179,28 +185,31 @@ class UserManagementView(APIView):
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
     def patch(self, request, id):
-        try:
-            user = User.objects.get(id=id)
-            if request.user != user:
-                return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+       try:
+           user = User.objects.get(id=id)
+           if request.user != user:
+               return Response({'error': 'Permission denied'}, status=403)
 
-            data = request.data
-            if 'username' in data:
-                user.username = data['username']
-            if 'email' in data:
-                user.email = data['email']
-            if 'password' in data:
-                user.set_password(data['password'])
-            if 'profile_picture' in data:
-                user.profile_picture = data['profile_picture']
+           data = request.data
+           if 'username' in data:
+               user.username = data['username']
+           if 'email' in data:
+               user.email = data['email']
+           if 'password' in data:
+               user.set_password(data['password'])
+           if 'profile_picture' in data:
+               timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+               unique_name = f"{timestamp}_{uuid.uuid4().hex[:8]}_{data['profile_picture'].name}"
+               file_name = default_storage.save(f'profile_pictures/{unique_name}', data['profile_picture'])
+               user.profile_picture_url = f"{settings.AWS_S3_ENDPOINT_URL}/hypertube/profile_pictures/{unique_name}"
 
-            user.save()
-            return Response({'message': 'User updated successfully'}, status=status.HTTP_200_OK)
+           user.save()
+           return Response({'message': 'User updated successfully'}, status=200)
 
-        except User.DoesNotExist:
-            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+       except User.DoesNotExist:
+           return Response({'error': 'User not found'}, status=404)
+       except Exception as e:
+           return Response({'error': str(e)}, status=400)
 
     def delete(self, request, id):
         try:

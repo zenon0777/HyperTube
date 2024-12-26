@@ -1,16 +1,20 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
-
+from django.core.files.storage import default_storage
+from datetime import datetime
+from django.conf import settings
+import uuid
 User = get_user_model()
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True)
+    profile_picture = serializers.ImageField(required=False)
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'first_name', 'last_name', 'password', 'password2')
+        fields = ('email', 'username', 'first_name', 'last_name', 'profile_picture', 'password', 'password2')
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
@@ -18,8 +22,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        profile_picture = validated_data.pop('profile_picture', None)
         validated_data.pop('password2')
         user = User.objects.create_user(**validated_data)
+        if profile_picture:
+           timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+           unique_name = f"{timestamp}_{uuid.uuid4().hex[:8]}_{profile_picture.name}"
+           file_name = default_storage.save(f'profile_pictures/{unique_name}', profile_picture)
+           user.profile_picture_url = f"{settings.AWS_S3_ENDPOINT_URL}/hypertube/profile_pictures/{unique_name}"
+           user.save()
         return user
 
 class UserLoginSerializer(serializers.Serializer):

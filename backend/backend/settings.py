@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'users',
     'rest_framework',
     'rest_framework_simplejwt',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -177,3 +178,25 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
+
+
+# AWS S3 settings
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = os.getenv('SPACES_ACCESS_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('SPACES_SECRET_ACCESS')
+AWS_STORAGE_BUCKET_NAME = os.getenv('SPACES_BUCKET')
+AWS_S3_ENDPOINT_URL = os.getenv('SPACES_ENDPOINT')
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_REGION_NAME = 'nyc3'
