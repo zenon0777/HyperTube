@@ -12,7 +12,7 @@ from rest_framework.parsers import JSONParser
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
-from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
+from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer, ChangePasswordSerializer
 
 class UserRegistrationView(APIView):
     permission_classes = (AllowAny,)
@@ -215,7 +215,7 @@ class UserManagementView(APIView):
 
 
 class PasswordResetView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = PasswordResetSerializer(data=request.data)
@@ -243,7 +243,7 @@ class PasswordResetView(APIView):
 
 
 class PasswordResetConfirmView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = (AllowAny,)
 
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
@@ -260,4 +260,18 @@ class PasswordResetConfirmView(APIView):
                 return Response({"error": "Invalid token"}, status=400)
             except User.DoesNotExist:
                 return Response({"error": "Invalid user"}, status=400)
+        return Response(serializer.errors, status=400)
+
+
+class ChangePasswordView(APIView):
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            if user.check_password(serializer.validated_data['old_password']):
+                user.set_password(serializer.validated_data['new_password'])
+                user.save()
+                return Response({'message': 'Password changed successfully'})
+            return Response({'error': 'Incorrect old password'}, status=400)
         return Response(serializer.errors, status=400)
