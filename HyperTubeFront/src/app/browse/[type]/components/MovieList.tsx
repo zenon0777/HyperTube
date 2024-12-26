@@ -128,7 +128,8 @@ const MoviesList = React.memo(
                       src={
                         (movie.poster_path &&
                           `https://image.tmdb.org/t/p/w300${movie.poster_path}`) ||
-                        movie.large_cover_image
+                        (movie.large_cover_image && movie.large_cover_image) ||
+                        "https://fakeimg.pl/300x350/"
                       }
                       alt={movie.title}
                       className="object-cover h-[350px] transition-transform duration-300 group-hover:scale-105"

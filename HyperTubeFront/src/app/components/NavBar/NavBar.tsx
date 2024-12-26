@@ -1,8 +1,8 @@
+"use client";
 import { elements } from "@/app/data/NavBarElements";
-import { Button, Drawer } from "@mui/material";
 import Image from "next/image";
-import { MdMenu } from "react-icons/md";
 import MenuDrawer from "./Drawer";
+import ProviderMenus from "./ProviderMenu";
 
 export default function NavBar() {
   return (
@@ -27,6 +27,8 @@ export default function NavBar() {
             <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-l from-orange-500 to-yellow-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
           </a>
         ))}
+        {/* Drawer for providers  */}
+        <ProviderMenus />
         <button className="px-4 py-2 border border-white rounded-full hover:bg-white hover:text-black transition">
           Sign in
         </button>

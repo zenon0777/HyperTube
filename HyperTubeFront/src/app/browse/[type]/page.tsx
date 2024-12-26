@@ -11,6 +11,8 @@ import { Chip } from "@mui/material";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import MoviesList from "./components/MovieList";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 export interface categoryOptions {
   id: string;
@@ -26,6 +28,8 @@ export interface activeFilters {
 }
 
 export default function Browse() {
+  const APIProvider = useSelector(
+    (state: any) => state.APIProviderSlice.APIProvider);
   const [hoveredMovie, setHoveredMovie] = useState<number | null>(null);
   const [movies, setMovies] = useState<any>([]);
   const [page, setPage] = useState<number>(1);
@@ -36,7 +40,7 @@ export default function Browse() {
     years: null,
     orderBy: null,
     categories: [] as categoryOptions[],
-    provider: "TMDB",
+    provider: APIProvider as string,
   });
   const [openSections, setOpenSections] = useState({
     quality: true,
@@ -86,13 +90,13 @@ export default function Browse() {
       const response = await fetch(url);
       const data = await response.json();
       console.log(data);
-      setTotalPages(data.movies.total_pages);
-      setMovies(data.movies.results);
+      setTotalPages(data.movies?.total_pages);
+      setMovies(data.movies?.results);
       console.log(movies.length);
     };
     const getYTSFiltredMovies = async () => {
       try {
-        let baseUrl = `http://0.0.0.0:8000/movies/yts_   movie_list?page=${page}&limit=20`;
+        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=${page}&limit=20`;
         let url = baseUrl;
         if (activeFilters.quality) {
           url += `&quality=${activeFilters.quality}`;
@@ -114,7 +118,7 @@ export default function Browse() {
         const data = await response.json();
         let np = data.data.movie_count / 20;
         setTotalPages(Number(np.toFixed(0)));
-        setMovies(data.data.movies);
+        setMovies(data.data?.movies);
       } catch (error: any) {
         setError(error.message);
         toast.error("hello");
@@ -123,7 +127,13 @@ export default function Browse() {
     activeFilters.provider === "TMDB"
       ? getTMDBFiltredMovies()
       : getYTSFiltredMovies();
+
+    console.log("Provider ----> :  ", activeFilters.provider);
   }, [activeFilters, page]);
+
+  useEffect(() => {
+    console.log("Provider ID : ===> : ", APIProvider);
+  }, [activeFilters]);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
@@ -157,6 +167,11 @@ export default function Browse() {
             categories: [...currentFilters, value],
           };
         }
+        currentFilters.splice(index, 1);
+        return {
+          ...prev,
+          categories: currentFilters,
+        };
       }
 
       return prev;

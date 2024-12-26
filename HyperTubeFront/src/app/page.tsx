@@ -1,13 +1,16 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { use, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-const movies = [
+const movies1 = [
   {
     id: 1,
     title: "Spider-Man: No Way Home",
@@ -46,9 +49,74 @@ const movies = [
 ];
 
 export default function Home() {
+  const [movies, setMovies] = useState([]);
+  const APIProvider = useSelector(
+    (state: any) => state.APIProvider
+  );
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [watchedMovies, setWatchedMovies] = useState([]);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [tvShows, setTvShows] = useState([]);
+
+  useEffect(() => {
+    const getTMDBFiltredMovies = async () => {
+      try {
+        let baseUrl = `http://0.0.0.0:8000/movies/tmdb_movie_list`;
+        let popularMoviesUrl = baseUrl + "?popular";
+        popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
+        let topRatedMoviesUrl = baseUrl + "?top_rated";
+        topRatedMoviesUrl += "?language=en-US&page=1&include_adult=false";
+        const response = await fetch(popularMoviesUrl);
+        const data = await response.json();
+        setPopularMovies(data.movies?.results);
+        const response2 = await fetch(topRatedMoviesUrl);
+        const data2 = await response2.json();
+        setTopRatedMovies(data2.movies?.results);
+        console.log(data);
+        setMovies(data.movies?.results);
+        console.log(movies.length);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
+    const getTrendingTvShows = async () => {
+      try {
+        let baseUrl = `http://0.0.0.0:8000/movies/trending_tv_shows?&language=en-US&page=1`;
+        const response = await fetch(baseUrl);
+        const data = await response.json();
+        console.log("Tv Shows", data.results);
+        setTvShows(data.results);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
+    const getYTSFiltredMovies = async () => {
+      try {
+        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=1&limit=20`;
+        let PopularMoviesUrl = baseUrl;
+        let topRatedMoviesUrl = baseUrl;
+        topRatedMoviesUrl += "&sort_by=rating&order_by=desc";
+        PopularMoviesUrl += "&sort_by=download_count&order_by=desc";
+        const response = await fetch(PopularMoviesUrl);
+        const data = await response.json();
+        console.log("Popular : --------> ", data);
+        setPopularMovies(data.data?.movies);
+        const response2 = await fetch(topRatedMoviesUrl);
+        const data2 = await response2.json();
+        console.log("Top Rated : --------> ", data2);
+        setTopRatedMovies(data2.data?.movies);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
+    APIProvider === "TMDB" ? getTMDBFiltredMovies() : getYTSFiltredMovies();
+    APIProvider === "TMDB" && getTrendingTvShows();
+  }, [APIProvider]);
+
   return (
     <div className="min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
       <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh]">
+        {/* latest movies */}
         <Swiper
           modules={[Navigation, Pagination]}
           navigation={false}
@@ -60,7 +128,7 @@ export default function Home() {
           spaceBetween={20}
           className="h-full swiper-container"
         >
-          {movies.map((movie, index) => (
+          {movies1.map((movie, index) => (
             <SwiperSlide key={index}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -143,7 +211,6 @@ export default function Home() {
         </Swiper>
       </div>
 
-      {/* Sections with Animated Headings */}
       {["Popular Movies", "Watched Movies", "Top Rated Movies"].map(
         (sectionTitle, idx) => (
           <motion.section
@@ -195,7 +262,7 @@ export default function Home() {
                 }}
                 className="swiper-container"
               >
-                {movies.map((movie) => (
+                {movies1.map((movie) => (
                   <SwiperSlide key={movie.id}>
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
