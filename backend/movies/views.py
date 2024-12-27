@@ -183,3 +183,31 @@ def tmdb_multi_search(request):
         )
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+@csrf_exempt
+def movie_detail(request, id):
+    if request.method == "GET":
+        try:
+            base_url = f"https://yts.mx/api/v2/movie_details.json"
+            query_params = {"movie_id": id}
+            query_string = "&".join(
+                f"{key}={value}" for key, value in query_params.items()
+            )
+            url = f"{base_url}?{query_string}"
+
+            response = requests.get(url)
+            response.raise_for_status()
+            data = response.json()
+            movie = data.get("data", {}).get("movie", {})
+            if not movie:
+                return JsonResponse(
+                    {"error": "No movie found for the given ID"}, status=404
+                )
+            return JsonResponse({"movie": movie}, status=200)
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"YTS API error: {str(e)}"}, status=500)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
