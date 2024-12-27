@@ -84,6 +84,7 @@ export const MovieSection = ({
                   alt={movie.title || movie.name}
                   width={300}
                   height={400}
+                  priority
                   className="xs:w-[180px] sm:w-[200px] md:[w-300px] lg:w-[300px] h-auto rounded-xl shadow-lg"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-1 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
@@ -108,11 +109,14 @@ export const MovieSection = ({
                   </p>
                   <motion.div className="flex items-center justify-center gap-2">
                     <p className="text-gray-100 text-xs sm:text-sm">
-                      {movie.release_date?.split("-")[0] || movie.year}
+                      {movie.release_date
+                        ? movie.release_date?.split("-")[0]
+                        : movie.year || movie.first_air_date?.split("-")[0]}
                     </p>
                     <span className="text-orange-500 text-sm sm:text-base font-medium">
-                      {Number(movie.vote_average).toFixed(1) ||
-                        Number(movie.rating)}{" "}
+                      {movie.vote_average
+                        ? Number(movie.vote_average).toFixed(1)
+                        : movie.rating}{" "}
                       <span className="text-yellow-400">★</span>
                     </span>
                   </motion.div>

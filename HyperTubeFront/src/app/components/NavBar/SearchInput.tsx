@@ -16,6 +16,7 @@ interface MovieResult {
   medium_cover_image?: string;
   media_type?: string;
   year?: number;
+  release_date?: string;
 }
 
 export default function SearchInput() {
@@ -49,12 +50,12 @@ export default function SearchInput() {
         if (!res.ok) throw new Error(`No movies found on ${provider}`);
 
         const data = await res.json();
-        setResults(
-          provider === "YTS"
-            ? data.data?.movies || []
-            : data.movies?.results || []
-        );
+        console.log("search data ====> ::: ", data);
+        provider === "YTS"
+          ? setResults(data.data?.movies)
+          : setResults(data.movies?.results);
       } catch (error: any) {
+        console.log("error ====> ::: ", error);
         setResults([]);
       } finally {
         setIsLoading(false);
@@ -78,12 +79,18 @@ export default function SearchInput() {
       if (!isResultsVisible || results.length === 0) return;
 
       if (event.key === "ArrowDown") {
-        setActiveIndex((prev) => (prev === null || prev >= results.length - 1 ? 0 : prev + 1));
+        setActiveIndex((prev) =>
+          prev === null || prev >= results.length - 1 ? 0 : prev + 1
+        );
       } else if (event.key === "ArrowUp") {
-        setActiveIndex((prev) => (prev === null || prev <= 0 ? results.length - 1 : prev - 1));
+        setActiveIndex((prev) =>
+          prev === null || prev <= 0 ? results.length - 1 : prev - 1
+        );
       } else if (event.key === "Enter" && activeIndex !== null) {
         const selectedResult = results[activeIndex];
-        toast.success(`Selected: ${selectedResult.title || selectedResult.name}`);
+        toast.success(
+          `Selected: ${selectedResult.title || selectedResult.name}`
+        );
         setIsResultsVisible(false);
       } else if (event.key === "Escape") {
         setIsResultsVisible(false);
@@ -114,16 +121,19 @@ export default function SearchInput() {
   }, [search, debouncedSearch]);
 
   const renderResultItem = (result: MovieResult, index: number) => {
-    const title = result.title || result.name || "Unknown Title";
+    const title = result.title ? result.title : result.name || "Unknown Title";
     const posterUrl =
       provider === "YTS"
         ? result.medium_cover_image
-        : result.poster_path &&
-          `https://image.tmdb.org/t/p/w300${result.poster_path}`;
-    const year = result.year || "N/A";
+        : (result.poster_path &&
+            `https://image.tmdb.org/t/p/w300${result.poster_path}`) ||
+          `https://via.placeholder.com/300x450?text=${title}`;
+    const year = result.year
+      ? result.year
+      : result?.release_date?.split("-")[0];
 
     const isActive = index === activeIndex;
-
+    console.log("title ====> ::: ", title);
     return (
       <div
         key={`${result.id}-${index}`}
@@ -134,6 +144,7 @@ export default function SearchInput() {
         <div className="relative w-12 h-16 flex-shrink-0">
           <Image
             fill
+            sizes="100px"
             className="rounded-md object-cover"
             src={posterUrl || "/placeholder-image.png"}
             alt={title}
@@ -147,7 +158,7 @@ export default function SearchInput() {
     );
   };
 
-  const displayResults = provider === "YTS" ? results : tmdbList;
+  const displayResults = results;
 
   return (
     <div className="relative w-40 md:w-52">
@@ -183,7 +194,9 @@ export default function SearchInput() {
           ) : displayResults.length > 0 ? (
             displayResults.map(renderResultItem)
           ) : (
-            <div className="text-center text-gray-400 p-4">No results found</div>
+            <div className="text-center text-gray-400 p-4">
+              No results found
+            </div>
           )}
         </div>
       )}

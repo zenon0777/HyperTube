@@ -8,7 +8,7 @@ import SearchInput from "./SearchInput";
 
 export default function NavBar() {
   return (
-    <nav className="px-4 md:px-6 lg:px-14 py-4 flex flex-wrap justify-between items-center fixed top-0 left-0 w-dvw">
+    <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center relative">
       {/* Logo Section */}
       <div className="flex items-center gap-2 md:gap-3">
         <Image

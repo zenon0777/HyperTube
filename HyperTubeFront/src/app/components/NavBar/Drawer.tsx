@@ -69,6 +69,14 @@ export default function MenuDrawer() {
             </ListItemButton>
           </ListItem>
         ))}
+        <Divider
+          sx={{
+            backgroundColor: "#fff",
+            color: "#fff",
+            size: "0.001rem",
+            margin: "0.5rem",
+          }}
+        />
         <ListItem
           key={"Providers"}
           disablePadding

@@ -12,6 +12,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { MovieSection } from "./components/MovieSection/MovieSection";
 import { genres } from "./data/NavBarElements";
 import { RootState } from "./store";
+import { Info } from "@mui/icons-material";
 
 const movies1 = [
   {
@@ -227,7 +228,7 @@ export default function Home() {
                         Watch now
                       </button>
                       <button className="px-5 sm:px-6 py-2 sm:py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-gray-200 hover:text-black transition transform hover:scale-105 active:scale-95">
-                        Watch trailer
+                        Details <Info />
                       </button>
                     </motion.div>
                   </motion.div>
@@ -251,6 +252,7 @@ export default function Home() {
                       alt={`${movie.title} Poster`}
                       width={300}
                       height={450}
+                      priority={true}
                       className="rounded-xl shadow-2xl shadow-black hover:scale-105 transition-transform duration-300"
                     />
                   </motion.div>
