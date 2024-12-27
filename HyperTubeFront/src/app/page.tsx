@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "swiper/css";
@@ -9,6 +9,9 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { MovieSection } from "./components/MovieSection/MovieSection";
+import { genres } from "./data/NavBarElements";
+import { RootState } from "./store";
 
 const movies1 = [
   {
@@ -51,12 +54,13 @@ const movies1 = [
 export default function Home() {
   const [movies, setMovies] = useState([]);
   const APIProvider = useSelector(
-    (state: any) => state.APIProvider
+    (state: RootState) => state.APIProviderSlice.APIProvider
   );
   const [popularMovies, setPopularMovies] = useState([]);
   const [watchedMovies, setWatchedMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [tvShows, setTvShows] = useState([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
 
   useEffect(() => {
     const getTMDBFiltredMovies = async () => {
@@ -66,15 +70,22 @@ export default function Home() {
         popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
         let topRatedMoviesUrl = baseUrl + "?top_rated";
         topRatedMoviesUrl += "?language=en-US&page=1&include_adult=false";
+        let NowPlayingMoviesUrl =
+          baseUrl +
+          "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
         const response = await fetch(popularMoviesUrl);
         const data = await response.json();
+        console.log("Popular movies : --------> ", data.movies?.results);
         setPopularMovies(data.movies?.results);
         const response2 = await fetch(topRatedMoviesUrl);
         const data2 = await response2.json();
+        console.log("Top Rated movies : --------> ", data2.movies?.results);
         setTopRatedMovies(data2.movies?.results);
-        console.log(data);
+        const response3 = await fetch(NowPlayingMoviesUrl);
+        const data3 = await response3.json();
+        console.log("Now Playing movies : --------> ", data3.movies?.results);
+        setNowPlayingMovies(data3.movies?.results);
         setMovies(data.movies?.results);
-        console.log(movies.length);
       } catch (error: any) {
         toast.error(error.message);
       }
@@ -84,19 +95,21 @@ export default function Home() {
         let baseUrl = `http://0.0.0.0:8000/movies/trending_tv_shows?&language=en-US&page=1`;
         const response = await fetch(baseUrl);
         const data = await response.json();
-        console.log("Tv Shows", data.results);
-        setTvShows(data.results);
+        console.log("Tv Shows : -----> :: ", data);
+        setTvShows(data.tv_shows.results);
       } catch (error: any) {
         toast.error(error.message);
       }
     };
     const getYTSFiltredMovies = async () => {
       try {
-        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=1&limit=20`;
+        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=1&limit=15`;
         let PopularMoviesUrl = baseUrl;
         let topRatedMoviesUrl = baseUrl;
         topRatedMoviesUrl += "&sort_by=rating&order_by=desc";
         PopularMoviesUrl += "&sort_by=download_count&order_by=desc";
+        let nowPlayingMoviesUrl = baseUrl;
+        nowPlayingMoviesUrl += "&sort_by=date_added&order_by=desc";
         const response = await fetch(PopularMoviesUrl);
         const data = await response.json();
         console.log("Popular : --------> ", data);
@@ -105,17 +118,22 @@ export default function Home() {
         const data2 = await response2.json();
         console.log("Top Rated : --------> ", data2);
         setTopRatedMovies(data2.data?.movies);
+        const response3 = await fetch(nowPlayingMoviesUrl);
+        const data3 = await response3.json();
+        console.log("Now Playing : --------> ", data3);
+        setNowPlayingMovies(data3.data?.movies);
       } catch (error: any) {
         toast.error(error.message);
       }
     };
     APIProvider === "TMDB" ? getTMDBFiltredMovies() : getYTSFiltredMovies();
     APIProvider === "TMDB" && getTrendingTvShows();
+    console.log("APIProvider : --------> :: ", APIProvider);
   }, [APIProvider]);
 
   return (
     <div className="min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
-      <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh]">
+      <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
         {/* latest movies */}
         <Swiper
           modules={[Navigation, Pagination]}
@@ -128,7 +146,7 @@ export default function Home() {
           spaceBetween={20}
           className="h-full swiper-container"
         >
-          {movies1.map((movie, index) => (
+          {nowPlayingMovies?.map((movie: any, index: number) => (
             <SwiperSlide key={index}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -136,7 +154,12 @@ export default function Home() {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="relative h-full flex items-center bg-cover bg-center text-white"
                 style={{
-                  backgroundImage: `url(${movie.background})`,
+                  backgroundImage: `url(${
+                    (movie.backdrop_path &&
+                      `https://image.tmdb.org/t/p/original${movie.backdrop_path}`) ||
+                    (movie.medium_cover_image && movie.medium_cover_image) ||
+                    `https://via.placeholder.com/1920x1080?text=${movie.title}`
+                  })`,
                 }}
               >
                 {/* Existing Gradient Overlays */}
@@ -145,7 +168,7 @@ export default function Home() {
                 <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-l from-black to-transparent opacity-70"></div>
 
                 {/* Movie Details with Staggered Animations */}
-                <div className="relative z-10 container mx-auto px-4 sm:px-8 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                <div className="relative z-10 container justify-center px-4 sm:px-8 flex flex-col md:flex-row items-center gap-6 md:gap-11 w-5/6">
                   <motion.div
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
@@ -154,7 +177,7 @@ export default function Home() {
                       delay: 0.3,
                       ease: "easeOut",
                     }}
-                    className="w-2xl"
+                    className="w-full md:w-1/2"
                   >
                     <motion.h1
                       initial={{ opacity: 0, y: 20 }}
@@ -168,9 +191,31 @@ export default function Home() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: 0.5 }}
-                      className="text-base sm:text-lg text-gray-300 mb-6 animate-fade-in-up"
+                      className="text-base sm:text-lg w-96 md:w-full text-gray-300 mb-6 animate-fade-in-up"
                     >
-                      {movie.description}
+                      {(movie.summary && movie.summary) ||
+                        (movie.overview && movie.overview)}
+                    </motion.p>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      className="text-base sm:text-lg w-96 md:w-full text-gray-300 mb-6 animate-fade-in-up"
+                    >
+                      {movie.release_date?.split("-")[0] || movie.year} |{" "}
+                      {movie.genres?.map((genre: string) => genre).join(", ") ||
+                        movie.genre_ids
+                          .map((id: number) => {
+                            const genre = genres.find(
+                              (genre: any) => genre.id === id
+                            );
+                            return genre?.name;
+                          })
+                          .join(", ")}{" "}
+                      |{" "}
+                      {movie.rating
+                        ? movie.rating
+                        : Number(movie.vote_average).toFixed(1)}
                     </motion.p>
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
@@ -194,14 +239,19 @@ export default function Home() {
                       delay: 0.5,
                       ease: "easeOut",
                     }}
-                    className="hidden lg:flex"
+                    className="hidden md:flex"
                   >
                     <Image
-                      src={movie.poster}
+                      src={
+                        (movie.large_cover_image && movie.large_cover_image) ||
+                        (movie.poster_path &&
+                          `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
+                        `https://via.placeholder.com/300x450?text=${movie.title}`
+                      }
                       alt={`${movie.title} Poster`}
                       width={300}
                       height={450}
-                      className="rounded-xl shadow-2xl hover:scale-105 transition-transform duration-300"
+                      className="rounded-xl shadow-2xl shadow-black hover:scale-105 transition-transform duration-300"
                     />
                   </motion.div>
                 </div>
@@ -211,99 +261,11 @@ export default function Home() {
         </Swiper>
       </div>
 
-      {["Popular Movies", "Watched Movies", "Top Rated Movies"].map(
-        (sectionTitle, idx) => (
-          <motion.section
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            key={idx}
-            className="bg-black py-8 sm:py-12"
-          >
-            <div className="container mx-auto px-4 sm:px-8">
-              <div className="flex justify-between items-start mb-6">
-                <motion.h2
-                  initial={{ opacity: 0, x: -30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                  viewport={{ once: true }}
-                  className="text-3xl sm:text-4xl text-[#A7B5BE] font-Lemonada font-semibold"
-                >
-                  {sectionTitle}
-                </motion.h2>
-                <motion.div
-                  initial={{ opacity: 0, x: 30 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5 }}
-                  viewport={{ once: true }}
-                  className="flex items-center px-4 py-1 border-2 border-white rounded-full"
-                >
-                  <a
-                    href="#"
-                    className="text-white text-sm sm:text-md relative group hover:text-[#FB9722] transition"
-                  >
-                    View all
-                  </a>
-                </motion.div>
-              </div>
-
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={10}
-                slidesPerView={1}
-                navigation
-                pagination={{ clickable: true }}
-                breakpoints={{
-                  400: { slidesPerView: 2, spaceBetween: 15 },
-                  768: { slidesPerView: 3, spaceBetween: 20 },
-                  1024: { slidesPerView: 4, spaceBetween: 25 },
-                  1280: { slidesPerView: 5, spaceBetween: 30 },
-                }}
-                className="swiper-container"
-              >
-                {movies1.map((movie) => (
-                  <SwiperSlide key={movie.id}>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      whileHover={{ scale: 1.05 }}
-                      transition={{ duration: 0.3 }}
-                      viewport={{ once: true }}
-                      className="relative group"
-                    >
-                      <Image
-                        src={movie.poster}
-                        alt={movie.title}
-                        width={300}
-                        height={400}
-                        className="xs:w-[180px] sm:w-[200px] md:[w-300px] lg:w-[300px] h-auto rounded-xl shadow-lg"
-                      />
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
-                      {/* Text Content */}
-                      <motion.div
-                        initial={{ opacity: 1, y: 10 }}
-                        whileHover={{ opacity: 1, y: 10 }}
-                        className="absolute inset-x-0 bottom-4 text-center px-2"
-                      >
-                        <h3 className="text-white text-sm sm:text-base font-semibold">
-                          {movie.title}
-                        </h3>
-                        <p className="text-gray-300 text-xs sm:text-sm">
-                          {movie.genre}
-                        </p>
-                        <span className="text-orange-500 text-sm sm:text-base font-medium">
-                          ★ 8.9
-                        </span>
-                      </motion.div>
-                    </motion.div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </motion.section>
-        )
+      <MovieSection title="Popular Movies" movies={popularMovies} />
+      <MovieSection title="Top Rated Movies" movies={topRatedMovies} />
+      {/* <MovieSection title="Watched Movies" movies={Watched Movies} /> */}
+      {APIProvider === "TMDB" && (
+        <MovieSection title="Tv Shows" movies={tvShows} />
       )}
     </div>
   );

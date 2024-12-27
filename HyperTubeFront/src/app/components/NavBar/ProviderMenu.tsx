@@ -52,7 +52,7 @@ const StyledMenu = styled((props: MenuProps) => (
   },
 }));
 
-export default function ProviderMenus() {
+export default function ProvidersMenu() {
   const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -75,13 +75,45 @@ export default function ProviderMenus() {
         disableElevation
         onClick={handleClick}
         endIcon={<KeyboardArrowDownIcon />}
+        sx={{
+          "&:hover": {
+            backgroundColor: "#FB9722",
+          },
+          width: "full",
+          height: "35px",
+          borderRadius: "5px",
+        }}
       >
-        API Providers
+        API Provider
       </Button>
       <StyledMenu
         id="demo-customized-menu"
         MenuListProps={{
           "aria-labelledby": "demo-customized-button",
+        }}
+        sx={{
+          "& .MuiMenu-list": {
+            padding: 0,
+            backgroundColor: "#1A202C",
+            color: "#FB9722",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
+            borderRadius: "5px",
+          },
+          "& .MuiMenuItem-root": {
+            "&:hover": {
+              backgroundColor: "#FB9722",
+            },
+            alignItems: "center",
+            display: "flex",
+            justifyContent: "center",
+          },
+          "& .MuiDivider-root": {
+            backgroundColor: "#fff",
+            width: "90%",
+            margin: "auto",
+          },
         }}
         anchorEl={anchorEl}
         open={open}

@@ -9,10 +9,8 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { elements } from "@/app/data/NavBarElements";
-import Router from "next/router";
-import { LuLogIn } from "react-icons/lu";
-import { AppRegistration } from "@mui/icons-material";
 import { MdMenu } from "react-icons/md";
+import ProvidersMenu from "./ProviderMenu";
 
 export default function MenuDrawer() {
   const [open, setOpen] = React.useState(false);
@@ -43,7 +41,7 @@ export default function MenuDrawer() {
           padding: "1rem",
         }}
       >
-        {elements.map((element, index) => (
+        {elements.map((element) => (
           <ListItem
             key={element.name}
             disablePadding
@@ -71,6 +69,18 @@ export default function MenuDrawer() {
             </ListItemButton>
           </ListItem>
         ))}
+        <ListItem
+          key={"Providers"}
+          disablePadding
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ProvidersMenu />
+        </ListItem>
       </List>
 
       <List>

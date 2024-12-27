@@ -2,11 +2,11 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
 export interface APIProviderState {
-  APIProvider: string | null;
+  APIProvider: string | "YTS";
 }
 
 const initialState: APIProviderState = {
-  APIProvider: null,
+  APIProvider: "YTS",
 };
 
 export const APIProviderSlice = createSlice({
@@ -14,10 +14,10 @@ export const APIProviderSlice = createSlice({
   initialState,
   reducers: {
     setAPIProvider: (state : any, action: PayloadAction<APIProviderState>) => {
-      state.APIProvider = action.payload;
+      state.APIProvider = action.payload.APIProvider;
     },
     deleteAPIProvider: (state : any) => {
-      state.APIProvider = null;
+      state.APIProvider = "YTS";
     },
   },
 });

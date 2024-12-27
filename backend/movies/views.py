@@ -48,9 +48,8 @@ def tmdb_movie_list(request):
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
-@csrf_exempt
-def yts_movie_search(request):
 
+@csrf_exempt
 def yts_movie_list(request):
     if request.method == "GET":
         try:
