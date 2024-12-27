@@ -15,8 +15,10 @@ def init_torrent_file(request):
         magnet_url = construct_magnet_link(torrent_hash, movie_name)
         if not magnet_url:
             return JsonResponse({'status': 'error', 'message': 'Magnet URL is required!'}, status=400)
+        if torrent_hash in streams:
+            return JsonResponse({'status': 'error', 'message': 'Torrent file already added!', 'stream_id': torrent_hash})
         ts = TorrentStream()
-        magnet_url = "magnet:?xt=urn:btih:96DCE3AEFFF1F881BC4953C89E13B8C823EB5C5C&dn=Gladiator+II+%282024%29+%5B720p%5D+%5BYTS.MX%5D&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Fopen.tracker.cl%3A1337%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce&tr=udp%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Fipv4.tracker.harry.lu%3A80%2Fannounce&tr=https%3A%2F%2Fopentracker.i2p.rocks%3A443%2Fannounce"
+
         ts.add_torrent(magnet_url)
         streams[torrent_hash] = ts
         print(f"====> Stream ID: {torrent_hash}")

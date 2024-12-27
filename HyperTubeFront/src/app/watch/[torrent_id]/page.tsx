@@ -27,14 +27,14 @@ export default async function Home({
   const torrentId = (await params).torrent_id;
 
   const torrentHash = "7D2E222138AEF25FFE38577E4CB9AD04E7D30356";
-  const movieName = "Oppenheimer";
+  const movieName = "Oppenheimer (2023) [720p] [YTS.MX]";
 
 
-  // const streamId = await initStream(torrentHash, movieName);
+  const streamId = await initStream(torrentHash, movieName);
 
   return (
     <div className="w-full h-screen flex justify-center items-center">
-      {true ? (
+      {streamId ? (
         <video controls>
           <source
             src={`http://localhost:8000/stream/?stream_id=${"7D2E222138AEF25FFE38577E4CB9AD04E7D30356"}`}
