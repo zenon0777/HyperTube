@@ -41,6 +41,7 @@ async def init_torrent_file(request):
 
 def stream_torrent(request):
     stream_id = request.GET.get('stream_id', None)
+    file_type = request.GET.get('file_type', 'mkv')
     if not stream_id:
         return JsonResponse({'status': 'error', 'message': 'stream_id is required!'}, status=400)
 
@@ -49,7 +50,6 @@ def stream_torrent(request):
     print(f"====> Stream: {ts}")
     if not ts:
         return JsonResponse({'status': 'error', 'message': 'Stream not found!'}, status=404)
-    data = ts.stream_torrent(vrange)
 
-    response = ts.create_response(data)
+    response = ts.create_response(vrange, file_type)
     return response
