@@ -26,10 +26,10 @@ export default async function Home({
 }) {
   const torrentId = (await params).torrent_id;
 
-  // const torrentHash = "7D2E222138AEF25FFE38577E4CB9AD04E7D30356";
-  // const movieName = "Oppenheimer (2023) [720p] [YTS.MX]";
-  const torrentHash = "96DCE3AEFFF1F881BC4953C89E13B8C823EB5C5C";
-  const movieName = "Gladiator II (2024) [720p] [WEBRip] [YTS.MX]";
+  const torrentHash = "7D2E222138AEF25FFE38577E4CB9AD04E7D30356";
+  const movieName = "Oppenheimer (2023) [720p] [YTS.MX]";
+  // const torrentHash = "96DCE3AEFFF1F881BC4953C89E13B8C823EB5C5C";
+  // const movieName = "Gladiator II (2024) [720p] [WEBRip] [YTS.MX]";
 
 
   const streamId = await initStream(torrentHash, movieName);

@@ -5,7 +5,6 @@ import time
 import os
 import ffmpeg
 
-
 SAVE_PATH = './_Movies'
 TORRENT_FILES_PATH = '/tmp/torrent_files'
 
@@ -95,7 +94,6 @@ class TorrentStream:
     def create_response(self, data):
         response = HttpResponse(data, content_type="video/mp4", status=206)
         self.end_byte = self.start_byte + len(data) - 1
-        print(f"====> Chunk size after: {len(data)}")
         print(
             f"====> Start byte: {self.start_byte} - End byte: {self.end_byte} - File size: {self.file_size}")
         response['Content-Range'] = f"bytes {self.start_byte}-{self.end_byte}/{self.file_size}"
@@ -106,8 +104,27 @@ class TorrentStream:
     def remove_stream(self):
         self.session.remove_torrent(self.handle)
 
-    async def convert_video(self):
+    def convert_video_to_mkv(self):
         print("====> Converting video to mkv...")
+        try:
+            while True:
+                status = self.handle.status()
+                print("====> Checking torrent status...", status.progress)
+                if status.progress == 1.0:
+                    print("====> Torrent finished downloading.")
+                    if not self.movie_path:
+                        print("====> Movie path not found.")
+                        return
+                    input_path = self.movie_path
+                    output_path = self.movie_path.replace(".mp4", ".mkv")
+                    ffmpeg.input(input_path).output(output_path).run()
+                    print("====> Video converted to mkv successfully.")
+                    return
+                time.sleep(1)
+        except ffmpeg.Error as e:
+            print(f"Error during conversion: {e.stderr.decode('utf-8')}")
+            raise
+            
 
     def __str__(self):
         return f"TorrentStream object with torrent file path: {self.torrent_info.files().file_path(0)}"

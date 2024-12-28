@@ -1,12 +1,12 @@
 # from django.shortcuts import Response
 from django.http import HttpResponse, JsonResponse
 from .services.stream import TorrentStream
-import json
 from .services.utils import construct_magnet_link
+import threading
 
 streams = {}
 
-def init_torrent_file(request):
+async def init_torrent_file(request):
     torrent_url = request.GET.get('torrent_url', None)
     torrent_hash = request.GET.get('torrent_hash', None)
     movie_name = request.GET.get('movie_name', None)
@@ -21,6 +21,10 @@ def init_torrent_file(request):
 
         ts.add_torrent(magnet_url)
         streams[torrent_hash] = ts
+        
+        # Start a new thread to convert the video to mkv format
+        thread = threading.Thread(target=ts.convert_video_to_mkv, daemon=True)
+        thread.start()
         print(f"====> Stream ID: {torrent_hash}")
         return JsonResponse({'status': 'success', 'message': 'Torrent file added successfully!', 'stream_id': torrent_hash})
     else:
