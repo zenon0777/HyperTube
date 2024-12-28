@@ -8,6 +8,12 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        geistSans: ['"Geist Sans"', 'sans-serif'],
+        geistMono: ['"Geist Mono"', 'monospace'],
+        praiseRegular: ['"Praise Regular"', 'cursive'],
+        Lemonada: ['"Lemonada"', 'cursive'],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
