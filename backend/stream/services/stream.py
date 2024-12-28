@@ -41,8 +41,7 @@ class TorrentStream:
             print(
                 f"Failed to download the torrent. Status code: {response.status_code}")
 
-    def add_torrent(self, magnet_link):
-        print(f"====> Adding torrent from: {self.torrent_file_path}")
+    def add_torrent(self, magnet_link=None):
         if magnet_link:
             print(f"====> Adding torrent from magnet link: {magnet_link}")
             params = lt.parse_magnet_uri(magnet_link)
@@ -53,7 +52,7 @@ class TorrentStream:
             print(f"====> Adding torrent from file: {self.torrent_file_path}")
             self.torrent_info = lt.torrent_info(self.torrent_file_path)
             self.handle = self.session.add_torrent(
-                {'ti': self.torrent_info, 'save_path': SAVE_PATH, 'storage_mode': lt.storage_mode_t.storage_mode_sparse})
+                {'ti': self.torrent_info, 'save_path': SAVE_PATH, 'storage_mode': lt.storage_mode_t.storage_mode_allocate})
 
         print("====> Waiting for metadata...")
         while not self.handle.status().has_metadata:
