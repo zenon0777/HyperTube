@@ -1,4 +1,6 @@
 from urllib.parse import quote
+import subprocess
+import os
 
 trackers = [
     "udp://open.demonii.com:1337/announce",
@@ -20,3 +22,29 @@ def construct_magnet_link(torrent_hash: str, movie_name: str) -> str:
     tr_params = "&".join(f"tr={tracker}" for tracker in trackers)
 
     return f"{base_url}{xt_param}&{dn_param}&{tr_params}"
+
+def convert_mp4_to_mkv(input_path: str, output_path: str) -> bool:
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+    
+    if output_path is None:
+        output_path = os.path.splitext(input_path)[0] + '.mkv'
+    
+    try:
+        command = [
+            'ffmpeg',
+            '-i', input_path,
+            '-c', 'copy',
+            '-y',
+            output_path
+        ]
+        
+        subprocess.run(command, check=True, capture_output=True, text=True)
+
+        if os.path.exists(output_path):
+            return True
+        return False
+        
+    except subprocess.CalledProcessError as e:
+        print(f"FFmpeg error: {e.stderr}")
+        return False

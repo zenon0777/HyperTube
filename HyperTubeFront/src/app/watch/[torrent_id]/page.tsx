@@ -39,8 +39,8 @@ export default async function Home({
       {streamId ? (
         <video controls>
           <source
-            src={`http://localhost:8000/stream/?stream_id=${streamId}`}
-            type="video/mp4"
+            src={`/mkv_video_test.mkv`}
+            type="video/webm"
           />
           Your browser does not support the video tag.
         </video>
