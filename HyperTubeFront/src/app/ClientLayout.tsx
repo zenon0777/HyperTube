@@ -31,7 +31,6 @@ export default function ClientLayout({
       />
       <Provider store={store}>
         <main className="relative max-w-[1500px] mx-auto justify-center w-dvw px-4">
-        <main className="relative w-full mx-auto justify-center">
           <motion.header
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
