@@ -6,14 +6,17 @@ import Footer from "./components/Footer/Footer";
 import NavBar from "./components/NavBar/NavBar";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function ClientLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const queryClient = new QueryClient();
   return (
     <main className="min-h-screen flex flex-col overflow-hidden">
+      <QueryClientProvider client={queryClient}>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -28,6 +31,7 @@ export default function ClientLayout({
       />
       <Provider store={store}>
         <main className="relative max-w-[1500px] mx-auto justify-center w-dvw px-4">
+        <main className="relative w-full mx-auto justify-center">
           <motion.header
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -40,6 +44,7 @@ export default function ClientLayout({
         </main>
       </Provider>
       <Footer />
+      </QueryClientProvider>
     </main>
   );
 }
