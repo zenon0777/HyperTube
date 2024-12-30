@@ -1,2 +1,0 @@
- {/* Movies Section with Swiper */}
- 
