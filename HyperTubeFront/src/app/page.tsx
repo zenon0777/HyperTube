@@ -1,12 +1,20 @@
 "use client";
+import { motion } from "framer-motion";
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import Image from "next/image";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { MovieSection } from "./components/MovieSection/MovieSection";
+import { genres } from "./data/NavBarElements";
+import { RootState } from "./store";
+import { Info } from "@mui/icons-material";
 
-const movies = [
+const movies1 = [
   {
     id: 1,
     title: "Spider-Man: No Way Home",
@@ -20,312 +28,247 @@ const movies = [
   },
   {
     id: 2,
-    title: "Avengers: Endgame",
-    year: 2019,
-    duration: "3 hours 2 minutes",
+    title: "DAIFI-2: No Way Home",
+    year: 2021,
+    duration: "2 hours 28 minutes",
     genre: "Sci-fi, Action",
     description:
-      "The Avengers assemble once more to reverse the destruction caused by Thanos and restore balance to the universe.",
+      "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
     background: "/imk.jpeg",
     poster: "/imk.jpeg",
   },
   {
     id: 3,
-    title: "DAIFI: Endgame",
-    year: 2019,
-    duration: "3 hours 2 minutes",
+    title: "DAIFI-3: No Way Home",
+    year: 2021,
+    duration: "2 hours 28 minutes",
     genre: "Sci-fi, Action",
     description:
-      "The DAIFI assemble once more to reverse the destruction caused by Thanos and restore balance to the universe.",
+      "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
     background: "/imk.jpeg",
     poster: "/imk.jpeg",
   },
+
+  // Add other movies here...
 ];
 
 export default function Home() {
+  const [movies, setMovies] = useState([]);
+  const APIProvider = useSelector(
+    (state: RootState) => state.APIProviderSlice.APIProvider
+  );
+  const [popularMovies, setPopularMovies] = useState([]);
+  const [watchedMovies, setWatchedMovies] = useState([]);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [tvShows, setTvShows] = useState([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
+
+  useEffect(() => {
+    const getTMDBFiltredMovies = async () => {
+      try {
+        let baseUrl = `http://0.0.0.0:8000/movies/tmdb_movie_list`;
+        let popularMoviesUrl = baseUrl + "?popular";
+        popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
+        let topRatedMoviesUrl = baseUrl + "?top_rated";
+        topRatedMoviesUrl += "?language=en-US&page=1&include_adult=false";
+        let NowPlayingMoviesUrl =
+          baseUrl +
+          "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
+        const response = await fetch(popularMoviesUrl);
+        const data = await response.json();
+        console.log("Popular movies : --------> ", data.movies?.results);
+        setPopularMovies(data.movies?.results);
+        const response2 = await fetch(topRatedMoviesUrl);
+        const data2 = await response2.json();
+        console.log("Top Rated movies : --------> ", data2.movies?.results);
+        setTopRatedMovies(data2.movies?.results);
+        const response3 = await fetch(NowPlayingMoviesUrl);
+        const data3 = await response3.json();
+        console.log("Now Playing movies : --------> ", data3.movies?.results);
+        setNowPlayingMovies(data3.movies?.results);
+        setMovies(data.movies?.results);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
+    const getTrendingTvShows = async () => {
+      try {
+        let baseUrl = `http://0.0.0.0:8000/movies/trending_tv_shows?&language=en-US&page=1`;
+        const response = await fetch(baseUrl);
+        const data = await response.json();
+        console.log("Tv Shows : -----> :: ", data);
+        setTvShows(data.tv_shows.results);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
+    const getYTSFiltredMovies = async () => {
+      try {
+        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=1&limit=15`;
+        let PopularMoviesUrl = baseUrl;
+        let topRatedMoviesUrl = baseUrl;
+        topRatedMoviesUrl += "&sort_by=rating&order_by=desc";
+        PopularMoviesUrl += "&sort_by=download_count&order_by=desc";
+        let nowPlayingMoviesUrl = baseUrl;
+        nowPlayingMoviesUrl += "&sort_by=date_added&order_by=desc";
+        const response = await fetch(PopularMoviesUrl);
+        const data = await response.json();
+        console.log("Popular : --------> ", data);
+        setPopularMovies(data.data?.movies);
+        const response2 = await fetch(topRatedMoviesUrl);
+        const data2 = await response2.json();
+        console.log("Top Rated : --------> ", data2);
+        setTopRatedMovies(data2.data?.movies);
+        const response3 = await fetch(nowPlayingMoviesUrl);
+        const data3 = await response3.json();
+        console.log("Now Playing : --------> ", data3);
+        setNowPlayingMovies(data3.data?.movies);
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
+    APIProvider === "TMDB" ? getTMDBFiltredMovies() : getYTSFiltredMovies();
+    APIProvider === "TMDB" && getTrendingTvShows();
+    console.log("APIProvider : --------> :: ", APIProvider);
+  }, [APIProvider]);
+
   return (
-    <main className="min-h-screen bg-black justify-center items-center flex">
-      <div className="relative min-h-screen max-w-[1500px] bg-gray-900 text-white w-full justify-center items-center ">
-        <header className=" absolute top-0 left-0 w-full px-8 py-4 flex justify-between items-center bg-transparent z-50">
-          <nav className="w-full px-8 py-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <Image src="/logo.svg" alt="Z-Tube Logo" width={40} height={40} />
-              <span className="text-xl font-semibold font-praiseRegular">
-                Z-Tube
-              </span>
-            </div>
-            <div className="flex items-center gap-8">
-              <input
-                type="text"
-                placeholder="Search"
-                className="bg-gray-800 bg-opacity-50 text-white px-4 py-2 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-              <a href="#" className="relative text-white group">
-                Home
-                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-l from-orange-500 to-yellow-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </a>
-              <a href="#" className="relative text-white group">
-                Movies
-                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-l from-orange-500 to-yellow-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </a>
-              <a href="#" className="relative text-white group">
-                Series
-                <span className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-l from-orange-500 to-yellow-500 scale-x-0 origin-left transition-transform duration-300 group-hover:scale-x-100"></span>
-              </a>
-              <button className="px-4 py-2 border border-white rounded-full hover:bg-white hover:text-black transition">
-                Sign in
-              </button>
-              <button className="px-4 py-2 bg-orange-500 rounded-full hover:bg-orange-600 transition">
-                Register
-              </button>
-            </div>
-          </nav>
-        </header>
-
-        {/* Swiper for Movies with Full-Page Background */}
-        <div className="relative h-[800px]">
-          <Swiper
-            modules={[Navigation, Pagination]}
-            navigation={false}
-            pagination={{ clickable: true }}
-            style={{ "--swiper-pagination-color": "#FB9722" }}
-            slidesPerView={1}
-            spaceBetween={20}
-            className="h-full swiper-container"
-          >
-            {movies.map((movie, index) => (
-              <SwiperSlide key={index}>
-                <div
-                  className="relative h-full flex items-center bg-cover bg-center text-white"
-                  style={{
-                    backgroundImage: `url(${movie.background})`,
-                  }}
-                >
-                  {/* Enhanced shadow effect on the left and right edges */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
-                  <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-black to-transparent opacity-70"></div>
-                  <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-black to-transparent opacity-70"></div>
-
-                  <div className="relative z-10 container mx-auto px-8 flex flex-col md:flex-row items-center gap-10">
-                    <div className="max-w-lg">
-                      <h1 className="text-6xl font-Lemonada font-bold mb-4">
-                        {movie.title}
-                      </h1>
-                      <p className="text-lg text-gray-300 mb-6">
-                        {movie.description}
-                      </p>
-                      <div className="flex gap-4">
-                        <button className="px-6 py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition">
-                          Watch now
-                        </button>
-                        <button className="px-6 py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-gray-200 hover:text-black transition">
-                          Watch trailer
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex-shrink-0">
-                      <Image
-                        src={movie.poster}
-                        alt={`${movie.title} Poster`}
-                        width={300}
-                        height={450}
-                        className="rounded-lg shadow-lg"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-
-        <div className="justify-center items-center flex-row">
-          <section id="Popular movies" className="bg-black py-12">
-            <div className="container mx-auto px-8">
-              <div className="flex justify-between items-start mb-4 h-20 ">
-                <h2 className="text-4xl text-[#A7B5BE] font-Lemonada font-semibold">
-                  Popular Movies
-                </h2>
-                <div className="flex items-center px-4 py-1 border-2 border-white rounded-full">
-                  <a
-                    href="#"
-                    className="text-white relative group text-md hover:text-[#FB9722]"
-                  >
-                    View all
-                  </a>
-                </div>
-              </div>
-
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={20}
-                slidesPerView={1}
-                navigation
-                pagination={{ clickable: true }}
-                breakpoints={{
-                  640: { slidesPerView: 2 },
-                  768: { slidesPerView: 3 },
-                  1024: { slidesPerView: 4 },
+    <div className="min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
+      <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
+        {/* latest movies */}
+        <Swiper
+          modules={[Navigation, Pagination]}
+          navigation={false}
+          pagination={{ clickable: true }}
+          style={
+            { "--swiper-pagination-color": "#FB9722" } as React.CSSProperties
+          }
+          slidesPerView={1}
+          spaceBetween={20}
+          className="h-full swiper-container"
+        >
+          {nowPlayingMovies?.map((movie: any, index: number) => (
+            <SwiperSlide key={index}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="relative h-full flex items-center bg-cover bg-center text-white"
+                style={{
+                  backgroundImage: `url(${
+                    (movie.backdrop_path &&
+                      `https://image.tmdb.org/t/p/original${movie.backdrop_path}`) ||
+                    (movie.medium_cover_image && movie.medium_cover_image) ||
+                    `https://via.placeholder.com/1920x1080?text=${movie.title}`
+                  })`,
                 }}
-                className="swiper-container"
               >
-                {movies.map((movie) => (
-                  <SwiperSlide key={movie.id}>
-                    <div className="relative group">
-                      <Image
-                        src={movie.poster}
-                        alt={movie.title}
-                        width={300}
-                        height={400}
-                        className="w-[300px] h-[400px] rounded-3xl shadow-lg transition duration-300 transform group-hover:scale-105"
-                      />
-                      <div className="inset-0 rounded-lg opacity-1 transition duration-300 flex-col justify-start items-center">
-                        <h3 className="text-white text-xl font-semibold">
-                          {movie.title}
-                        </h3>
-                        <h4 className="text-gray-300 text-sm  py-1 rounded-full">
-                          {movie.genre}
-                        </h4>
-                        <h4 className="text-white text-sm font-semibold bg-orange-500 rounded-full text-center w-12">
-                          {movie.year}
-                        </h4>
-                        {/* review */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-orange-500">★</span>
-                          <span className="text-white">8.9</span>
-                        </div>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </section>
-          <section id="Watched movies" className="bg-black py-12 ">
-            <div className="container mx-auto px-8">
-              <div className="flex justify-between items-start mb-4 h-20 ">
-                <h2 className="text-4xl text-[#A7B5BE] font-Lemonada font-bold-700">
-                  Watched Movies
-                </h2>
-                <div className="flex items-center px-4 py-1 border-2 border-white rounded-full">
-                  <a
-                    href="#"
-                    className="text-white relative group text-md hover:text-[#FB9722]"
-                  >
-                    View all
-                  </a>
-                </div>
-              </div>
+                {/* Existing Gradient Overlays */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
+                <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-r from-black to-transparent opacity-70"></div>
+                <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-l from-black to-transparent opacity-70"></div>
 
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={20}
-                slidesPerView={1}
-                navigation
-                pagination={{ clickable: true }}
-                breakpoints={{
-                  640: { slidesPerView: 2 },
-                  768: { slidesPerView: 3 },
-                  1024: { slidesPerView: 4 },
-                }}
-                className="swiper-container"
-              >
-                {movies.map((movie) => (
-                  <SwiperSlide key={movie.id}>
-                    <div className="relative group">
-                      <Image
-                        src={movie.poster}
-                        alt={movie.title}
-                        width={300}
-                        height={400}
-                        className="w-[300px] h-[400px] rounded-3xl shadow-lg transition duration-300 transform group-hover:scale-105"
-                      />
-                      <div className="inset-0 rounded-lg opacity-1 transition duration-300 flex-col justify-start items-center">
-                        <h3 className="text-white text-xl font-semibold">
-                          {movie.title}
-                        </h3>
-                        <h4 className="text-gray-300 text-sm  py-1 rounded-full">
-                          {movie.genre}
-                        </h4>
-                        <h4 className="text-white text-sm font-semibold bg-orange-500 rounded-full text-center w-12">
-                          {movie.year}
-                        </h4>
-                        {/* review */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-orange-500">★</span>
-                          <span className="text-white">8.9</span>
-                        </div>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </section>
-          <section id="Top rated movies" className="bg-black py-12 ">
-            <div className="container mx-auto px-8">
-              <div className="flex justify-between items-start mb-4 h-20 ">
-                <h2 className="text-4xl text-[#A7B5BE] font-Lemonada font-bold-700">
-                  Top Rated Movies
-                </h2>
-                <div className="flex items-center px-4 py-1 border-2 border-white rounded-full">
-                  <a
-                    href="#"
-                    className="text-white relative group text-md hover:text-[#FB9722]"
+                {/* Movie Details with Staggered Animations */}
+                <div className="relative z-10 container justify-center px-4 sm:px-8 flex flex-col md:flex-row items-center gap-6 md:gap-11 w-5/6">
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.3,
+                      ease: "easeOut",
+                    }}
+                    className="w-full md:w-1/2"
                   >
-                    View all
-                  </a>
+                    <motion.h1
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                      className="text-4xl sm:text-5xl lg:text-6xl font-Lemonada font-bold mb-4 animate-pulse-slow"
+                    >
+                      {movie.title}
+                    </motion.h1>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      className="text-base sm:text-lg w-96 md:w-full text-gray-300 mb-6 animate-fade-in-up"
+                    >
+                      {(movie.summary && movie.summary) ||
+                        (movie.overview && movie.overview)}
+                    </motion.p>
+                    <motion.p
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                      className="text-base sm:text-lg w-96 md:w-full text-gray-300 mb-6 animate-fade-in-up"
+                    >
+                      {movie.release_date?.split("-")[0] || movie.year} |{" "}
+                      {movie.genres?.map((genre: string) => genre).join(", ") ||
+                        movie.genre_ids
+                          .map((id: number) => {
+                            const genre = genres.find(
+                              (genre: any) => genre.id === id
+                            );
+                            return genre?.name;
+                          })
+                          .join(", ")}{" "}
+                      |{" "}
+                      {movie.rating
+                        ? movie.rating
+                        : Number(movie.vote_average).toFixed(1)}
+                    </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                      className="flex gap-4"
+                    >
+                      <button className="px-5 sm:px-6 py-2 sm:py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition transform hover:scale-105 active:scale-95">
+                        Watch now
+                      </button>
+                      <button className="px-5 sm:px-6 py-2 sm:py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-gray-200 hover:text-black transition transform hover:scale-105 active:scale-95">
+                        Details <Info />
+                      </button>
+                    </motion.div>
+                  </motion.div>
+                  <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.5,
+                      ease: "easeOut",
+                    }}
+                    className="hidden md:flex"
+                  >
+                    <Image
+                      src={
+                        (movie.large_cover_image && movie.large_cover_image) ||
+                        (movie.poster_path &&
+                          `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
+                        `https://via.placeholder.com/300x450?text=${movie.title}`
+                      }
+                      alt={`${movie.title} Poster`}
+                      width={300}
+                      height={450}
+                      priority={true}
+                      className="rounded-xl shadow-2xl shadow-black hover:scale-105 transition-transform duration-300"
+                    />
+                  </motion.div>
                 </div>
-              </div>
-
-              <Swiper
-                modules={[Navigation, Pagination]}
-                spaceBetween={20}
-                slidesPerView={1}
-                navigation
-                pagination={{ clickable: true }}
-                breakpoints={{
-                  640: { slidesPerView: 2 },
-                  768: { slidesPerView: 3 },
-                  1024: { slidesPerView: 4 },
-                }}
-                className="swiper-container"
-              >
-                {movies.map((movie) => (
-                  <SwiperSlide key={movie.id}>
-                    <div className="relative group">
-                      <Image
-                        src={movie.poster}
-                        alt={movie.title}
-                        width={300}
-                        height={400}
-                        className="w-[300px] h-[400px] rounded-3xl shadow-lg transition duration-300 transform group-hover:scale-105"
-                      />
-                      <div className="inset-0 rounded-lg opacity-1 transition duration-300 flex-col justify-start items-center">
-                        <h3 className="text-white text-xl font-semibold">
-                          {movie.title}
-                        </h3>
-                        <h4 className="text-gray-300 text-sm  py-1 rounded-full">
-                          {movie.genre}
-                        </h4>
-                        <h4 className="text-white text-sm font-semibold bg-orange-500 rounded-full text-center w-12">
-                          {movie.year}
-                        </h4>
-                        {/* review */}
-                        <div className="flex items-center gap-2">
-                          <span className="text-orange-500">★</span>
-                          <span className="text-white">8.9</span>
-                        </div>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </div>
-          </section>
-        </div>
+              </motion.div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
-    </main>
+
+      <MovieSection title="Popular Movies" movies={popularMovies} />
+      <MovieSection title="Top Rated Movies" movies={topRatedMovies} />
+      {/* <MovieSection title="Watched Movies" movies={Watched Movies} /> */}
+      {APIProvider === "TMDB" && (
+        <MovieSection title="Tv Shows" movies={tvShows} />
+      )}
+    </div>
   );
 }
