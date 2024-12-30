@@ -78,7 +78,6 @@ AUTH_PASSWORD_VALIDATORS = [
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=["http://localhost:3000"])
 CORS_ORIGIN_ALLOW_ALL = True
 
-ALLOWED_HOSTS = ['http://localhost:3000', "localhost"]
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

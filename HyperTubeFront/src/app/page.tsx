@@ -1,4 +1,5 @@
 "use client";
+import { Info } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -12,45 +13,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { MovieSection } from "./components/MovieSection/MovieSection";
 import { genres } from "./data/NavBarElements";
 import { RootState } from "./store";
-import { Info } from "@mui/icons-material";
-
-const movies1 = [
-  {
-    id: 1,
-    title: "Spider-Man: No Way Home",
-    year: 2021,
-    duration: "2 hours 28 minutes",
-    genre: "Sci-fi, Action",
-    description:
-      "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
-    background: "/imk.jpeg",
-    poster: "/imk.jpeg",
-  },
-  {
-    id: 2,
-    title: "DAIFI-2: No Way Home",
-    year: 2021,
-    duration: "2 hours 28 minutes",
-    genre: "Sci-fi, Action",
-    description:
-      "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
-    background: "/imk.jpeg",
-    poster: "/imk.jpeg",
-  },
-  {
-    id: 3,
-    title: "DAIFI-3: No Way Home",
-    year: 2021,
-    duration: "2 hours 28 minutes",
-    genre: "Sci-fi, Action",
-    description:
-      "Peter Parker seeks Doctor Strange's help to make people forget about his identity, but things take a wild turn.",
-    background: "/imk.jpeg",
-    poster: "/imk.jpeg",
-  },
-
-  // Add other movies here...
-];
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
