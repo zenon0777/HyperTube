@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
       }, {
         protocol: 'https',
         hostname: 'fakeimg.pl'
+      }, {
+        protocol: 'https',
+        hostname: "via.placeholder.com"
       }
     ],
   },

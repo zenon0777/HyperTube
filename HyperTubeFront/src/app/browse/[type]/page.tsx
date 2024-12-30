@@ -9,10 +9,9 @@ import {
 } from "@mui/icons-material";
 import { Chip } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import MoviesList from "./components/MovieList";
-import { useSelector } from "react-redux";
-import { RootState } from "@/app/store";
 
 export interface categoryOptions {
   id: string;
@@ -29,7 +28,8 @@ export interface activeFilters {
 
 export default function Browse() {
   const APIProvider = useSelector(
-    (state: any) => state.APIProviderSlice.APIProvider);
+    (state: any) => state.APIProviderSlice.APIProvider
+  );
   const [hoveredMovie, setHoveredMovie] = useState<number | null>(null);
   const [movies, setMovies] = useState<any>([]);
   const [page, setPage] = useState<number>(1);
@@ -56,7 +56,6 @@ export default function Browse() {
   const qualityOptions = ["480p", "720p", "1080p", "2160p"];
   const yearOptions = ["2020", "2021", "2022", "2023", "2024"];
   const orderOptions = ["Ascending", "descending"];
-  const providerOptions = ["TMDB", "YTS"];
 
   useEffect(() => {
     const getGenres = async () => {
@@ -133,7 +132,11 @@ export default function Browse() {
 
   useEffect(() => {
     console.log("Provider ID : ===> : ", APIProvider);
-  }, [activeFilters]);
+    setActiveFilters((prev) => ({
+      ...prev,
+      provider: APIProvider,
+    }));
+  }, [APIProvider]);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
@@ -144,12 +147,7 @@ export default function Browse() {
 
   const toggleFilter = (type: string, value: any) => {
     setActiveFilters((prev) => {
-      if (
-        type === "quality" ||
-        type === "years" ||
-        type === "orderBy" ||
-        type === "provider"
-      ) {
+      if (type === "quality" || type === "years" || type === "orderBy") {
         return {
           ...prev,
           [type]: prev[type] === value ? null : value,
@@ -182,43 +180,6 @@ export default function Browse() {
     <div className="min-h-screen max-w-[1500px] mx-auto text-white w-full flex flex-col mt-32">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-6 py-8">
         <div className="w-full space-y-6 sticky top-20">
-          <div className="bg-[#1e1e1e] rounded-2xl shadow-lg overflow-hidden">
-            <div
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors group"
-              onClick={() => toggleSection("provider")}
-            >
-              <div className="flex items-center space-x-2">
-                <FilterList className="text-orange-500 group-hover:rotate-45 transition-transform" />
-                <h2 className="text-lg font-semibold">Provider</h2>
-              </div>
-              {openSections.provider ? (
-                <Remove className="text-orange-500" />
-              ) : (
-                <Add className="text-orange-500" />
-              )}
-            </div>
-
-            {openSections.provider && (
-              <div className="p-4 space-y-2">
-                <div className="flex flex-wrap gap-2">
-                  {providerOptions.map((provider) => (
-                    <Chip
-                      key={provider}
-                      label={provider}
-                      variant={
-                        activeFilters.provider === provider
-                          ? "filled"
-                          : "outlined"
-                      }
-                      color="error"
-                      onClick={() => toggleFilter("provider", provider)}
-                      className="transition-all duration-300 ease-in-out"
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
           {/* Quality Filter */}
           {activeFilters.provider === "YTS" && (
             <div className="bg-[#1e1e1e] rounded-2xl shadow-lg overflow-hidden">
@@ -260,7 +221,6 @@ export default function Browse() {
             </div>
           )}
 
-          {/* Release Year Filter */}
           <div className="bg-[#1e1e1e] rounded-2xl shadow-lg overflow-hidden">
             <div
               className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors group"
@@ -297,7 +257,6 @@ export default function Browse() {
             )}
           </div>
 
-          {/* Order By Filter */}
           <div className="bg-[#1e1e1e] rounded-2xl shadow-lg overflow-hidden">
             <div
               className="flex items-center justify-between p-4 cursor-pointer hover:bg-[#2a2a2a] transition-colors group"
