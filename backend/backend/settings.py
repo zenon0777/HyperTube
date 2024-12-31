@@ -4,6 +4,8 @@ import environ
 # Initialize environment variables
 env = environ.Env()
 environ.Env.read_env()
+import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
@@ -21,7 +23,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    'movies',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'storages',
+    'users',
     'movies',
     'stream',
 ]
@@ -91,3 +96,62 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# Authentication settings
+AUTH_USER_MODEL = 'users.User'
+
+SIMPLE_JWT = {
+   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
+   'REFRESH_TOKEN_LIFETIME': timedelta(minutes=4),
+   'SIGNING_KEY': env('JWT_SIGNING_KEY', default='key-not-found'),
+}
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.authentication.CustomJWTAuthentication',
+    ),
+
+	'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+
+FRONTEND_URL= env('FRONTEND_URL', default='http://localhost:3000')
+
+# Email settings
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_POST = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='key-not-found')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='key-not-found')
+DEFAULT_FROM_EMAIL = env('EMAIL_HOST_USER', default='key-not-found')
+
+
+# AWS S3 settings
+
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = env('SPACES_ACCESS_ID', default='key-not-found')
+AWS_SECRET_ACCESS_KEY = env('SPACES_SECRET_ACCESS', default='key-not-found')
+AWS_STORAGE_BUCKET_NAME = env('SPACES_BUCKET', default='key-not-found')
+AWS_S3_ENDPOINT_URL = env('SPACES_ENDPOINT', default='key-not-found')
+AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+AWS_DEFAULT_ACL = 'public-read'
+AWS_S3_REGION_NAME = 'nyc3'
