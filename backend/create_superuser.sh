@@ -3,7 +3,7 @@
 # Set default values
 USERNAME="admin"
 EMAIL="admin@example.com"
-PASSWORD="admin1337"
+PASSWORD="addmin1337"
 
 # Allow optional arguments for username, email, and password
 while getopts u:e:p: flag
