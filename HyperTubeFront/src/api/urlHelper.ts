@@ -1,0 +1,1 @@
+export const GET_MOVIE_DETAILS = 'http://0.0.0.0:8000/movies/movie_detail';

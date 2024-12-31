@@ -6,14 +6,17 @@ import Footer from "./components/Footer/Footer";
 import NavBar from "./components/NavBar/NavBar";
 import { Provider } from "react-redux";
 import { store } from "./store";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function ClientLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const queryClient = new QueryClient();
   return (
     <main className="min-h-screen flex flex-col overflow-hidden">
+      <QueryClientProvider client={queryClient}>
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -40,6 +43,7 @@ export default function ClientLayout({
         </main>
       </Provider>
       <Footer />
+      </QueryClientProvider>
     </main>
   );
 }

@@ -4,6 +4,8 @@ import Image from "next/image";
 import React from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { useRouter } from 'next/navigation';
+
 export const MovieSection = ({
   title,
   movies,
@@ -11,6 +13,13 @@ export const MovieSection = ({
   title: string;
   movies: any[];
 }) => {
+  const router = useRouter();
+  const handleMovieClick = (movieId: string) => {
+    if (typeof window !== "undefined") {
+      router.push(`/browse/movie/${movieId}`);
+    }
+  };
+
   return (
     <motion.section
       initial={{ opacity: 0, y: 50 }}
@@ -87,7 +96,10 @@ export const MovieSection = ({
                   priority
                   className="xs:w-[180px] sm:w-[200px] md:[w-300px] lg:w-[300px] h-auto rounded-xl shadow-lg"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-1 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-1 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
+                  onClick={() => handleMovieClick(movie?.id)}
+                ></div>
                 <motion.div
                   initial={{ opacity: 1, y: 10 }}
                   whileHover={{ opacity: 1, y: 10 }}

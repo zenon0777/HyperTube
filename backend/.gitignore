@@ -87,3 +87,8 @@ local_settings.py
 .vscode/
 .env
 db.sqlite3
+
+_Movies
+
+.vscode
+.idea

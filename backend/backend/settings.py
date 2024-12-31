@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'storages',
     'users',
     'movies',
+    'stream',
 ]
 
 MIDDLEWARE = [
@@ -80,6 +81,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 CORS_ALLOWED_ORIGINS = env.list('CORS_ALLOWED_ORIGINS', default=["http://localhost:3000"])
+CORS_ORIGIN_ALLOW_ALL = True
+
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
