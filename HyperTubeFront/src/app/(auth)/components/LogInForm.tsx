@@ -5,6 +5,9 @@ import { User, Lock, Film, ArrowRight, Github, Twitter, Chrome } from 'lucide-re
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { authService } from '@/lib/auth';
+import { getUserProfile } from '@/app/store/userSlice';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/app/store';
 
 interface FormInputEvent extends React.ChangeEvent<HTMLInputElement> { }
 
@@ -16,25 +19,27 @@ export const LogInForm = () => {
 		password: '',
 	});
 
+	const dispatch = useDispatch<AppDispatch>();
 	const router = useRouter();
-
+	
 	const handleChange = (e: FormInputEvent) => {
 		setFormData(prev => ({
 			...prev,
 			[e.target.name]: e.target.value
 		}));
 	};
-
+	
 	const handleOAuthLogin = (provider: string) => {
 		window.location.href = `http://localhost:8000/auth/${provider}/`;
 	};
-
+	
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setIsLoading(true);
 
 		try {
 			await authService.login(formData);
+			await dispatch(getUserProfile()).unwrap();
 			router.push('/');
 		} catch (error) {
 			console.error('Login error:', error);
