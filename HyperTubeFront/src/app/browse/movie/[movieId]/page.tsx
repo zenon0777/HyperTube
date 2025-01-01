@@ -6,6 +6,8 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { MdOutlineFavorite } from "react-icons/md";
+import { Alert, AlertTitle } from "@mui/material";
+import Comments from "@/app/components/Comments/Comments";
 
 
 
@@ -13,12 +15,45 @@ export default function Movie() {
     const APIProvider = useSelector(
         (state: any) => state.APIProviderSlice.APIProvider);
     const { movieId } = useParams();
-    const details = movieId ? getMovieDetails(movieId) : null;
+    const details = movieId ? getMovieDetails(movieId, APIProvider == 'YTS' ? 'yts' : 'tmdb') : null;
     console.log(details?.data);
     console.log(details?.isLoading)
     console.log(details?.isError)
+    if (details?.isLoading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (details?.isError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Alert variant="destructive" className="max-w-lg">
+                    <AlertTitle>Error Loading Movie</AlertTitle>
+                    <AlertDescription>
+                        Unable to fetch movie details. Please try again later.
+                    </AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
+
+    if (!details?.data?.movie) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Alert className="max-w-lg">
+                    <AlertTitle>Movie Not Found</AlertTitle>
+                    <AlertDescription>
+                        The requested movie could not be found.
+                    </AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
     return (
-        <div className="min-h-screen max-w-[1500px] mx-auto text-white w-full flex flex-col">
+        <div className="min-h-screen max-w-[1500px] mx-auto text-white w-full flex flex-col overflow-auto">
             <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -128,6 +163,7 @@ export default function Movie() {
                     </div>
                 </motion.div>
             </div>
+            <Comments />
         </div>
     );
 }
