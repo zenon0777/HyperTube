@@ -35,6 +35,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${PraiseRegular.variable} antialiased bg-black`}
       >
+        {/*
+          FIXME: Remove ClientLayout from displaying globally
+          Should NOT appear on Login and Register pages
+          */}
         <ClientLayout children={children} />
       </body>
     </html>
