@@ -57,6 +57,20 @@ class UserRegistrationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserProfileView(APIView):
+
+    def get(self, request):
+        user = request.user
+
+        user_profile_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'profile_picture': user.profile_picture_url if hasattr(user, 'profile_picture_url') and user.profile_picture_url else None
+        }
+
+        return Response(user_profile_data, status=status.HTTP_200_OK)
+    
 
 class UserLoginView(APIView):
     permission_classes = (AllowAny,)
