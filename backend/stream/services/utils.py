@@ -1,6 +1,7 @@
 from urllib.parse import quote
 import subprocess
 import os
+from crontab import CronTab
 
 trackers = [
     "udp://open.demonii.com:1337/announce",
@@ -48,3 +49,13 @@ def convert_mp4_to_mkv(input_path: str, output_path: str) -> bool:
     except subprocess.CalledProcessError as e:
         print(f"FFmpeg error: {e.stderr}")
         return False
+
+def create_cron_tap(folder_name: str):
+    my_cron = CronTab(user='mbenkhat')
+    job = my_cron.new(command='echo test > test.txt')
+    job.day.every(1)
+    my_cron.write()
+    job.clear()
+
+if __name__ == '__main__':
+    create_cron_tap('')

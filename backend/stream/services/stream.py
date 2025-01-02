@@ -11,10 +11,6 @@ TORRENT_FILES_PATH = '/tmp/torrent_files'
 
 class TorrentStream:
     def __init__(self):
-        """
-        Initialize the TorrentStream object, creating necessary paths
-        and starting a libtorrent session.
-        """
         os.makedirs(TORRENT_FILES_PATH, exist_ok=True)
         self.torrent_file_path = None
         self.session = lt.session()
@@ -86,7 +82,6 @@ class TorrentStream:
         self.file_size = files.file_size(0)
         self.piece_size = self.torrent_info.piece_length()
 
-        # Read the first piece to start download
         self.handle.read_piece(0)
         print(f"====> File path: {self.file_path}")
         print(f"====> File size: {self.file_size}")
@@ -174,16 +169,16 @@ class TorrentStream:
         chunk_size = (end_byte - start_byte) + 1
         return self._read_file_chunk(self.mkv_file_path, start_byte, chunk_size)
 
-    def create_response(self, vrange, file_type='mp4'):
+    def create_response(self, vrange, video_format='mp4'):
         """
         Create and return an HTTP partial content response for the specified range.
         """
-        if file_type.lower() == 'mkv':
+        if video_format.lower() == 'mkv':
             data = self.stream_mkv(vrange)
             content_type = "video/x-matroska"
         else:
             data = self.stream_torrent(vrange)
-            content_type = f"video/{file_type}"
+            content_type = f"video/{video_format}"
 
         if not data:
             return HttpResponse(
