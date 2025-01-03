@@ -5,8 +5,29 @@ import Link from "next/link";
 import MenuDrawer from "./Drawer";
 import ProvidersMenu from "./ProviderMenu";
 import SearchInput from "./SearchInput";
-
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
+import { useEffect, useState } from "react";
+import ProfileMenu from "./ProfileMenu";
+import { authService } from "@/lib/auth";
 export default function NavBar() {
+  const [user, setUser] = useState(
+    useSelector((state: RootState) => state.user.user)
+  );
+
+  useEffect(() => {
+    const getuser = async () => {
+      try {
+        const user = await authService.getUserProfile();
+        console.log(user);
+        setUser(user);
+      } catch (error) {
+        console.log("Error fetching user", error);
+      }
+    };
+    if (!user) getuser();
+  }, []);
+
   return (
     <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center relative">
       {/* Logo Section */}
@@ -25,32 +46,38 @@ export default function NavBar() {
 
       {/* Desktop Navigation */}
       <div className="hidden lg:flex flex-wrap items-center gap-4 xl:gap-6">
-        <div className="flex items-center gap-2 xl:gap-4">
-          <SearchInput />
-          <ProvidersMenu />
-          {elements.map((element, index) => (
-            <Link
-              href={element.path}
-              key={index}
-              className="relative text-base xl:text-lg text-white/90 hover:text-orange-500 group transition-colors duration-200"
-            >
-              {element.name}
-              <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-orange-500 scale-x-0 origin-left transition-transform duration-200 ease-out group-hover:scale-x-100"></span>
+        {user && (
+          <div className="flex items-center gap-2 xl:gap-4">
+            <SearchInput />
+            <ProvidersMenu />
+            {elements.map((element, index) => (
+              <Link
+                href={element.path}
+                key={index}
+                className="relative text-base xl:text-lg text-white/90 hover:text-orange-500 group transition-colors duration-200"
+              >
+                {element.name}
+                <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-orange-500 scale-x-0 origin-left transition-transform duration-200 ease-out group-hover:scale-x-100"></span>
+              </Link>
+            ))}
+          </div>
+        )}
+        {user ? (
+          <ProfileMenu {...user} />
+        ) : (
+          <div className="flex items-center gap-3 xl:gap-4">
+            <Link href="/login">
+              <button className="px-4 xl:px-5 py-1.5 xl:py-2 text-sm xl:text-base border border-white/80 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200">
+                Sign in
+              </button>
             </Link>
-          ))}
-        </div>
-        <div className="flex items-center gap-3 xl:gap-4">
-          <Link href="/login">
-            <button className="px-4 xl:px-5 py-1.5 xl:py-2 text-sm xl:text-base border border-white/80 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200">
-              Sign in
-            </button>
-          </Link>
-          <Link href="/register">
-            <button className="px-4 xl:px-5 py-1.5 xl:py-2 text-sm xl:text-base bg-orange-500 rounded-full hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200">
-              Register
-            </button>
-          </Link>
-        </div>
+            <Link href="/register">
+              <button className="px-4 xl:px-5 py-1.5 xl:py-2 text-sm xl:text-base bg-orange-500 rounded-full hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200">
+                Register
+              </button>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Mobile Navigation */}

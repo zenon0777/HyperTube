@@ -10,9 +10,9 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { MovieSection } from "./components/MovieSection/MovieSection";
-import { genres } from "./data/NavBarElements";
-import { RootState } from "./store";
+import { MovieSection } from "../components/MovieSection/MovieSection";
+import { genres } from "../data/NavBarElements";
+import { RootState } from "../store";
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
