@@ -1,6 +1,6 @@
 "use client";
 
-import { getMovieDetails } from "@/api/movie/movie";
+import { getMovieComments, getMovieDetails } from "@/api/movie/movie";
 import { useParams } from 'next/navigation'
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -16,6 +16,7 @@ export default function Movie() {
         (state: any) => state.APIProviderSlice.APIProvider);
     const { movieId } = useParams();
     const details = movieId ? getMovieDetails(movieId, APIProvider == 'YTS' ? 'yts' : 'tmdb') : null;
+    const comments = movieId ? getMovieComments(movieId) : null;
     console.log(details?.data);
     console.log(details?.isLoading)
     console.log(details?.isError)
@@ -27,31 +28,31 @@ export default function Movie() {
         );
     }
 
-    if (details?.isError) {
-        return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <Alert variant="destructive" className="max-w-lg">
-                    <AlertTitle>Error Loading Movie</AlertTitle>
-                    <AlertDescription>
-                        Unable to fetch movie details. Please try again later.
-                    </AlertDescription>
-                </Alert>
-            </div>
-        );
-    }
+    // if (details?.isError) {
+    //     return (
+    //         <div className="min-h-screen flex items-center justify-center p-4">
+    //             <Alert variant="destructive" className="max-w-lg">
+    //                 <AlertTitle>Error Loading Movie</AlertTitle>
+    //                 <AlertDescription>
+    //                     Unable to fetch movie details. Please try again later.
+    //                 </AlertDescription>
+    //             </Alert>
+    //         </div>
+    //     );
+    // }
 
-    if (!details?.data?.movie) {
-        return (
-            <div className="min-h-screen flex items-center justify-center p-4">
-                <Alert className="max-w-lg">
-                    <AlertTitle>Movie Not Found</AlertTitle>
-                    <AlertDescription>
-                        The requested movie could not be found.
-                    </AlertDescription>
-                </Alert>
-            </div>
-        );
-    }
+    // if (!details?.data?.movie) {
+    //     return (
+    //         <div className="min-h-screen flex items-center justify-center p-4">
+    //             <Alert className="max-w-lg">
+    //                 <AlertTitle>Movie Not Found</AlertTitle>
+    //                 <AlertDescription>
+    //                     The requested movie could not be found.
+    //                 </AlertDescription>
+    //             </Alert>
+    //         </div>
+    //     );
+    // }
     return (
         <div className="min-h-screen max-w-[1500px] mx-auto text-white w-full flex flex-col overflow-auto">
             <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">

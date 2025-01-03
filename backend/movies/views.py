@@ -1,11 +1,15 @@
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework.response import Response
+ 
 import requests
 import environ
 from pathlib import Path
+from rest_framework.views import APIView
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+from .models import Movie, Comment
+from rest_framework import status
 env = environ.Env()
 environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
@@ -276,36 +280,170 @@ def tmdb_multi_search(request):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-@csrf_exempt
-def movie_detail(request, id):
-    if request.method == "GET":
+
+
+
+
+class MovieProvider:
+    @staticmethod
+    def get_movie_details(movie_id, provider):
+        if provider == "yts":
+            return YTSProvider.get_movie(movie_id)
+        elif provider == "tmdb":
+            return TMDBProvider.get_movie(movie_id)
+        raise ValueError("Invalid provider")
+
+class YTSProvider:
+    @staticmethod
+    def get_movie(movie_id):
+        url = f"https://yts.mx/api/v2/movie_details.json?movie_id={movie_id}"
+        response = requests.get(url)
+        response.raise_for_status()
+        return response.json().get("data", {}).get("movie", {})
+
+class TMDBProvider:
+    @staticmethod
+    def get_movie(movie_id):
+        url = f"https://api.themoviedb.org/3/movie/{movie_id}"
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {settings.TMDB_API_KEY}",
+        }
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+class MovieDetailView(APIView):
+    def get(self, request, id):
         try:
             provider = request.GET.get('provider', 'yts')
-
-            if provider == "yts":
-                base_url = f"https://yts.mx/api/v2/movie_details.json"
-                query_params = {"movie_id": id}
-                url = f"{base_url}?movie_id={id}"
-                response = requests.get(url)
-                movie = response.json().get("data", {}).get("movie", {})
+            movie_data = MovieProvider.get_movie_details(id, provider)
+            
+            if not movie_data:
+                return Response({"error": "No movie found"}, status=status.HTTP_404_NOT_FOUND)
                 
-            elif provider == "tmdb":
-                base_url = f"https://api.themoviedb.org/3/movie/{id}"
-                headers = {
-                    "accept": "application/json",
-                    "Authorization": f"Bearer {env('TMDB_API_KEY')}",
-                }
-                response = requests.get(f"{base_url}?api_key={env('TMDB_API_KEY')}", headers=headers)
-                movie = response.json()
-            else:
-                return JsonResponse({"error": "Invalid provider"}, status=400)
-
-            if not movie:
-                return JsonResponse({"error": "No movie found"}, status=404)
-            return JsonResponse({"movie": movie}, status=200)
-
+            return Response({"movie": movie_data})
+            
         except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": f"API error: {str(e)}"}, status=500)
+            return Response({"error": f"API error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class MovieCommentView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_movie(self, movie_id):
+        try:
+            return Movie.objects.get(id=movie_id)
+        except Movie.DoesNotExist:
+            return None
+
+    def get(self, request, movie_id):
+        movie = self.get_movie(movie_id)
+        if not movie:
+            return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        comments = movie.comments.all()
+        data = [{
+            'id': comment.id,
+            'content': comment.content,
+            'username': comment.user.username,
+            'created_at': comment.created_at,
+            'updated_at': comment.updated_at
+        } for comment in comments]
+        return Response(data)
+    def post(self, request, movie_id):
+        movie = self.get_movie(movie_id)
+        if not movie:
+            try:
+                provider = request.data.get('provider', 'yts')
+                print("Provider:", provider)
+                
+                movie_data = MovieProvider.get_movie_details(movie_id, provider)
+                print("Movie Data:", movie_data)
+                
+                if movie_data:
+                    movie_create_interface = {
+                        'title': movie_data.get('title'),
+                        'imdb_code': movie_data.get('imdb_code', ''),
+                        'genre': movie_data.get('genre', 'Unknown'),
+                        'year': movie_data.get('year', 0),
+                        'is_watched': False,
+                        'is_favorite': False,
+                        'rating': movie_data.get('rating', 0.0)
+                    }
+                    movie = Movie.objects.create(id=movie_id, **movie_create_interface)
+            except Exception as e:
+                return Response({'error': f"Error creating movie: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        content = request.data.get('content')
+        if not content:
+            return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            comment = Comment.objects.create(
+                movie=movie,
+                user=request.user,
+                content=content
+            )
+            return Response({
+                'id': comment.id,
+                'content': comment.content,
+                'username': comment.user.username,
+                'created_at': comment.created_at
+            }, status=status.HTTP_201_CREATED)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    return JsonResponse({"error": "Only GET requests allowed"}, status=405)
+            return Response({'error': f"Error creating comment: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+class CommentDetailView(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_comment(self, comment_id, user):
+        """
+        Fetches a comment by its ID and checks if the user has permission to access it.
+        """
+        try:
+            comment = Comment.objects.get(id=comment_id)
+            if comment.user != user:
+                raise PermissionError("You are not authorized to access this comment.")
+            return comment
+        except Comment.DoesNotExist:
+            return None
+
+    def put(self, request, comment_id):
+        """
+        Updates an existing comment.
+        """
+        try:
+            comment = self.get_comment(comment_id, request.user)
+            if not comment:
+                return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            content = request.data.get('content')
+            if not content:
+                return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            comment.content = content
+            comment.save()
+            return Response({
+                'id': comment.id,
+                'content': comment.content,
+                'username': comment.user.username,
+                'updated_at': comment.updated_at
+            }, status=status.HTTP_200_OK)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+    def delete(self, request, comment_id):
+        """
+        Deletes an existing comment.
+        """
+        try:
+            comment = self.get_comment(comment_id, request.user)
+            if not comment:
+                return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            comment.delete()
+            return Response({'message': 'Comment deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)

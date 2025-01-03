@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from .views import  MovieDetailView, MovieCommentView, CommentDetailView
 
 urlpatterns = [
     path("tmdb_movie_list", views.tmdb_movie_list, name="TMDBlist_movies"),
@@ -9,7 +9,8 @@ urlpatterns = [
     path("tmdb_multi_search", views.tmdb_multi_search, name="tmdb_multi_search"),
     path("trending_tv_shows", views.trending_tv_shows, name="trending_tv_shows"),
     path("trending_movies_tmdb_shows", views.top_movies_tmdb_shows, name="top_movies_tmdb_shows"),
-    path("movies/<int:id>", views.movie_detail, name="movies"),
-    path("movie_detail/<int:id>", views.movie_detail, name="movie_detail"),
+    path('movies/<int:id>', MovieDetailView.as_view()),
     path("test_scraper", views.test_scraper, name="test_scraper"),
+    path('movies/<int:movie_id>/comments', MovieCommentView.as_view()),
+    path('comments/<int:comment_id>/', CommentDetailView.as_view()),
 ]

@@ -1,13 +1,10 @@
 import axios from 'axios';
+// import Cookies from 'js-cookie';
+
+// const getJWT = () => {
+//   return Cookies.get('access_token') || null;
+// };
 axios.defaults.baseURL = process.env.BACKEND_URL;
-
-axios.defaults.withCredentials = false;
-
-
-// const token = localStorage.getItem('access_token') ? localStorage.getItem('access_token') : null;
-// if (token) axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-// intercepting to capture errors
 axios.interceptors.response.use(
   async function (response) {
     return response.data ? response.data : response;
@@ -61,6 +58,7 @@ get = (url: string, params: any) => {
         ...params,
         headers: {
           Authorization: `Bearer ${token}`,
+          // withCredentials: true,
         },
       });
     }
@@ -74,6 +72,7 @@ post = (url: string, data: any, config = {}) => {
         headers: {
             ...config.headers,
             Authorization: `Bearer ${token}`,
+            // withCredentials: true,
         },
     });
 };
@@ -82,6 +81,7 @@ put = (url: string, data: any) => {
     return axios.put(url, data, {
         headers: {
             Authorization: `Bearer ${token}`,
+            // withCredentials: true,
         },
     });
 };
@@ -90,6 +90,7 @@ delete = (url: string, data: any) => {
     return axios.delete(url, {
         headers: {
             Authorization: `Bearer ${token}`,
+            // withCredentials: true,
         },
     });
 };
