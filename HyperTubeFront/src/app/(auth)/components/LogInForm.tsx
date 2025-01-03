@@ -8,6 +8,7 @@ import { authService } from '@/lib/auth';
 import { getUserProfile } from '@/app/store/userSlice';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
+import { toast } from 'react-toastify';
 
 interface FormInputEvent extends React.ChangeEvent<HTMLInputElement> { }
 
@@ -41,8 +42,9 @@ export const LogInForm = () => {
 			await authService.login(formData);
 			await dispatch(getUserProfile()).unwrap();
 			router.push('/');
-		} catch (error) {
-			console.error('Login error:', error);
+		} catch (error : any) {
+			console.log('Login error:', error);
+			toast.error(error.message);
 		} finally {
 			setIsLoading(false);
 		}
