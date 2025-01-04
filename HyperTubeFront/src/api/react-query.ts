@@ -1,8 +1,7 @@
+import APIClient from "@/lib/movie";
 import { QueryFunctionContext, UseQueryOptions, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { APIClient } from './apiHelper';
 import { AxiosError, AxiosResponse } from "axios";
 
-export const api = new APIClient();
 type QueryKeyT = [string, object | undefined];
 type Updater<T, S> = (oldData: T | undefined, newData: S) => T;
 export interface GetInfinitePagesInterface<T> {
@@ -20,7 +19,7 @@ export const fetcher = async <T>({
 }: QueryFunctionContext<QueryKeyT>): Promise<any> => {
     const [url, params] = queryKey;
     try {
-        const response = await api.get(url, params);
+        const response = await APIClient.get(url, params);
         return response;
     } catch (error) {
         throw new Error((error as AxiosError)?.response?.data?.message || (error as AxiosError)?.message);

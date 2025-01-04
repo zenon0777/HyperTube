@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 BASE_DIR = Path(__file__).resolve().parent.parent
 from .models import Movie, Comment
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 env = environ.Env()
 environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
@@ -306,14 +307,15 @@ class TMDBProvider:
     def get_movie(movie_id):
         url = f"https://api.themoviedb.org/3/movie/{movie_id}"
         headers = {
-            "accept": "application/json",
-            "Authorization": f"Bearer {settings.TMDB_API_KEY}",
-        }
+                "accept": "application/json",
+                "Authorization": f"Bearer {env('TMDB_API_KEY')}",
+            }
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         return response.json()
-
+from rest_framework.permissions import AllowAny
 class MovieDetailView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, id):
         try:
             provider = request.GET.get('provider', 'yts')
@@ -330,7 +332,7 @@ class MovieDetailView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class MovieCommentView(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_movie(self, movie_id):
         try:

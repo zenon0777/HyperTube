@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { store } from "../store";
+import MovieTitlesBackground from "./components/Background";
 
 export default function ClientAuthLayout({
   children,
@@ -27,7 +28,12 @@ export default function ClientAuthLayout({
           className="z-[9999]"
         />
         <Provider store={store}>
-          <main className="relative max-w-[1500px] mx-auto justify-center w-dvw px-4">
+        <main className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4 relative overflow-hidden">
+			<MovieTitlesBackground />
+			<div className="absolute inset-0 overflow-hidden">
+				<div className="absolute w-96 h-96 -top-48 -left-48 bg-orange-500/20 rounded-full blur-3xl animate-pulse" />
+				<div className="absolute w-96 h-96 -bottom-48 -right-48 bg-orange-600/20 rounded-full blur-3xl animate-pulse" />
+			</div>
             {children}
           </main>
         </Provider>

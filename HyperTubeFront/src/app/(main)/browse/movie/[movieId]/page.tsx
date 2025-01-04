@@ -1,26 +1,64 @@
 "use client";
 
-import { getMovieComments, getMovieDetails } from "@/api/movie/movie";
 import { useParams } from 'next/navigation'
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { MdOutlineFavorite } from "react-icons/md";
-import { Alert, AlertTitle } from "@mui/material";
 import Comments from "@/app/components/Comments/Comments";
+import { useEffect, useState } from "react";
+import { movieService } from "@/lib/movie";
+import { Movie as MovieType } from '@/lib/interface';
+import { Alert, AlertTitle } from '@mui/material';
 
-
+interface MovieState {
+    movie: MovieType | null;
+    isLoading: boolean;
+    error: string | null;
+  }
+  
 
 export default function Movie() {
     const APIProvider = useSelector(
         (state: any) => state.APIProviderSlice.APIProvider);
     const { movieId } = useParams();
-    const details = movieId ? getMovieDetails(movieId, APIProvider == 'YTS' ? 'yts' : 'tmdb') : null;
-    const comments = movieId ? getMovieComments(movieId) : null;
-    console.log(details?.data);
-    console.log(details?.isLoading)
-    console.log(details?.isError)
-    if (details?.isLoading) {
+    const [state, setState] = useState<MovieState>({
+        movie: null,
+        isLoading: true,
+        error: null
+    });
+
+    useEffect(() => {
+        const getMovieDetails = async () => {
+            setState(prev => ({ ...prev, isLoading: true, error: null }));
+            try {
+                const response = await movieService.getMovieDetails(
+                    movieId,
+                    APIProvider === 'YTS' ? 'yts' : 'tmdb'
+                );
+                setState({
+                    movie: response.data,
+                    isLoading: false,
+                    error: response.error
+                });
+            } catch (error) {
+                setState(prev => ({
+                    ...prev,
+                    isLoading: false,
+                    error: "An unexpected error occurred"
+                }));
+            }
+        }
+        getMovieDetails();
+        return () => {
+            setState({
+                movie: null,
+                isLoading: true,
+                error: null
+            });
+        };
+    }, [movieId, APIProvider]);
+
+    if (state.isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
@@ -28,31 +66,26 @@ export default function Movie() {
         );
     }
 
-    // if (details?.isError) {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center p-4">
-    //             <Alert variant="destructive" className="max-w-lg">
-    //                 <AlertTitle>Error Loading Movie</AlertTitle>
-    //                 <AlertDescription>
-    //                     Unable to fetch movie details. Please try again later.
-    //                 </AlertDescription>
-    //             </Alert>
-    //         </div>
-    //     );
-    // }
+    if (state.error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Alert className="max-w-lg">
+                    <AlertTitle>Error Loading Movie</AlertTitle>
+                </Alert>
+            </div>
+        );
+    }
 
-    // if (!details?.data?.movie) {
-    //     return (
-    //         <div className="min-h-screen flex items-center justify-center p-4">
-    //             <Alert className="max-w-lg">
-    //                 <AlertTitle>Movie Not Found</AlertTitle>
-    //                 <AlertDescription>
-    //                     The requested movie could not be found.
-    //                 </AlertDescription>
-    //             </Alert>
-    //         </div>
-    //     );
-    // }
+    if (!state.movie) {
+        return (
+            <div className="min-h-screen flex items-center justify-center p-4">
+                <Alert className="max-w-lg">
+                    <AlertTitle>Movie Not Found</AlertTitle>
+                </Alert>
+            </div>
+        );
+    }
+    console.log("state ==",state);
     return (
         <div className="min-h-screen max-w-[1500px] mx-auto text-white w-full flex flex-col overflow-auto">
             <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
@@ -62,10 +95,10 @@ export default function Movie() {
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="relative h-full flex items-center bg-cover bg-center text-white"
                     style={{
-                        backgroundImage: `url(${(details?.data?.movie.backdrop_path &&
-                            `https://image.tmdb.org/t/p/original${details?.data?.movie.backdrop_path}`) ||
-                            (details?.data?.movie.medium_cover_image && details?.data?.movie.medium_cover_image) ||
-                            `https://via.placeholder.com/1920x1080?text=${details?.data?.movie.title}`
+                        backgroundImage: `url(${(state?.movie?.movie?.backdrop_path &&
+                            `https://image.tmdb.org/t/p/original${state?.movie.backdrop_path}`) ||
+                            (state?.movie?.movie?.medium_cover_image && state?.movie?.movie?.medium_cover_image) ||
+                            `https://via.placeholder.com/1920x1080?text=${state?.movie?.movie?.title}`
                             })`,
                     }}
                 >
@@ -92,7 +125,7 @@ export default function Movie() {
                                 transition={{ duration: 0.5, delay: 0.4 }}
                                 className="text-4xl sm:text-5xl lg:text-6xl font-Lemonada font-bold mb-4 animate-pulse-slow"
                             >
-                                {details?.data?.movie.title}
+                                {state?.movie?.movie?.title}
                             </motion.h1>
                             <motion.p
                                 initial={{ opacity: 0, y: 20 }}
@@ -100,8 +133,8 @@ export default function Movie() {
                                 transition={{ duration: 0.5, delay: 0.5 }}
                                 className="text-base sm:text-lg w-96 md:w-full text-gray-300 mb-6 animate-fade-in-up"
                             >
-                                {(details?.data?.movie.summary && details?.data?.movie.summary) ||
-                                    (details?.data?.movie.overview && details?.data?.movie.overview)}
+                                {(state?.movie?.movie?.summary && state?.movie?.movie?.summary) ||
+                                    (state?.movie?.movie?.overview && state?.movie?.movie?.overview)}
                             </motion.p>
                             <motion.p
                                 initial={{ opacity: 0, y: 20 }}
@@ -109,9 +142,9 @@ export default function Movie() {
                                 transition={{ duration: 0.5, delay: 0.5 }}
                                 className="text-base sm:text-lg w-96 md:w-full text-gray-300 mb-6 animate-fade-in-up"
                             >
-                                {details?.data?.movie.release_date?.split("-")[0] || details?.data?.movie.year} |{" "}
-                                {/* {details?.data?.movie.genres?.map((genre: string) => genre).join(", ") ||
-                                details?.data?.movie.genre_ids
+                                {state?.movie?.movie?.release_date?.split("-")[0] || state?.movie?.movie?.year} |{" "}
+                                {/* {state?.movie.genres?.map((genre: string) => genre).join(", ") ||
+                                state?.movie.genre_ids
                                     .map((id: number) => {
                                         const genre = genres.find(
                                             (genre: any) => genre.id === id
@@ -120,9 +153,9 @@ export default function Movie() {
                                     })
                                     .join(", ")}{" "}
                             |{" "} */}
-                                {details?.data?.movie.rating
-                                    ? details?.data?.movie.rating
-                                    : Number(details?.data?.movie.vote_average).toFixed(1)}
+                                {state?.movie?.movie?.rating
+                                    ? state?.movie?.movie?.rating
+                                    : Number(state?.movie?.movie?.vote_average).toFixed(1)}
                             </motion.p>
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }}
@@ -150,12 +183,12 @@ export default function Movie() {
                         >
                             <img
                                 src={
-                                    (details?.data?.movie.large_cover_image && details?.data?.movie.large_cover_image) ||
-                                    (details?.data?.movie.poster_path &&
-                                        `https://image.tmdb.org/t/p/original${details?.data?.movie.poster_path}`) ||
-                                    `https://via.placeholder.com/300x450?text=${details?.data?.movie.title}`
+                                    (state?.movie?.movie?.large_cover_image && state?.movie?.movie?.large_cover_image) ||
+                                    (state?.movie?.movie?.poster_path &&
+                                        `https://image.tmdb.org/t/p/original${state?.movie?.movie?.poster_path}`) ||
+                                    `https://via.placeholder.com/300x450?text=${state?.movie?.movie?.title}`
                                 }
-                                alt={`${details?.data?.movie.title} Poster`}
+                                alt={`${state?.movie?.movie?.title} Poster`}
                                 width={300}
                                 height={450}
                                 className="rounded-xl shadow-2xl shadow-black hover:scale-105 transition-transform duration-300"

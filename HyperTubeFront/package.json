@@ -30,7 +30,8 @@
     "react-loading-skeleton": "^3.5.0",
     "react-redux": "^9.2.0",
     "react-toastify": "^10.0.6",
-    "swiper": "^11.1.15"
+    "swiper": "^11.1.15",
+    "typescript-cookie": "^1.0.6"
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^5.62.9",

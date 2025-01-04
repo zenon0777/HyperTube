@@ -1,10 +1,9 @@
 import axios from 'axios';
-// import Cookies from 'js-cookie';
 
-// const getJWT = () => {
-//   return Cookies.get('access_token') || null;
-// };
 axios.defaults.baseURL = process.env.BACKEND_URL;
+axios.defaults.headers.post['Content-Type'] = 'application/json';
+axios.defaults.headers.put['Content-Type'] = 'application/json';
+axios.defaults.withCredentials = true;
 axios.interceptors.response.use(
   async function (response) {
     return response.data ? response.data : response;
@@ -29,14 +28,10 @@ axios.interceptors.response.use(
   }
 );
 
-const setAuthorization = (token: string) => {
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-};
-
 class APIClient {
 get = (url: string, params: any) => {
-    const token = '';
     let response;
+    // console.log("token =",token);
 
     let paramKeys: string[] = [];
 
@@ -44,67 +39,37 @@ get = (url: string, params: any) => {
       Object.keys(params).map(key => {
         paramKeys.push(key + '=' + params[key]);
         return paramKeys;
-      });
+      })
 
       const queryString = paramKeys && paramKeys.length ? paramKeys.join('&') : '';
       response = axios.get(`${url}?${queryString}`, {
         ...params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
     } else {
       response = axios.get(`${url}`, {
         ...params,
-        headers: {
-          Authorization: `Bearer ${token}`,
-          // withCredentials: true,
-        },
       });
     }
 
     return response;
   };
 post = (url: string, data: any, config = {}) => {
-    const token = '';
     return axios.post(url, data, {
         ...config,
-        headers: {
-            ...config.headers,
-            Authorization: `Bearer ${token}`,
-            // withCredentials: true,
-        },
     });
 };
 put = (url: string, data: any) => {
-    const token = '';
     return axios.put(url, data, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            // withCredentials: true,
-        },
     });
 };
 delete = (url: string, data: any) => {
-    const token = '';
     return axios.delete(url, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-            // withCredentials: true,
-        },
+
     });
 };
 }
 
-const getJWT = () => {
-  const jwt = localStorage.getItem('access_token');
-  if (!jwt) {
-    return null;
-  } else {
-    return jwt;
-  }
-};
 
 const apiClient = new APIClient();
 
-export { APIClient, setAuthorization, getJWT, apiClient };
+export { APIClient, apiClient };

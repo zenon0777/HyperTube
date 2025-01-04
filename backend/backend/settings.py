@@ -113,15 +113,15 @@ SIMPLE_JWT = {
    'SIGNING_KEY': env('JWT_SIGNING_KEY', default='key-not-found'),
 }
 
-# REST_FRAMEWORK = {
-#     'DEFAULT_AUTHENTICATION_CLASSES': (
-#         'users.authentication.CustomJWTAuthentication',
-#     ),
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.authentication.CustomJWTAuthentication',
+    ),
 
-# 	'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.IsAuthenticated',
-#     ],
-# }
+	'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 FRONTEND_URL= env('FRONTEND_URL', default='http://localhost:3000')
 
