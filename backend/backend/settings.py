@@ -13,7 +13,7 @@ environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='key-not-found')
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
-ALLOWED_HOSTS = ["localhost", "localhost:8000", "localhost:3000", "0.0.0.0"]
+ALLOWED_HOSTS = ["localhost", "localhost:9000", "localhost:3000", "0.0.0.0"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -108,8 +108,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 AUTH_USER_MODEL = 'users.User'
 
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
-   'REFRESH_TOKEN_LIFETIME': timedelta(minutes=4),
+   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+   'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
    'SIGNING_KEY': env('JWT_SIGNING_KEY', default='key-not-found'),
 }
 

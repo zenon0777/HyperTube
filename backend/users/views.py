@@ -29,7 +29,7 @@ class UserRegistrationView(APIView):
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
 
-            response =  Response({
+            response = Response({
                 'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
 
@@ -41,7 +41,7 @@ class UserRegistrationView(APIView):
                 secure=False,
                 samesite='Strict',
                 max_age=120
-            ),
+            )
 
             response.set_cookie(
                 key='access_token',
@@ -66,6 +66,8 @@ class UserProfileView(APIView):
             'id': user.id,
             'username': user.username,
             'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'profile_picture': user.profile_picture_url if hasattr(user, 'profile_picture_url') and user.profile_picture_url else None
         }
 
@@ -85,27 +87,24 @@ class UserLoginView(APIView):
             if user:
                 refresh = RefreshToken.for_user(user)
 
-                response =  Response({
+                response = Response({
                     'message': 'Login successful'
                 })
-   
-                response.set_cookie(
-                key='refresh_token',
-                value=str(refresh),
-                httponly=True,
-                path='/auth/token/',
-                secure=False,
-                samesite='Lax',
-                max_age=60*4
-                ),
-
                 response.set_cookie(
                     key='access_token',
                     value=str(refresh.access_token),
                     httponly=True,
                     samesite='Lax',
                     secure=False,
-                    max_age=60
+                    max_age=20
+                )
+
+                response.set_cookie(
+                    key='refresh_token',
+                    value=str(refresh),
+                    httponly=True,
+                    secure=False,
+                    samesite='Lax',
                 )
 
                 return response
@@ -129,49 +128,103 @@ class LogoutView(APIView):
 
 
 
+# class CookieTokenRefreshView(APIView):
+#     permission_classes = (AllowAny,)
+
+#     def post(self, request):
+#         refresh_token = request.COOKIES.get('refresh_token')
+        
+#         if not refresh_token:
+#             response = Response({'message': 'No refresh token'}, status=401)
+#             response.delete_cookie('access_token')
+#             response.delete_cookie('refresh_token')
+#             return response
+            
+#         try:
+
+#             refresh = RefreshToken(refresh_token)
+#             access_token = str(refresh.access_token)
+            
+#             response = Response({
+#                 'message': 'Token refresh successful'
+#             })
+
+#             response.set_cookie(
+#                 key='access_token',
+#                 value=access_token,
+#                 httponly=True,
+#                 samesite='Lax',
+#                 secure=False,
+#             )
+            
+#             return response
+
+#         except TokenError as e:
+#             # This catches specific token validation errors
+#             response = Response({'message': str(e)}, status=401)
+#             response.delete_cookie('access_token')
+#             response.delete_cookie('refresh_token')
+#             return response
+
+#         except Exception as e:
+#             response = Response({'message': 'Invalid token'}, status=401)
+#             response.delete_cookie('access_token')
+#             response.delete_cookie('refresh_token')
+
+
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework.permissions import AllowAny
+# from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+import logging
+
+logger = logging.getLogger(__name__)
+
 class CookieTokenRefreshView(APIView):
     permission_classes = (AllowAny,)
 
+    def delete_cookies(self, response):
+        """Utility function to delete authentication cookies."""
+        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token')
+
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
-        
-        if not refresh_token:
-            response = Response({'message': 'No refresh token'}, status=401)
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token', path='/auth/token/')
-            return response
-            
-        try:
 
+        if not refresh_token:
+            response = Response({'message': 'No refresh token provided'}, status=401)
+            self.delete_cookies(response)
+            return response
+
+        try:
+            # Validate and refresh the token
             refresh = RefreshToken(refresh_token)
             access_token = str(refresh.access_token)
-            
-            response = Response({
-                'message': 'Token refresh successful'
-            })
 
+            response = Response({'message': 'Token refresh successful'})
             response.set_cookie(
                 key='access_token',
                 value=access_token,
                 httponly=True,
                 samesite='Lax',
-                secure=False,
-                max_age=60
+                secure=True,
+                max_age=20
             )
-            
             return response
 
         except TokenError as e:
-            # This catches specific token validation errors
-            response = Response({'message': str(e)}, status=401)
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token', path='/auth/token/')
+            # Handle specific token errors
+            logger.error(f"Token error: {str(e)}")
+            response = Response({'message': 'Invalid or expired refresh token'}, status=401)
+            self.delete_cookies(response)
             return response
 
         except Exception as e:
-            response = Response({'message': 'Invalid token'}, status=401)
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token', path='/auth/token/')
+            # Handle unexpected errors
+            logger.exception(f"Unexpected error: {str(e)}")
+            response = Response({'message': 'An error occurred while refreshing the token'}, status=500)
+            self.delete_cookies(response)
+            return response
 
 
 User = get_user_model()

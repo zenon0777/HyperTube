@@ -17,7 +17,7 @@ RUN pip install --upgrade pip
 # Copy requirements.txt into the container
 COPY requirements.txt /app/
 
-EXPOSE 8000
+EXPOSE 9000
 
 # Install Python dependencies
 RUN pip install -r requirements.txt
