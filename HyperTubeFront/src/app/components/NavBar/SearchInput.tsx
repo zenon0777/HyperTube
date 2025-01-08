@@ -40,7 +40,7 @@ export default function SearchInput() {
 
       setIsLoading(true);
       try {
-        const baseUrl = "http://0.0.0.0:8000/movies/";
+        const baseUrl = "http://0.0.0.0:9000/movies/";
         const endpoints = {
           YTS: `${baseUrl}yts_movie_list?query_term=${searchTerm}&limit=5`,
           TMDB: `${baseUrl}tmdb_multi_search?query=${searchTerm}`,

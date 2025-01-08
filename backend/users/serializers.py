@@ -60,7 +60,6 @@ class PasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    print("PasswordResetConfirmSerializer")
     token = serializers.CharField()
     password = serializers.CharField(write_only=True)
     password2 = serializers.CharField(write_only=True)

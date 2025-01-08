@@ -3,7 +3,7 @@ import axios from "axios";
 const initStream = async (torrentHash: string, movieName: string) => {
   try {
     const { data } = await axios.get(
-      `http://localhost:8000/stream/init/`,
+      `http://localhost:9000/stream/init/`,
       {
         params: {
           torrent_hash: torrentHash,
@@ -39,7 +39,7 @@ export default async function Home({
       {streamId ? (
         <video controls>
           <source
-            src={`http://localhost:8000/stream/?stream_id=${streamId}`}
+            src={`http://localhost:9000/stream/?stream_id=${streamId}`}
             type="video/mp4"
           />
           Your browser does not support the video tag.

@@ -31,7 +31,7 @@ export default function RegisterPage() {
 	};
 	
 	const handleOAuthLogin = (provider: string) => {
-		window.location.href = `http://localhost:8000/auth/${provider}/`;
+		window.location.href = `http://localhost:9000/auth/${provider}/`;
 	};
 	
 	const handleSubmit = async (e: React.FormEvent) => {
