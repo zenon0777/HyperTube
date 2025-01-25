@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from 'next/navigation'
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { MdOutlineFavorite } from "react-icons/md";
 import Comments from "@/app/components/Comments/Comments";
@@ -9,13 +9,14 @@ import { useEffect, useState } from "react";
 import { movieService } from "@/lib/movie";
 import { Movie as MovieType } from '@/lib/interface';
 import { Alert, AlertTitle } from '@mui/material';
+import { UserProfile } from '@/app/store/userSlice';
 
 interface MovieState {
     movie: MovieType | null;
     isLoading: boolean;
     error: string | null;
-  }
-  
+}
+
 
 export default function Movie() {
     const APIProvider = useSelector(
@@ -26,7 +27,7 @@ export default function Movie() {
         isLoading: true,
         error: null
     });
-
+    const { user, loading, error } = useSelector((state: any) => state.user);
     useEffect(() => {
         const getMovieDetails = async () => {
             setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -85,7 +86,6 @@ export default function Movie() {
             </div>
         );
     }
-    console.log("state ==",state);
     return (
         <div className="min-h-screen max-w-[1500px] mx-auto text-white w-full flex flex-col overflow-auto">
             <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
@@ -197,7 +197,7 @@ export default function Movie() {
                     </div>
                 </motion.div>
             </div>
-            <Comments />
+            <Comments movieId={movieId} user={user}/>
         </div>
     );
 }

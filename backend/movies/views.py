@@ -331,6 +331,8 @@ class MovieDetailView(APIView):
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
 class MovieCommentView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -340,64 +342,169 @@ class MovieCommentView(APIView):
         except Movie.DoesNotExist:
             return None
 
-    def get(self, request, movie_id):
-        movie = self.get_movie(movie_id)
-        if not movie:
-            return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+    def get(self, request, movie_id=None):
+        if movie_id:
+            movie = self.get_movie(movie_id)
+            if not movie:
+                return Response([], status=status.HTTP_200_OK)
 
-        comments = movie.comments.all()
-        data = [{
-            'id': comment.id,
-            'content': comment.content,
-            'username': comment.user.username,
-            'created_at': comment.created_at,
-            'updated_at': comment.updated_at
-        } for comment in comments]
-        return Response(data)
-    def post(self, request, movie_id):
-        movie = self.get_movie(movie_id)
-        if not movie:
-            try:
-                provider = request.data.get('provider', 'yts')
-                print("Provider:", provider)
-                
-                movie_data = MovieProvider.get_movie_details(movie_id, provider)
-                print("Movie Data:", movie_data)
-                
-                if movie_data:
-                    movie_create_interface = {
-                        'title': movie_data.get('title'),
-                        'imdb_code': movie_data.get('imdb_code', ''),
-                        'genre': movie_data.get('genre', 'Unknown'),
-                        'year': movie_data.get('year', 0),
-                        'is_watched': False,
-                        'is_favorite': False,
-                        'rating': movie_data.get('rating', 0.0)
-                    }
-                    movie = Movie.objects.create(id=movie_id, **movie_create_interface)
-            except Exception as e:
-                return Response({'error': f"Error creating movie: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        content = request.data.get('content')
-        if not content:
-            return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            comment = Comment.objects.create(
-                movie=movie,
-                user=request.user,
-                content=content
-            )
-            return Response({
+            comments = movie.comments.all()
+            data = [{
                 'id': comment.id,
-                'content': comment.content,
+                'comment': comment.content,
                 'username': comment.user.username,
-                'created_at': comment.created_at
-            }, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({'error': f"Error creating comment: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+                'date': comment.created_at,
+            } for comment in comments]
+            return Response(data)
+        else:
+            # GET /comments
+            comments = Comment.objects.all().order_by('-created_at')
+            data = [{
+                'id': comment.id,
+                'comment': comment.content,
+                'username': comment.user.username,
+                'date': comment.created_at,
+            } for comment in comments]
+            return Response(data)
+
+    def post(self, request, movie_id=None):
+        if movie_id:
+            movie = self.get_movie(movie_id)
+            if not movie:
+                try:
+                    provider = request.data.get('provider', 'yts')
+                    print("Provider:", provider)
+                    
+                    movie_data = MovieProvider.get_movie_details(movie_id, provider)
+                    print("Movie Data:", movie_data)
+                    
+                    if movie_data:
+                        movie_create_interface = {
+                            'title': movie_data.get('title'),
+                            'imdb_code': movie_data.get('imdb_code', ''),
+                            'genre': movie_data.get('genre', 'Unknown'),
+                            'year': movie_data.get('year', 0),
+                            'is_watched': False,
+                            'is_favorite': False,
+                            'rating': movie_data.get('rating', 0.0)
+                        }
+                        movie = Movie.objects.create(id=movie_id, **movie_create_interface)
+                except Exception as e:
+                    return Response({'error': f"Error creating movie: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+            content = request.data.get('content')
+            if not content:
+                return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                comment = Comment.objects.create(
+                    movie=movie,
+                    user=request.user,
+                    content=content
+                )
+                return Response({
+                    'id': comment.id,
+                    'comment': comment.content,
+                    'username': comment.user.username,
+                    'date': comment.created_at
+                }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': f"Error creating comment: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            content = request.data.get('content')
+            movie_id = request.data.get('movie_id')
+            if not content or not movie_id:
+                return Response({'error': 'Content and movie_id are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            movie = self.get_movie(movie_id)
+            if not movie:
+                return Response({'error': 'Movie not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                comment = Comment.objects.create(
+                    movie=movie,
+                    user=request.user,
+                    content=content
+                )
+                return Response({
+                    'id': comment.id,
+                    'comment': comment.content,
+                    'username': comment.user.username,
+                    'date': comment.created_at
+                }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({'error': f"Error creating comment: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CommentDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_comment(self, comment_id, user):
+        """
+        Fetches a comment by its ID and checks if the user has permission to access it.
+        """
+        try:
+            comment = Comment.objects.get(id=comment_id)
+            if comment.user != user:
+                raise PermissionError("You are not authorized to access this comment.")
+            return comment
+        except Comment.DoesNotExist:
+            return None
+
+    def get(self, request, comment_id):
+        """
+        GET /comments/:id
+        Returns comment, author’s username, comment id, date posted.
+        """
+        comment = self.get_comment(comment_id, request.user)
+        if not comment:
+            return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({
+            'id': comment.id,
+            'comment': comment.content,
+            'username': comment.user.username,
+            'date': comment.created_at
+        }, status=status.HTTP_200_OK)
+
+    def patch(self, request, comment_id):
+        """
+        PATCH /comments/:id
+        Expected data : comment, username
+        """
+        try:
+            comment = self.get_comment(comment_id, request.user)
+            if not comment:
+                return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            content = request.data.get('content')
+            if not content:
+                return Response({'error': 'Content is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            comment.content = content
+            comment.save()
+            return Response({
+                'id': comment.id,
+                'comment': comment.content,
+                'username': comment.user.username,
+                'date': comment.updated_at
+            }, status=status.HTTP_200_OK)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+    def delete(self, request, comment_id):
+        """
+        DELETE /comments/:id
+        """
+        try:
+            comment = self.get_comment(comment_id, request.user)
+            if not comment:
+                return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            comment.delete()
+            return Response({'message': 'Comment deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
     # permission_classes = [IsAuthenticated]
 
     def get_comment(self, comment_id, user):
@@ -429,9 +536,9 @@ class CommentDetailView(APIView):
             comment.save()
             return Response({
                 'id': comment.id,
-                'content': comment.content,
+                'comment': comment.content,
                 'username': comment.user.username,
-                'updated_at': comment.updated_at
+                'date': comment.updated_at
             }, status=status.HTTP_200_OK)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)

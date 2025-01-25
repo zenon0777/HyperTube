@@ -12,5 +12,6 @@ urlpatterns = [
     path('movies/<int:id>', MovieDetailView.as_view()),
     path("test_scraper", views.test_scraper, name="test_scraper"),
     path('movies/<int:movie_id>/comments', MovieCommentView.as_view()),
-    path('comments/<int:comment_id>/', CommentDetailView.as_view()),
+    path('comments/<int:comment_id>', CommentDetailView.as_view()),
+
 ]

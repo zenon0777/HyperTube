@@ -3,7 +3,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from '../../lib/auth'; // Assuming authService is in lib/auth.ts
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   username: string;
   email: string;
