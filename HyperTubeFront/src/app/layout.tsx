@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import ClientLayout from "./ClientLayout";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -22,7 +21,7 @@ const PraiseRegular = localFont({
 
 export const metadata: Metadata = {
   title: "Z-Tube",
-  description: "A video streaming platform",
+  description: "A torrent video streaming platform",
 };
 
 export default function RootLayout({
@@ -35,7 +34,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${PraiseRegular.variable} antialiased bg-black`}
       >
-        <ClientLayout children={children} />
+        {children}
       </body>
     </html>
   );

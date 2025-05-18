@@ -5,12 +5,15 @@ import Link from "next/link";
 import MenuDrawer from "./Drawer";
 import ProvidersMenu from "./ProviderMenu";
 import SearchInput from "./SearchInput";
+import { redirect } from "next/navigation";
 
 export default function NavBar() {
   return (
     <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center relative">
-      {/* Logo Section */}
-      <div className="flex items-center gap-2 md:gap-3">
+      <div
+        className="flex items-center gap-2 md:gap-3 cursor-pointer"
+        onClick={() => redirect("/home")}
+      >
         <Image
           src="/logo.svg"
           alt="Z-Tube Logo"
@@ -23,7 +26,6 @@ export default function NavBar() {
         </span>
       </div>
 
-      {/* Desktop Navigation */}
       <div className="hidden lg:flex flex-wrap items-center gap-4 xl:gap-6">
         <div className="flex items-center gap-2 xl:gap-4">
           <SearchInput />
@@ -49,7 +51,6 @@ export default function NavBar() {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       <div className="lg:hidden flex flex-wrap items-center gap-2">
         <SearchInput />
         <MenuDrawer />
