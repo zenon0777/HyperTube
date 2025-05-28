@@ -13,7 +13,9 @@ export default function Movie() {
     const APIProvider = useSelector(
         (state: any) => state.APIProviderSlice.APIProvider);
     const { movieId } = useParams();
-    const details = movieId ? getMovieDetails(movieId) : null;
+    // send movieId and APIProvider to the getMovieDetails function
+    const details = movieId ? getMovieDetails(movieId as string, APIProvider) : null;
+    
     console.log(details?.data);
     console.log(details?.isLoading)
     console.log(details?.isError)

@@ -5,6 +5,8 @@ import React from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useRouter } from 'next/navigation';
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/app/store";
 
 export const MovieSection = ({
   title,

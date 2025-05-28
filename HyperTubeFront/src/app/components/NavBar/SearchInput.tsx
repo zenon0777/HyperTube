@@ -137,7 +137,7 @@ export default function SearchInput() {
     return (
       <div
         key={`${result.id}-${index}`}
-        className={`flex items-center gap-3 p-3 cursor-pointer border-b border-gray-700/50 last:border-b-0 transition-all ${
+        className={`flex w-auto items-center gap-3 p-3 cursor-pointer border-b border-gray-700/50 last:border-b-0 transition-all ${
           isActive ? "bg-gray-700 text-orange-400" : "hover:bg-gray-700/50"
         }`}
       >
@@ -150,7 +150,7 @@ export default function SearchInput() {
             alt={title}
           />
         </div>
-        <div className="flex-grow min-w-0">
+        <div className="flex-grow w-auto">
           <p className="text-sm font-medium truncate">{title}</p>
           <p className="text-xs mt-1">{year}</p>
         </div>
@@ -161,7 +161,7 @@ export default function SearchInput() {
   const displayResults = results;
 
   return (
-    <div className="relative w-40 md:w-52">
+    <div className="relative w-auto md:w-96 lg:w-80 xl:w-96">
       <div className="relative">
         <SearchOffOutlined className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
         <input

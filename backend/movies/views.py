@@ -187,7 +187,7 @@ def tmdb_multi_search(request):
 @csrf_exempt
 def movie_detail(request, id):
     if request.method == "GET":
-        try:
+        try:    
             base_url = f"https://yts.mx/api/v2/movie_details.json"
             query_params = {"movie_id": id}
             query_string = "&".join(
