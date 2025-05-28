@@ -68,7 +68,7 @@ export default function Browse() {
 
   useEffect(() => {
     const getTMDBFiltredMovies = async () => {
-      let baseUrl = `http://0.0.0.0:8000/movies/tmdb_movie_list?&language=en-US&page=${page}&include_adult=false`;
+      let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list?&language=en-US&page=${page}&include_adult=false`;
       let url = baseUrl;
       if (activeFilters.quality) {
         url += `&quality=${activeFilters.quality}`;
@@ -95,7 +95,7 @@ export default function Browse() {
     };
     const getYTSFiltredMovies = async () => {
       try {
-        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=${page}&limit=20`;
+        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=${page}&limit=20`;
         let url = baseUrl;
         if (activeFilters.quality) {
           url += `&quality=${activeFilters.quality}`;

@@ -185,20 +185,33 @@ def tmdb_multi_search(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
-def movie_detail(request, id):
+def yts_movie_detail(request):
     if request.method == "GET":
         try:    
-            base_url = f"https://yts.mx/api/v2/movie_details.json"
-            query_params = {"movie_id": id}
+            # get base url from environment variable
+            base_url = env("YTS_API_BASE_URL", default="https://yts.mx/api/v2/")
+            details_url = base_url + "movie_details.json"
+            query_params = request.GET.dict()
             query_string = "&".join(
                 f"{key}={value}" for key, value in query_params.items()
             )
-            url = f"{base_url}?{query_string}"
-
+            url = f"{details_url}?{query_string}"
+            
+            similar_url = f"{base_url}movie_suggestions.json?movie_id={query_params.get('movie_id', '')}"
+            similar_response = requests.get(similar_url)
+            similar_response.raise_for_status()
+            similar_data = similar_response.json()
+            if "data" in similar_data and "movies" in similar_data["data"]:
+                similar_data = similar_data["data"]["movies"]
+            else:
+                similar_data = {}
+        
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
-            movie = data.get("data", {}).get("movie", {})
+            movie = data.get("data", {}).get("movie", {}) 
+            if similar_data:
+                movie["similar_movies"] = similar_data
             if not movie:
                 return JsonResponse(
                     {"error": "No movie found for the given ID"}, status=404
@@ -207,6 +220,67 @@ def movie_detail(request, id):
 
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"YTS API error: {str(e)}"}, status=500)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+
+@csrf_exempt
+def tmdb_movie_detail(request, id):
+    if request.method == "GET":
+        try:
+            base_url = env("TMDB_API_DETAILS_URL")
+            base_url = base_url.format(id=id)
+            query_params = request.GET.dict()
+            query_string = "&".join(
+                f"{key}={value}" for key, value in query_params.items()
+            )
+            url = f"{base_url}?{query_string}"
+            headers = {
+                "accept": "application/json",
+                "Authorization": f"Bearer {env('TMDB_API_KEY')}",
+            }
+            
+
+            videos_url = base_url.split("?")[0] + "/videos"
+            images_url = base_url.split("?")[0] + "/images"
+            similar_url = base_url.split("?")[0] + "/similar"
+            
+            images_response = requests.get(images_url, headers=headers)
+            images_response.raise_for_status()
+            images_data = images_response.json()
+                
+            similar_response = requests.get(similar_url, headers=headers)
+            similar_response.raise_for_status()
+            similar_data = similar_response.json()
+            
+            videos_response = requests.get(videos_url, headers=headers)
+            videos_response.raise_for_status()
+            videos_data = videos_response.json()
+           
+            
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            movie = data
+            movie["images"] = images_data
+            movie["similar_movies"] = similar_data
+            movie["videos"] = videos_data
+            
+            
+            if not movie:
+                return JsonResponse(
+                    {"error": "No movie found for the given ID"}, status=404
+                )
+            return JsonResponse({"movie": movie}, status=200)
+
+        except requests.exceptions.RequestException as e:
+            return JsonResponse({"error": f"TMDB API error: {str(e)}"}, status=500)
+        except environ.ImproperlyConfigured:
+            return JsonResponse(
+                {"error": "Environment variable TMDB_API_KEY is not set"}, status=500
+            )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     else:

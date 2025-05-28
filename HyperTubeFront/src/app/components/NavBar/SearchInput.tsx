@@ -7,6 +7,7 @@ import { LuLoader } from "react-icons/lu";
 import { SearchOffOutlined } from "@mui/icons-material";
 import { AiFillX } from "react-icons/ai";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 interface MovieResult {
   id: number;
@@ -30,6 +31,7 @@ export default function SearchInput() {
   const [isLoading, setIsLoading] = useState(false);
   const [isResultsVisible, setIsResultsVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const router = useRouter();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -40,7 +42,7 @@ export default function SearchInput() {
 
       setIsLoading(true);
       try {
-        const baseUrl = "http://0.0.0.0:8000/movies/";
+        const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/`;
         const endpoints = {
           YTS: `${baseUrl}yts_movie_list?query_term=${searchTerm}&limit=5`,
           TMDB: `${baseUrl}tmdb_multi_search?query=${searchTerm}`,
@@ -132,6 +134,8 @@ export default function SearchInput() {
       ? result.year
       : result?.release_date?.split("-")[0];
 
+    const id = result.id;
+
     const isActive = index === activeIndex;
     console.log("title ====> ::: ", title);
     return (
@@ -140,6 +144,11 @@ export default function SearchInput() {
         className={`flex w-auto items-center gap-3 p-3 cursor-pointer border-b border-gray-700/50 last:border-b-0 transition-all ${
           isActive ? "bg-gray-700 text-orange-400" : "hover:bg-gray-700/50"
         }`}
+        onClick={() => {
+          router.push(`/browse/movie/${id}`);
+          setSearch("");
+          setIsResultsVisible(false);
+        }}
       >
         <div className="relative w-12 h-16 flex-shrink-0">
           <Image

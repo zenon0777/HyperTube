@@ -1,1 +1,1 @@
-export const GET_MOVIE_DETAILS = 'http://0.0.0.0:8000/movies/movie_detail';
+export const GET_MOVIE_DETAILS =   `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/movie_detail`;
