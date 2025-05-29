@@ -9,6 +9,98 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 env = environ.Env()
 environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
+
+import requests
+from bs4 import BeautifulSoup
+import re
+
+class TorrentScraper:
+    def __init__(self):
+        self.base_url = "https://1337x.to"
+        self.headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        }
+
+    def search_torrent(self, query, year=None):
+        search_query = f"{query} {year}" if year else query
+        search_url = f"{self.base_url}/search/{search_query}/1/"
+        
+        try:
+            response = requests.get(search_url, headers=self.headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            results = []
+            for row in soup.select('tbody tr'):
+                name_cell = row.select_one('td.name')
+                if not name_cell:
+                    continue
+                
+                link = name_cell.select_one('a:nth-of-type(2)')
+                if not link:
+                    continue
+                
+                seeds = row.select_one('td.seeds').text
+                leeches = row.select_one('td.leeches').text
+                size = row.select_one('td.size').text
+                
+                # Get magnet link from torrent page
+                torrent_url = self.base_url + link['href']
+                magnet = self.get_magnet_link(torrent_url)
+                
+                results.append({
+                    'name': link.text,
+                    'url': torrent_url,
+                    'magnet': magnet,
+                    'seeds': int(seeds),
+                    'leeches': int(leeches),
+                    'size': size
+                })
+            
+            # Sort by seeds descending
+            return sorted(results, key=lambda x: x['seeds'], reverse=True)
+            
+        except Exception as e:
+            print(f"Error searching torrents: {str(e)}")
+            return []
+
+    def get_magnet_link(self, torrent_url):
+        try:
+            response = requests.get(torrent_url, headers=self.headers)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            magnet_link = soup.select_one('a[href^="magnet:?"]')
+            return magnet_link['href'] if magnet_link else None
+        except Exception as e:
+            print(f"Error getting magnet link: {str(e)}")
+            return None
+
+    def find_best_match(self, title, year=None, min_seeds=10):
+        results = self.search_torrent(title, year)
+        if not results:
+            return None
+        
+        # Filter by minimum seeds
+        results = [r for r in results if r['seeds'] >= min_seeds]
+        
+        if year:
+            # Try to find exact match with year
+            year_pattern = re.compile(rf'\b{year}\b')
+            exact_matches = [r for r in results if year_pattern.search(r['name'])]
+            if exact_matches:
+                return exact_matches[0]
+        
+        # Return highest seeded result if no exact match
+        return results[0] if results else None
+
+
+def test_scraper(request):
+    scraper = TorrentScraper()
+    torrent = scraper.find_best_match("Your Fault", 2024)
+    if torrent:
+        print(f"Found: {torrent['name']}")
+        print(f"Magnet: {torrent['magnet']}")
+        return JsonResponse({"torrent": torrent}, status=200)
+    return JsonResponse({"error": "No torrent found"}, status=404)
+
 @csrf_exempt
 def tmdb_movie_list(request):
     if request.method == "GET":

@@ -57,6 +57,20 @@ class UserRegistrationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class UserProfileView(APIView):
+
+    def get(self, request):
+        user = request.user
+
+        user_profile_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'profile_picture': user.profile_picture_url if hasattr(user, 'profile_picture_url') and user.profile_picture_url else None
+        }
+
+        return Response(user_profile_data, status=status.HTTP_200_OK)
+    
 
 class UserLoginView(APIView):
     permission_classes = (AllowAny,)
@@ -234,7 +248,7 @@ class PasswordResetView(APIView):
                 user = User.objects.get(email=email)
                 token = default_token_generator.make_token(user)
                 
-                reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}&user={user.id}"
+                reset_url = f"{settings.FRONTEND_URL}/reset-password/confirm?token={token}&user={user.id}"
                 
                 subject = 'Password Reset Request'
                 from_email = f"HyperTube <noreply@yourapp.com>"
@@ -256,6 +270,7 @@ class PasswordResetConfirmView(APIView):
 
     def post(self, request):
         serializer = PasswordResetConfirmSerializer(data=request.data)
+
         if serializer.is_valid():
             token = serializer.validated_data['token']
             user_id = request.data.get('user')

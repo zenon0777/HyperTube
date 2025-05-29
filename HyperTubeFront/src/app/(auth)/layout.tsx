@@ -1,13 +1,9 @@
+import ClientAuthLayout from "./ClientAuthLayout";
 
-import ClientLayout from "./ClientLayout";
-import "../globals.css";
-
-export default function RootLayout({
+export default function AuthLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  return (
-    <ClientLayout children={children} />
-  );
+}) {
+  return <ClientAuthLayout>{children}</ClientAuthLayout>;
 }

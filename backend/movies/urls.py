@@ -10,4 +10,5 @@ urlpatterns = [
     path("trending_movies_tmdb_shows", views.top_movies_tmdb_shows, name="top_movies_tmdb_shows"),
     path("yts_movie_detail", views.yts_movie_detail, name="yts_movie_detail"),
     path("tmdb_movie_detail/<int:id>", views.tmdb_movie_detail, name="tmdb_movie_detail"),
+    path("test_scraper", views.test_scraper, name="test_scraper"),
 ]

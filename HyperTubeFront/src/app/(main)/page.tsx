@@ -28,7 +28,7 @@ export default function Home() {
   useEffect(() => {
     const getTMDBFiltredMovies = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list`;
+        let baseUrl = `http://0.0.0.0:8000/movies/tmdb_movie_list`;
         let popularMoviesUrl = baseUrl + "?popular";
         popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
         let topRatedMoviesUrl = baseUrl + "?top_rated";
@@ -55,7 +55,7 @@ export default function Home() {
     };
     const getTrendingTvShows = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/trending_tv_shows?&language=en-US&page=1`;
+        let baseUrl = `http://0.0.0.0:8000/movies/trending_tv_shows?&language=en-US&page=1`;
         const response = await fetch(baseUrl);
         const data = await response.json();
         console.log("Tv Shows : -----> :: ", data);
@@ -66,7 +66,7 @@ export default function Home() {
     };
     const getYTSFiltredMovies = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
+        let baseUrl = `http://0.0.0.0:8000/movies/yts_movie_list?page=1&limit=15`;
         let PopularMoviesUrl = baseUrl;
         let topRatedMoviesUrl = baseUrl;
         topRatedMoviesUrl += "&sort_by=rating&order_by=desc";
