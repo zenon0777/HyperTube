@@ -27,8 +27,7 @@ class UserRegistrationView(APIView):
     
     def post(self, request):
         serializer = UserRegistrationSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
+        if serializer.is_valid():            user = serializer.save()
             refresh = RefreshToken.for_user(user)
 
             response = Response({
@@ -91,9 +90,7 @@ class UserLoginView(APIView):
 
                 response = Response({
                     'message': 'Login successful'
-                })
-   
-                response.set_cookie(
+                })                response.set_cookie(
                     key='refresh_token',
                     value=str(refresh),
                     httponly=True,
@@ -138,9 +135,8 @@ class LogoutView(APIView):
         except Exception as e:
             # If anything fails, continue with logout
             print(f"Logout token handling failed: {e}")
-        
-        response = Response()
-        response.delete_cookie('refresh_token', path='/')
+          response = Response()
+        response.delete_cookie('refresh_token', path='/auth/token/refresh')
         response.delete_cookie('access_token', path='/')
         response.data = {'message': 'Logout successful'}
         return response
@@ -154,11 +150,10 @@ class CookieTokenRefreshView(APIView):
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
         print("refresh Token: ", refresh_token)
-        
-        if not refresh_token:
+          if not refresh_token:
             response = Response({'message': 'No refresh token'}, status=401)
             response.delete_cookie('access_token', path='/')
-            response.delete_cookie('refresh_token', path='/')
+            response.delete_cookie('refresh_token', path='/auth/token/refresh')
             return response
             
         try:
@@ -180,18 +175,15 @@ class CookieTokenRefreshView(APIView):
             )
             
             return response
-            
-        except TokenError as e:
+              except TokenError as e:
             # This catches specific token validation errors
             response = Response({'message': str(e)}, status=401)
             response.delete_cookie('access_token', path='/')
-            response.delete_cookie('refresh_token', path='/')
-            return response
-
-        except Exception as e:
+            response.delete_cookie('refresh_token', path='/auth/token/refresh')
+            return response        except Exception as e:
             response = Response({'message': 'Invalid token'}, status=401)
             response.delete_cookie('access_token', path='/')
-            response.delete_cookie('refresh_token', path='/')
+            response.delete_cookie('refresh_token', path='/auth/token/refresh')
             return response
 
 
