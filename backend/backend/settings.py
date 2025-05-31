@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'storages',
     'users',
     'movies',
@@ -114,6 +115,8 @@ SIMPLE_JWT = {
    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
    'SIGNING_KEY': env('JWT_SIGNING_KEY', default='key-not-found'),
+   'ROTATE_REFRESH_TOKENS': False,  # Disable rotation for now to avoid blacklist issues
+   'BLACKLIST_AFTER_ROTATION': False,
 }
 
 REST_FRAMEWORK = {

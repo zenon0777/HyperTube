@@ -47,5 +47,18 @@ export const authService = {
     return response.data;
   },
   
+    async logout() {
+    try {
+      const response = await api.post("/auth/logout/");
+      return response.data;
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    } finally {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+  },
 
 };
