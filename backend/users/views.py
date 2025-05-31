@@ -40,7 +40,7 @@ class UserRegistrationView(APIView):
                 path='/auth/token/',
                 secure=False,
                 samesite='Strict',
-                max_age=120
+                max_age=7 * 24 * 60 * 60
             ),
 
             response.set_cookie(
@@ -49,7 +49,7 @@ class UserRegistrationView(APIView):
                 httponly=True,
                 samesite='Lax',
                 secure=False,
-                max_age=60
+                max_age=15 * 60
             )
 
             return response
@@ -96,7 +96,7 @@ class UserLoginView(APIView):
                 path='/auth/token/',
                 secure=False,
                 samesite='Lax',
-                max_age=60*4
+                max_age=7 * 24 * 60 * 60
                 ),
 
                 response.set_cookie(
@@ -105,7 +105,7 @@ class UserLoginView(APIView):
                     httponly=True,
                     samesite='Lax',
                     secure=False,
-                    max_age=60
+                    max_age=15 * 60
                 )
 
                 return response
@@ -156,7 +156,7 @@ class CookieTokenRefreshView(APIView):
                 httponly=True,
                 samesite='Lax',
                 secure=False,
-                max_age=60
+                max_age=15 * 60
             )
             
             return response
