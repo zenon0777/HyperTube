@@ -1,18 +1,31 @@
 import api from "./axios";
 
-export const authService = {
-  async register(userData: any) {
-    const response = await api.post("/auth/register/", userData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
+export const authService = {  async register(userData: any) {
+    try {
+      const response = await api.post("/auth/register/", userData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        throw new Error('Registration failed - please check your information');
+      }
+      throw new Error('Failed to register');
+    }
   },
 
   async login(credentials: any) {
-    const response = await api.post("/auth/login/", credentials);
-    return response.data;
+    try {
+      const response = await api.post("/auth/login/", credentials);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw new Error('Username or password incorrect');
+      }
+      throw new Error('Failed to login');
+    }
   },
 
   async getUserProfile() {
