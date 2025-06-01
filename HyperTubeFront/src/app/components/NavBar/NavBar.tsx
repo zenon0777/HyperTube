@@ -6,9 +6,31 @@ import MenuDrawer from "./Drawer";
 import ProvidersMenu from "./ProviderMenu";
 import SearchInput from "./SearchInput";
 import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/app/store";
+import ProfileMenu from "./ProfileMenu";
+import { useEffect } from "react";
 
 export default function NavBar() {
+  const user = useAppSelector((state) => state.user);
+
   const router = useRouter();
+  if (user.error) {
+    console.error("Error fetching user data:", user.error);
+    return (
+      <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center">
+        <div className="text-red-500">Error loading user data</div>
+      </nav>
+    );
+  }
+
+  useEffect(() => {
+    console.log("User data:", user);
+    if (user.error) {
+      console.error("Error fetching user data:", user.error);
+      router.push("/login");
+    }
+  }, [user.error, router]);
+
   return (
     <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center relative">
       <div
@@ -43,18 +65,7 @@ export default function NavBar() {
           ))}
         </div>
         <div className="flex items-center gap-3 xl:gap-4">
-          <button
-            onClick={() => router.push("/login")}
-            className="px-4 xl:px-5 py-1.5 xl:py-2 text-sm xl:text-base border border-white/80 rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all duration-200"
-          >
-            Sign in
-          </button>
-          <button
-            onClick={() => router.push("/register")}
-            className="px-4 xl:px-5 py-1.5 xl:py-2 text-sm xl:text-base bg-orange-500 rounded-full hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200"
-          >
-            Register
-          </button>
+          {user.user && <ProfileMenu {...user.user} />}
         </div>
       </div>
 
