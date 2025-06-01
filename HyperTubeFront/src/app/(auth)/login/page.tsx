@@ -41,7 +41,7 @@ export default function RegisterPage() {
 		try {
 			await authService.login(formData);
 			await dispatch(getUserProfile()).unwrap();
-			router.push('/');
+			router.push('/home');
 		} catch (error : any) {
 			console.log('Login error:', error);
 			toast.error(error.message);
