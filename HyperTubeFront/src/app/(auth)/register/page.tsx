@@ -6,6 +6,7 @@ import { authService } from "@/lib/auth";
 import { toast } from "react-toastify";
 import { FormInput } from "../components/FormInput";
 import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
+import { SocialLoginButtons } from "../components/SocialLoginButtons";
 
 interface FormData {
   email: string;
@@ -41,6 +42,10 @@ export default function RegisterPage() {
 		...prev,
 		[e.target.name]: e.target.value,
 	  }));
+	};
+
+	const handleOAuthLogin = (provider: string) => {
+		authService.initiateOAuth(provider);
 	};
   
 	const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,8 +219,10 @@ export default function RegisterPage() {
 				<div className="absolute inset-0 flex items-center justify-center">
 				  <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
 				</div>
-			  )}
-			</button>
+			  )}			</button>
+
+			{/* OAuth Login - Show only on step 1 */}
+			{step === 1 && <SocialLoginButtons onOAuthLogin={handleOAuthLogin} />}
   
 			{/* Sign In Link */}
 			<div className="text-center text-sm pt-4">
