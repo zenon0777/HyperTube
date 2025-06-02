@@ -45,8 +45,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Skip token refresh for auth endpoints
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/') || 
+                          originalRequest.url?.includes('/password/');
+
     // Check if the error is due to an expired access token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       if (isRefreshing) {
         // If we're already refreshing, queue this request
         return new Promise((resolve, reject) => {

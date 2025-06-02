@@ -42,7 +42,7 @@ class UserRegistrationView(APIView):
                 path='/auth/token/refresh',
                 secure=False,
                 samesite='Lax',
-                max_age=7 * 24 * 60 * 60  # 7 days
+                max_age=7 * 24 * 60 * 60
             )
 
             response.set_cookie(
@@ -51,7 +51,7 @@ class UserRegistrationView(APIView):
                 httponly=True,
                 samesite='Lax',
                 secure=False,
-                max_age=15 * 60,  # 15 minutes
+                max_age=15 * 60,
                 path='/',
             )
 
@@ -100,7 +100,7 @@ class UserLoginView(APIView):
                     path='/auth/token/refresh',
                     secure=False,
                     samesite='Lax',
-                    max_age=7 * 24 * 60 * 60  # 7 days
+                    max_age=7 * 24 * 60 * 60
                 )
 
                 response.set_cookie(
@@ -109,7 +109,7 @@ class UserLoginView(APIView):
                     samesite='Lax',
                     httponly=True,
                     secure=False,
-                    max_age=15 * 60,  # 15 minutes
+                    max_age=15 * 60,
                     path='/'
                 )
 
@@ -175,7 +175,7 @@ class CookieTokenRefreshView(APIView):
                 httponly=True,
                 samesite='Lax',
                 secure=False,
-                max_age=60,  # 15 minutes
+                max_age=60,
                 path='/'
             )
             
