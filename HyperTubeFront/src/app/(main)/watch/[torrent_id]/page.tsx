@@ -1,4 +1,6 @@
 import axios from "axios";
+import CustomReactPlayer from '@/components/Video/CustomReactPlayer';
+import { fetchSubtitlesForMovie, extractMovieInfoFromName } from '@/api/subtitles/movieSubtitles';
 
 const initStream = async (torrentHash: string, movieName: string) => {
   try {
@@ -11,41 +13,53 @@ const initStream = async (torrentHash: string, movieName: string) => {
         },
       }
     );
-    console.log(data);
+    console.log("Stream init data:", data);
     return data.stream_id;
   } catch (error) {
-    console.log(error);
+    console.error("Error initializing stream:", error);
     return null;
   }
 };
 
-export default async function Home({
+export default async function WatchPage({
   params,
+  searchParams,
 }: {
-  params: Promise<{ torrent_id: string }>;
+  params: { torrent_id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const torrentId = (await params).torrent_id;
+  const torrentHash = params.torrent_id;
+  const movieName = searchParams?.movieName as string || "Unknown Movie";
 
-  // const torrentHash = "7D2E222138AEF25FFE38577E4CB9AD04E7D30356";
-  // const movieName = "Oppenheimer (2023) [720p] [YTS.MX]";
-  const torrentHash = "96DCE3AEFFF1F881BC4953C89E13B8C823EB5C5C";
-  const movieName = "Gladiator II (2024) [720p] [WEBRip] [YTS.MX]";
+  if (!torrentHash) {
+    return (
+      <div className="w-full h-screen flex justify-center items-center bg-black text-white">
+        <p className="text-xl text-red-500">Error: Torrent ID is missing.</p>
+      </div>
+    );
+  }
 
+  // console.log(`Attempting to stream: Torrent Hash = ${torrentHash}, Movie Name = ${movieName}`);
 
   const streamId = await initStream(torrentHash, movieName);
 
+  const movieInfo = extractMovieInfoFromName(movieName);
+  const tracks = await fetchSubtitlesForMovie(movieInfo);
+
   return (
-    <div className="w-full h-screen flex justify-center items-center">
+    <div className="w-full h-screen flex justify-center items-center bg-black text-white">
       {streamId ? (
-        <video controls>
-          <source
-            src={`http://localhost:8000/stream/?stream_id=${streamId}`}
-            type="video/mp4"
-          />
-          Your browser does not support the video tag.
-        </video>
+        <CustomReactPlayer 
+          streamUrl={`http://localhost:8000/stream/?stream_id=${streamId}`}
+          tracks={tracks}
+          movieId={torrentHash}
+        />
       ) : (
-        <p>NotFound...</p>
+        <div className="text-center">
+          <p className="text-xl text-red-500">Could not load stream.</p>
+          <p className="text-md">Please check if the torrent is valid or try again later.</p>
+          <p className="text-sm mt-4 text-gray-400">Details: Torrent Hash - {torrentHash}, Movie Name - {movieName}</p>
+        </div>
       )}
     </div>
   );

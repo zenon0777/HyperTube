@@ -206,7 +206,39 @@ export default function Movie() {
             </motion.div>
             <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="text-sm sm:text-base md:text-lg text-gray-300 mb-6 sm:mb-8 leading-relaxed max-w-2xl line-clamp-3 sm:line-clamp-4"> {getOverview()} </motion.p>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.7 }} className="flex flex-wrap gap-3 sm:gap-4">
-              <button className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"> <MdMovie /> Watch now </button>
+              {APIProvider === "YTS" && details?.torrents && details.torrents.length > 0 ? (
+                <Link href={`/watch/${details.torrents[0].hash}?movieName=${encodeURIComponent(getTitle())}`} passHref>
+                  <motion.button 
+                    className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <MdMovie /> Watch now
+                  </motion.button>
+                </Link>
+              ) : APIProvider !== "YTS" && details?.id ? (
+                 // For TMDB, we don't have a direct torrent hash. 
+                 // You might want to link to a search page or a placeholder, 
+                 // or if you have a way to get a torrent hash for TMDB movies, implement that here.
+                 // For now, let's assume we can't directly watch TMDB movies this way or we'd need another API call.
+                 // Option 1: Link to a generic watch page that might search for torrents (if you build such a page)
+                 // <Link href={`/watch/search?title=${encodeURIComponent(getTitle())}`} passHref>
+                 // Option 2: Disable or show a different button for TMDB
+                <button 
+                  className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
+                  disabled
+                  title="Direct watch not available for TMDB source currently"
+                >
+                  <MdMovie /> Watch (YTS only)
+                </button>
+              ) : (
+                <button 
+                  className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
+                  disabled
+                >
+                  <MdMovie /> Watch now
+                </button>
+              )}
               <button className="px-5 sm:px-7 py-2.5 sm:py-3 border-2 border-white/80 text-white/90 rounded-full flex items-center justify-center space-x-1.5 font-semibold text-sm sm:text-base hover:bg-white/20 hover:text-white transition transform hover:scale-105 active:scale-95"> <span>Add to Watchlist</span> <MdOutlineFavorite className="text-red-500 text-lg" /> </button>
             </motion.div>
           </motion.div>
