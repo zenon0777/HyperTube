@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_ROUTES = ['/login', '/register', '/reset-password'];
+const PUBLIC_ROUTES = ['/login', '/register', '/reset-password', '/'];
 const AUTH_ROUTES = ['/auth/token/refresh'];
 
 function isPublicRoute(pathname: string): boolean {

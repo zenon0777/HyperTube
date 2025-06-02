@@ -6,30 +6,41 @@ import MenuDrawer from "./Drawer";
 import ProvidersMenu from "./ProviderMenu";
 import SearchInput from "./SearchInput";
 import { useRouter } from "next/navigation";
-import { useAppSelector } from "@/app/store";
+import { RootState, useAppSelector } from "@/app/store";
 import ProfileMenu from "./ProfileMenu";
 import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { getUserProfile } from "@/app/store/userSlice";
 
 export default function NavBar() {
-  const user = useAppSelector((state) => state.user);
-
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const router = useRouter();
-  if (user.error) {
-    console.error("Error fetching user data:", user.error);
-    return (
-      <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center">
-        <div className="text-red-500">Error loading user data</div>
-      </nav>
-    );
-  }
+
+  useEffect(() => {
+    dispatch(getUserProfile() as any);
+  }, [dispatch]);
+
+  // if (user.error) {
+  //   console.log("Error fetching user data:", user.error);
+  //   return (
+  //     <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center">
+  //       <div className="text-red-500">Error loading user data</div>
+  //     </nav>
+  //   );
+  // }
+
+  // useEffect(() => {
+  //   console.log("User data:", user);
+  //   if (user.error) {
+  //     console.error("Error fetching user data:", user.error);
+  //     router.push("/login");
+  //   }
+  // }, [user.error, router]);
 
   useEffect(() => {
     console.log("User data:", user);
-    if (user.error) {
-      console.error("Error fetching user data:", user.error);
-      router.push("/login");
-    }
-  }, [user.error, router]);
+  }, [user]);
 
   return (
     <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center relative">
