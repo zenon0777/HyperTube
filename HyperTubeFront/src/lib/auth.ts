@@ -1,6 +1,7 @@
 import api from "./axios";
 
-export const authService = {  async register(userData: any) {
+export const authService = {
+  async register(userData: any) {
     try {
       const response = await api.post("/auth/register/", userData, {
         headers: {
@@ -71,6 +72,13 @@ export const authService = {  async register(userData: any) {
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
+    }
+  },
+
+  // OAuth login method
+  initiateOAuth(provider: string) {
+    if (typeof window !== 'undefined') {
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/${provider}/`;
     }
   },
 

@@ -1,14 +1,14 @@
 "use client"
 import { useState } from 'react';
-import { User, Lock, Film, ArrowRight, Github, Twitter, Chrome } from 'lucide-react';
+import { User, Lock, Film, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { authService } from '@/lib/auth';
 import { getUserProfile } from '@/app/store/userSlice';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/app/store';
 import { toast } from 'react-toastify';
 import { FormInput } from '../components/FormInput';
+import { SocialLoginButtons } from '../components/SocialLoginButtons';
 
 interface FormInputEvent extends React.ChangeEvent<HTMLInputElement> { }
 
@@ -29,9 +29,8 @@ export default function RegisterPage() {
 			[e.target.name]: e.target.value
 		}));
 	};
-	
 	const handleOAuthLogin = (provider: string) => {
-		window.location.href = `http://localhost:8000/auth/${provider}/`;
+		authService.initiateOAuth(provider);
 	};
 	
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -118,54 +117,7 @@ export default function RegisterPage() {
 								<div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
 							</div>
 						)}
-					</button>
-
-					<div className="mt-4">
-						<div className="relative">
-							<div className="absolute inset-0 flex items-center">
-								<span className="w-full border-t border-gray-700" />
-							</div>
-							<div className="relative flex justify-center text-sm">
-								<span className="bg-gray-800 px-2 text-gray-400">Or continue with</span>					</div>
-						</div>
-
-						<button
-							type="button"
-							onClick={() => handleOAuthLogin('42')}
-							className="mt-4 w-full flex items-center justify-center gap-3 bg-gray-700/50 text-white py-3 px-4 rounded-xl hover:bg-gray-700/70 transition-colors"
-						>
-							<span>Continue with</span>
-							<Image
-								src="/42.png"
-								alt="42 School"
-								width={50}
-								height={50}
-							/>
-						</button>
-
-						<div className="grid grid-cols-3 gap-4 mt-4">
-							<button
-								onClick={() => handleOAuthLogin('github')}
-								className="flex items-center justify-center p-3 bg-gray-700/50 text-white rounded-xl hover:bg-gray-700/70 transition-colors"
-							>
-								<Github className="w-5 h-5" />
-							</button>
-
-							<button
-								onClick={() => handleOAuthLogin('google')}
-								className="flex items-center justify-center p-3 bg-gray-700/50 text-white rounded-xl hover:bg-gray-700/70 transition-colors"
-							>
-								<Chrome className="w-5 h-5" />
-							</button>
-
-							<button
-								onClick={() => handleOAuthLogin('twitter')}
-								className="flex items-center justify-center p-3 bg-gray-700/50 text-white rounded-xl hover:bg-gray-700/70 transition-colors"
-							>
-								<Twitter className="w-5 h-5" />
-							</button>
-						</div>
-					</div>
+					</button>					<SocialLoginButtons onOAuthLogin={handleOAuthLogin} />
 
 					<div className="text-center text-sm pt-4">
 						<span className="text-gray-400">Don't have an account? </span>
