@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const PUBLIC_ROUTES = ['/login', '/register', '/reset-password'];
-const AUTH_ROUTES = ['/auth/token/refresh'];
+
+const AUTH_ROUTES = ['/auth/token/refresh', '/auth/success'];
 
 function isPublicRoute(pathname: string): boolean {
-    return PUBLIC_ROUTES.some(route => pathname.startsWith(route));
+    if (pathname === '/') {
+        return true;
+    }
+    const publicRoutesWithSubpaths = ['/login', '/register', '/reset-password'];
+    return publicRoutesWithSubpaths.some(route => pathname.startsWith(route));
 }
 
 function isAuthRoute(pathname: string): boolean {
@@ -26,7 +30,6 @@ async function checkTokenValidity(request: NextRequest): Promise<{ isValid: bool
             return { isValid: true, needsRefresh: false };
         }
 
-        // Check if it's a 401 (expired token) vs other errors
         if (res.status === 401) {
             return { isValid: false, needsRefresh: true };
         }
@@ -41,7 +44,6 @@ async function checkTokenValidity(request: NextRequest): Promise<{ isValid: bool
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Skip middleware for public routes and auth routes
     if (isPublicRoute(pathname) || isAuthRoute(pathname)) {
         return NextResponse.next();
     }
