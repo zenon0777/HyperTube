@@ -276,7 +276,7 @@ def get_movie_comments(request, movie_id):
 
 @csrf_exempt
 @permission_classes([IsAuthenticated])
-@api_view (["GET", "POST"])
+@api_view (["GET"])
 def tmdb_movie_list(request):
     if request.method == "GET":
         try:
@@ -316,6 +316,8 @@ def tmdb_movie_list(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def yts_movie_list(request):
     if request.method == "GET":
         try:
@@ -379,6 +381,8 @@ def trending_tv_shows(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def top_movies_tmdb_shows(request):
     if request.method == "GET":
         try:
@@ -418,6 +422,8 @@ def top_movies_tmdb_shows(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def tmdb_multi_search(request):
     try:
         #  ?query=={query}
@@ -451,6 +457,8 @@ def tmdb_multi_search(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def yts_movie_detail(request):
     if request.method == "GET":
         try:    

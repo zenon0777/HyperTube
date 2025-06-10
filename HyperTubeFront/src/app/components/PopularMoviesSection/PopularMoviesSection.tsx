@@ -74,7 +74,7 @@ function PopularMoviesSection() {
                     {movie.title}
                   </h3>
                   <button
-                    onClick={() => router.push(`/movies/${movie.id}`)}
+                    onClick={() => router.push(`/browse/movie/${movie.id}`)}
                     className="mt-2 inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 font-medium"
                   >
                     View Details <ChevronRight className="w-4 h-4" />

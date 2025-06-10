@@ -89,7 +89,7 @@ export default function RegisterPage() {
   
 	  try {
 		await authService.register(data);
-		router.push("/");
+		router.push("/home");
 	  } catch (error: any) {
 		console.log("Register error:", error);
 		toast.error(error.message);
