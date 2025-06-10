@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.shortcuts import render, get_object_or_404
 from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.permissions import AllowAny
 
 import json
 from .models import Movie, MoviComment
@@ -101,6 +102,33 @@ class TorrentScraper:
         return results[0] if results else None
 
 
+api_view(["GET"])
+@permission_classes([AllowAny])
+def movie_list(request):
+    if request.method == "GET":
+        try:
+            url = "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1"
+            headers = {
+                "accept": "application/json",
+                "Authorization": f"Bearer {env('TMDB_API_KEY')}",
+            }
+
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            movies = data
+            if not movies:
+                return JsonResponse(
+                    {"error": "No movies found in the response"}, status=404
+                )
+            return JsonResponse({"movies": movies}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+
 def test_scraper(request):
     scraper = TorrentScraper()
     torrent = scraper.find_best_match(
@@ -177,14 +205,7 @@ def removeFavorite(request):
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_comment(request, movie_id):
-    """
-    DRF endpoint to add a comment to a movie.
-    - Only authenticated users may call this (IsAuthenticated).
-    - Expect JSON body: { "comment": "<text>" }.
-    - If Movie(movie_id=…) does not exist yet, create it first.
-    """
 
-    # 1) DRF has already parsed JSON, so use request.data
     comment_text = request.data.get("comment", "").strip()
     if not comment_text:
         return JsonResponse(
@@ -192,20 +213,17 @@ def add_comment(request, movie_id):
             status= 400
         )
 
-    # 2) Fetch or create the Movie row
     try:
         movie = Movie.objects.get(movie_id=movie_id)
     except Movie.DoesNotExist:
         movie = Movie.objects.create(movie_id=movie_id)
 
-    # 3) Create the MoviComment (request.user is guaranteed to be a real User)
     comment = MoviComment.objects.create(
         movie=movie,
         user=request.user,
         comment=comment_text
     )
 
-    # 4) Build and return the response
     response_data = {
         "success": True,
         "message": "Comment added successfully",
@@ -221,53 +239,44 @@ def add_comment(request, movie_id):
     return JsonResponse(response_data, status=201)
 
 
-@login_required
-@csrf_exempt  # Added for API consistency
-@require_http_methods(["GET"])
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def get_movie_comments(request, movie_id):
-    """
-    Retrieve all comments for a given movie_id, including each commenter's info.
-    """
-    try:
-        movie = get_object_or_404(Movie, movie_id=movie_id)
 
-        # Pull in the "user" for each comment in a single query
-        comments_qs = MoviComment.objects.select_related("user").filter(
-            movie=movie
-        ).order_by("-created_at")
+    movie = get_object_or_404(Movie, movie_id=movie_id)
 
-        comments_data = []
-        for comment in comments_qs:
-            comments_data.append({
-                "id": comment.id,
-                "comment": comment.comment,
-                "user": {
-                    "id": comment.user.id,
-                    "username": comment.user.username,
-                    "email": getattr(comment.user, "email", None),
-                    # If your User model has a profile_picture field, include it:
-                    "profile_picture": getattr(comment.user, "profile_picture", None)
-                },
-                "created_at": comment.created_at.isoformat(),
-                "updated_at": comment.updated_at.isoformat()
-            })
+    comments_qs = (
+        MoviComment.objects
+        .select_related("user")
+        .filter(movie=movie)
+        .order_by("-created_at")
+    )
 
-        return JsonResponse({
-            "success": True,
-            "movie_id": movie.movie_id,
-            "comments_count": comments_qs.count(),
-            "comments": comments_data
+    comments_data = []
+    for comment in comments_qs:
+        comments_data.append({
+            "id": comment.id,
+            "comment": comment.comment,
+            "user": {
+                "id": comment.user.id,
+                "username": comment.user.username,
+                "email": getattr(comment.user, "email", None),
+                "profile_picture": getattr(comment.user, "profile_picture", None)
+            },
+            "created_at": comment.created_at.isoformat(),
+            "updated_at": comment.updated_at.isoformat(),
         })
 
-    except Exception as e:
-        return JsonResponse({
-            "success": False,
-            "error": str(e)
-        }, status=500)
-
-
+    return JsonResponse({
+        "success": True,
+        "movie_id": movie.movie_id,
+        "comments_count": comments_qs.count(),
+        "comments": comments_data
+    }, status=200)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET", "POST"])
 def tmdb_movie_list(request):
     if request.method == "GET":
         try:
@@ -305,7 +314,7 @@ def tmdb_movie_list(request):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
-    
+
 @csrf_exempt
 def yts_movie_list(request):
     if request.method == "GET":

@@ -3,6 +3,7 @@ from . import views
 
 
 urlpatterns = [
+    path("", views.movie_list, name="movie_list"),
     path("tmdb_movie_list", views.tmdb_movie_list, name="TMDBlist_movies"),
     path("yts_movie_list", views.yts_movie_list, name="YTSlist_movie"),
     path("tmdb_multi_search", views.tmdb_multi_search, name="tmdb_multi_search"),

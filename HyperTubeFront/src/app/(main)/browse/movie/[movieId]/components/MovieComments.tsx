@@ -221,7 +221,13 @@ const CommentsSection = ({
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                    <MdPerson className="text-white text-xl" />
+                    <img
+                      src={
+                        comment.user?.profile_picture || "/default-avatar.png"
+                      }
+                      alt="User Avatar"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
                   </div>
                 </div>
 

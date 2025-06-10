@@ -54,10 +54,6 @@ export default function Movie() {
   }, [dispatch]);
 
   useEffect(() => {
-    console.log("User data:", user);
-  }, [user]);
-
-  useEffect(() => {
     if (!APIProvider || !movieId) {
       setIsLoading(false);
       setIsError(true);
