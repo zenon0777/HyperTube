@@ -10,13 +10,12 @@ export const authService = {
       });
       return response.data;
     } catch (error: any) {
-      if (error.response?.status === 400) {
-        throw new Error('Registration failed - please check your information');
+      if (error.response?.data) {
+        throw error;
       }
       throw new Error('Failed to register');
     }
   },
-
   async login(credentials: any) {
     try {
       const response = await api.post("/auth/login/", credentials);
@@ -24,6 +23,9 @@ export const authService = {
     } catch (error: any) {
       if (error.response?.status === 401) {
         throw new Error('Username or password incorrect');
+      }
+      if (error.response?.data) {
+        throw error;
       }
       throw new Error('Failed to login');
     }
@@ -60,8 +62,8 @@ export const authService = {
     });
     return response.data;
   },
-  
-    async logout() {
+
+  async logout() {
     try {
       const response = await api.post("/auth/logout/");
       return response.data;
