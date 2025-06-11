@@ -18,6 +18,8 @@ from datetime import datetime
 import uuid
 from django.conf import settings
 from django.core.files.storage import default_storage
+from rest_framework.permissions import IsAuthenticated
+
 
 class UserRegistrationView(APIView):
     parser_classes = (MultiPartParser, FormParser)
@@ -29,7 +31,7 @@ class UserRegistrationView(APIView):
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
 
-            response =  Response({
+            response = Response({
                 'message': 'Registration successful'
             }, status=status.HTTP_201_CREATED)
 
@@ -37,11 +39,11 @@ class UserRegistrationView(APIView):
                 key='refresh_token',
                 value=str(refresh),
                 httponly=True,
-                path='/auth/token/',
+                path='/auth/token/refresh',
                 secure=False,
-                samesite='Strict',
-                max_age=120
-            ),
+                samesite='Lax',
+                max_age=7 * 24 * 60 * 60
+            )
 
             response.set_cookie(
                 key='access_token',
@@ -49,7 +51,8 @@ class UserRegistrationView(APIView):
                 httponly=True,
                 samesite='Lax',
                 secure=False,
-                max_age=60
+                max_age=15 * 60,
+                path='/',
             )
 
             return response
@@ -58,7 +61,7 @@ class UserRegistrationView(APIView):
 
 
 class UserProfileView(APIView):
-
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         user = request.user
 
@@ -82,30 +85,32 @@ class UserLoginView(APIView):
                 username=serializer.validated_data['username'],
                 password=serializer.validated_data['password']
             )
+            
             if user:
                 refresh = RefreshToken.for_user(user)
 
-                response =  Response({
+                response = Response({
                     'message': 'Login successful'
                 })
    
                 response.set_cookie(
-                key='refresh_token',
-                value=str(refresh),
-                httponly=True,
-                path='/auth/token/',
-                secure=False,
-                samesite='Lax',
-                max_age=60*4
-                ),
+                    key='refresh_token',
+                    value=str(refresh),
+                    httponly=True,
+                    path='/auth/token/refresh',
+                    secure=False,
+                    samesite='Lax',
+                    max_age=7 * 24 * 60 * 60
+                )
 
                 response.set_cookie(
                     key='access_token',
                     value=str(refresh.access_token),
-                    httponly=True,
                     samesite='Lax',
+                    httponly=True,
                     secure=False,
-                    max_age=60
+                    max_age=15 * 60,
+                    path='/'
                 )
 
                 return response
@@ -120,9 +125,23 @@ class UserLoginView(APIView):
 
 class LogoutView(APIView):
     def post(self, request):
+        try:
+            refresh_token = request.COOKIES.get('refresh_token')
+            if refresh_token:
+                # Try to blacklist the refresh token
+                try:
+                    token = RefreshToken(refresh_token)
+                    token.blacklist()
+                except Exception as blacklist_error:
+                    # If blacklisting fails, log but continue with logout
+                    print(f"Token blacklist failed (continuing): {blacklist_error}")
+        except Exception as e:
+            # If anything fails, continue with logout
+            print(f"Logout token handling failed: {e}")
+        
         response = Response()
-        response.delete_cookie('refresh_token', path='/auth/token/')
-        response.delete_cookie('access_token')
+        response.delete_cookie('refresh_token', path='/')
+        response.delete_cookie('access_token', path='/')
         response.data = {'message': 'Logout successful'}
         return response
 
@@ -134,44 +153,46 @@ class CookieTokenRefreshView(APIView):
 
     def post(self, request):
         refresh_token = request.COOKIES.get('refresh_token')
+        print("refresh Token: ", refresh_token)
         
         if not refresh_token:
             response = Response({'message': 'No refresh token'}, status=401)
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token', path='/auth/token/')
+            response.delete_cookie('access_token', path='/')
+            response.delete_cookie('refresh_token', path='/')
             return response
             
         try:
-
             refresh = RefreshToken(refresh_token)
             access_token = str(refresh.access_token)
             
             response = Response({
                 'message': 'Token refresh successful'
             })
-
+            
             response.set_cookie(
                 key='access_token',
                 value=access_token,
                 httponly=True,
                 samesite='Lax',
                 secure=False,
-                max_age=60
+                max_age=60,
+                path='/'
             )
             
             return response
-
+            
         except TokenError as e:
             # This catches specific token validation errors
             response = Response({'message': str(e)}, status=401)
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token', path='/auth/token/')
+            response.delete_cookie('access_token', path='/')
+            response.delete_cookie('refresh_token', path='/')
             return response
 
         except Exception as e:
             response = Response({'message': 'Invalid token'}, status=401)
-            response.delete_cookie('access_token')
-            response.delete_cookie('refresh_token', path='/auth/token/')
+            response.delete_cookie('access_token', path='/')
+            response.delete_cookie('refresh_token', path='/')
+            return response
 
 
 User = get_user_model()

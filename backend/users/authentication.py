@@ -1,5 +1,7 @@
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework_simplejwt.exceptions import InvalidToken, AuthenticationFailed
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework import status
+from rest_framework.response import Response
 from django.conf import settings
 
 class CustomJWTAuthentication(JWTAuthentication):
@@ -7,11 +9,9 @@ class CustomJWTAuthentication(JWTAuthentication):
         # Get the token from cookies instead of Authorization header
         access_token = request.COOKIES.get('access_token')
         print('access_token =', access_token)
-        refresh_token = request.COOKIES.get('refresh_token')
-        print('refresh_token =', refresh_token)
-       
         
-        print(access_token)
+        refresh_token = request.COOKIES.get('refresh_token')
+        print('refresh_token = ', refresh_token)
         if not access_token:
             return None
             
@@ -21,7 +21,8 @@ class CustomJWTAuthentication(JWTAuthentication):
             user = self.get_user(validated_token)
             return (user, validated_token)
             
-        except InvalidToken:
-            raise AuthenticationFailed('Invalid token')
+        except TokenError as e:
+            # Token is expired or invalid - let middleware handle refresh
+            return None
         except Exception as e:
-            raise AuthenticationFailed(str(e))
+            return None

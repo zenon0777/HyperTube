@@ -13,6 +13,7 @@ interface FormInputProps {
   showPasswordToggle?: boolean;
   showPassword?: boolean;
   onTogglePassword?: () => void;
+  error?: string;
 }
 
 export const FormInput = ({
@@ -27,7 +28,8 @@ export const FormInput = ({
   onChange,
   showPasswordToggle,
   showPassword,
-  onTogglePassword
+  onTogglePassword,
+  error
 }: FormInputProps) => {
   return (
     <div className="space-y-2">
@@ -35,15 +37,18 @@ export const FormInput = ({
         {label}
       </label>
       <div className="relative group">
-        <Icon size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        <input
+        <Icon size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />        <input
           id={id}
           name={name}
           type={type}
           required={required}
           value={value}
           onChange={onChange}
-          className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-200 group-hover:bg-gray-700/70"
+          className={`w-full pl-10 pr-12 py-3 bg-gray-700/50 border rounded-xl focus:ring-2 focus:border-transparent text-gray-100 placeholder-gray-400 transition-all duration-200 group-hover:bg-gray-700/70 ${
+            error 
+              ? 'border-red-500 focus:ring-red-500' 
+              : 'border-gray-600 focus:ring-orange-500'
+          }`}
           placeholder={placeholder}
         />
         {showPasswordToggle && (
@@ -54,9 +59,9 @@ export const FormInput = ({
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
-        )}
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500 to-orange-300 opacity-0 group-hover:opacity-10 transition-opacity duration-200 pointer-events-none" />
+        )}        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-orange-500 to-orange-300 opacity-0 group-hover:opacity-10 transition-opacity duration-200 pointer-events-none" />
       </div>
+      {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
     </div>
   );
 };

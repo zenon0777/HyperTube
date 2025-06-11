@@ -2,17 +2,33 @@ import api from "./axios";
 
 export const authService = {
   async register(userData: any) {
-    const response = await api.post("/auth/register/", userData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
+    try {
+      const response = await api.post("/auth/register/", userData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error;
+      }
+      throw new Error('Failed to register');
+    }
   },
-
   async login(credentials: any) {
-    const response = await api.post("/auth/login/", credentials);
-    return response.data;
+    try {
+      const response = await api.post("/auth/login/", credentials);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        throw new Error('Username or password incorrect');
+      }
+      if (error.response?.data) {
+        throw error;
+      }
+      throw new Error('Failed to login');
+    }
   },
 
   async getUserProfile() {
@@ -46,6 +62,26 @@ export const authService = {
     });
     return response.data;
   },
-  
+
+  async logout() {
+    try {
+      const response = await api.post("/auth/logout/");
+      return response.data;
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    } finally {
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
+  },
+
+  // OAuth login method
+  initiateOAuth(provider: string) {
+    if (typeof window !== 'undefined') {
+      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/${provider}/`;
+    }
+  },
 
 };

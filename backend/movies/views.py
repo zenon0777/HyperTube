@@ -1,6 +1,17 @@
 from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 import requests
+from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.shortcuts import render, get_object_or_404
+from django.core.exceptions import ObjectDoesNotExist
+from rest_framework.permissions import AllowAny
+
+import json
+from .models import Movie, MoviComment
 import environ
 from pathlib import Path
 
@@ -56,7 +67,6 @@ class TorrentScraper:
                     'size': size
                 })
             
-            # Sort by seeds descending
             return sorted(results, key=lambda x: x['seeds'], reverse=True)
             
         except Exception as e:
@@ -92,16 +102,181 @@ class TorrentScraper:
         return results[0] if results else None
 
 
+api_view(["GET"])
+@permission_classes([AllowAny])
+def movie_list(request):
+    if request.method == "GET":
+        try:
+            url = "https://api.themoviedb.org/3/movie/popular?language=en-US&page=1"
+            headers = {
+                "accept": "application/json",
+                "Authorization": f"Bearer {env('TMDB_API_KEY')}",
+            }
+
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            movies = data
+            if not movies:
+                return JsonResponse(
+                    {"error": "No movies found in the response"}, status=404
+                )
+            return JsonResponse({"movies": movies}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+
 def test_scraper(request):
     scraper = TorrentScraper()
-    torrent = scraper.find_best_match("Your Fault", 2024)
+    torrent = scraper.find_best_match(
+        title=request.GET.get("title", ""),
+        year=request.GET.get("year", None),
+    )
     if torrent:
         print(f"Found: {torrent['name']}")
         print(f"Magnet: {torrent['magnet']}")
         return JsonResponse({"torrent": torrent}, status=200)
     return JsonResponse({"error": "No torrent found"}, status=404)
 
+def setFavorite(request):
+    if request.method == "POST":
+        try:
+            movie_id = request.POST.get("movie_id")
+            user_id = request.POST.get("user_id")
+            if not movie_id or not user_id:
+                return JsonResponse({"error": "movie_id and user_id are required"}, status=400)
+
+            # Assuming you have a Movie model with a favorite field
+            from .models import Movie
+            movie, created = Movie.objects.get_or_create(movie_id=movie_id, user_id=user_id)
+            movie.favorite = True
+            movie.save()
+            return JsonResponse({"message": "Movie marked as favorite"}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
+def getFavorite(request):
+    if request.method == "GET":
+        try:
+            user_id = request.GET.get("user_id")
+            if not user_id:
+                return JsonResponse({"error": "user_id is required"}, status=400)
+
+            # Assuming you have a Movie model with a favorite field
+            from .models import Movie
+            favorites = Movie.objects.filter(user_id=user_id, favorite=True)
+            favorite_movies = [movie.movie_id for movie in favorites]
+            return JsonResponse({"favorite_movies": favorite_movies}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+def removeFavorite(request):
+    if request.method == "POST":
+        try:
+            movie_id = request.POST.get("movie_id")
+            user_id = request.POST.get("user_id")
+            if not movie_id or not user_id:
+                return JsonResponse({"error": "movie_id and user_id are required"}, status=400)
+
+            # Assuming you have a Movie model with a favorite field
+            from .models import Movie
+            movie = Movie.objects.filter(movie_id=movie_id, user_id=user_id).first()
+            if movie:
+                movie.favorite = False
+                movie.save()
+                return JsonResponse({"message": "Movie removed from favorites"}, status=200)
+            else:
+                return JsonResponse({"error": "Movie not found"}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def add_comment(request, movie_id):
+
+    comment_text = request.data.get("comment", "").strip()
+    if not comment_text:
+        return JsonResponse(
+            {"success": False, "error": "Comment text is required"},
+            status= 400
+        )
+
+    try:
+        movie = Movie.objects.get(movie_id=movie_id)
+    except Movie.DoesNotExist:
+        movie = Movie.objects.create(movie_id=movie_id)
+
+    comment = MoviComment.objects.create(
+        movie=movie,
+        user=request.user,
+        comment=comment_text
+    )
+
+    response_data = {
+        "success": True,
+        "message": "Comment added successfully",
+        "comment": {
+            "id": comment.id,
+            "comment": comment.comment,
+            "user": comment.user.username,
+            "user_id": comment.user.id,
+            "created_at": comment.created_at.isoformat(),
+            "movie_id": movie.movie_id
+        }
+    }
+    return JsonResponse(response_data, status=201)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_movie_comments(request, movie_id):
+
+    movie = get_object_or_404(Movie, movie_id=movie_id)
+
+    comments_qs = (
+        MoviComment.objects
+        .select_related("user")
+        .filter(movie=movie)
+        .order_by("-created_at")
+    )
+
+    comments_data = []
+    for comment in comments_qs:
+        comments_data.append({
+            "id": comment.id,
+            "comment": comment.comment,
+            "user": {
+                "id": comment.user.id,
+                "username": comment.user.username,
+                "email": getattr(comment.user, "email", None),
+                "profile_picture": getattr(comment.user, "profile_picture", None)
+            },
+            "created_at": comment.created_at.isoformat(),
+            "updated_at": comment.updated_at.isoformat(),
+        })
+
+    return JsonResponse({
+        "success": True,
+        "movie_id": movie.movie_id,
+        "comments_count": comments_qs.count(),
+        "comments": comments_data
+    }, status=200)
+
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def tmdb_movie_list(request):
     if request.method == "GET":
         try:
@@ -140,8 +315,9 @@ def tmdb_movie_list(request):
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
-
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def yts_movie_list(request):
     if request.method == "GET":
         try:
@@ -205,6 +381,8 @@ def trending_tv_shows(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def top_movies_tmdb_shows(request):
     if request.method == "GET":
         try:
@@ -244,6 +422,8 @@ def top_movies_tmdb_shows(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def tmdb_multi_search(request):
     try:
         #  ?query=={query}
@@ -277,6 +457,8 @@ def tmdb_multi_search(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def yts_movie_detail(request):
     if request.method == "GET":
         try:    
