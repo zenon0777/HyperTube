@@ -67,11 +67,11 @@ interface OpenSubtitlesResponse {
 
 class OpenSubtitlesService {
   private readonly baseUrl = 'https://api.opensubtitles.com/api/v1';
-  private readonly apiKey = process.env.NEXT_PUBLIC_OPENSUBTITLES_API_KEY;
+  private readonly apiKey = process.env.OPENSUBTITLES_API_KEY;
 
   private async makeRequest(endpoint: string, params: Record<string, any> = {}) {
     if (!this.apiKey) {
-      console.error('OpenSubtitles API key is not configured. Please set NEXT_PUBLIC_OPENSUBTITLES_API_KEY in your environment variables.');
+      console.error('OpenSubtitles API key is not configured. Please set OPENSUBTITLES_API_KEY in your environment variables.');
       throw new Error('OpenSubtitles API key is not configured');
     }
 

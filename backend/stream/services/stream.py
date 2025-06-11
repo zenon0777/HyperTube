@@ -46,18 +46,24 @@ class VideoConverter:
     
     @staticmethod
     def convert_video_chunk(input_path, start_byte, chunk_size, output_format='mp4'):
+        if not os.path.exists(input_path) or not os.path.isfile(input_path):
+            raise ValueError("Invalid input path")
+
+        if output_format not in ['mp4', 'webm']:
+            raise ValueError("Invalid output format")
+
         try:
             duration_cmd = ['ffprobe', '-v', 'quiet', '-show_entries', 'format=duration', 
-                          '-of', 'csv=p=0', input_path]
+                            '-of', 'csv=p=0', input_path]
             duration_result = subprocess.run(duration_cmd, capture_output=True, text=True)
-            
+
             if duration_result.returncode == 0:
                 total_duration = float(duration_result.stdout.strip())
                 file_size = os.path.getsize(input_path)
                 time_offset = (start_byte / file_size) * total_duration
             else:
                 time_offset = 0
-            
+
             cmd = [
                 'ffmpeg',
                 '-ss', str(time_offset),
@@ -71,10 +77,10 @@ class VideoConverter:
                 '-f', output_format,
                 '-'
             ]
-            
+
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             return process
-            
+
         except Exception as e:
             print(f"Error in video conversion: {str(e)}")
             return None
@@ -338,7 +344,6 @@ class StoredMovieStream:
                 status=200
             )
             
-            response['Content-Length'] = str(self.file_size)
             response['Accept-Ranges'] = 'none'
             response['Cache-Control'] = 'no-cache'
             
