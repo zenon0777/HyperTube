@@ -224,12 +224,14 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
       <video
         ref={videoRef}
         controls
-        autoPlay
         crossOrigin="anonymous"
         className="w-full h-auto"
         style={{ maxHeight: '80vh' }}
         onError={(e) => console.error('Video Error:', e)}
         onLoadedData={() => console.log('Video loaded data')}
+        onLoadStart={() => console.log('Video load started')}
+        onWaiting={() => console.log('Video waiting for data')}
+        onCanPlay={() => console.log('Video can play')}
       >
         <source src={streamUrl} type="video/mp4" />
         {tracks.map((track, index) => (
