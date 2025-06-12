@@ -26,6 +26,7 @@ import { BsLightningChargeFill, BsSpeedometer2 } from "react-icons/bs";
 import CommentsSection from "./components/MovieComments";
 import { RootState } from "@/app/store";
 import { getUserProfile } from "@/app/store/userSlice";
+import { getTorrentHashForTMDBMovie } from "@/api/torrent/torrentHelper";
 
 // Helper to format runtime
 const formatRuntime = (minutes: number | undefined | null) => {
@@ -48,6 +49,8 @@ export default function Movie() {
   const [details, setDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
+  const [torrentHash, setTorrentHash] = useState<string | null>(null);
+  const [isLoadingTorrent, setIsLoadingTorrent] = useState(false);
 
   useEffect(() => {
     dispatch(getUserProfile() as any);
@@ -64,6 +67,8 @@ export default function Movie() {
       setIsLoading(true);
       setIsError(false);
       setDetails(null);
+      setTorrentHash(null);
+      setIsLoadingTorrent(false);
 
       let base_url =
         APIProvider === "YTS"
@@ -79,7 +84,8 @@ export default function Movie() {
 
       try {
         const response = await fetch(full_url, {
-          method: "GET",
+					method: "GET",
+					credentials: 'include',
           headers: { "Content-Type": "application/json" },
         });
         if (!response.ok)
@@ -102,6 +108,25 @@ export default function Movie() {
     };
     fetchMovieDetails();
   }, [APIProvider, movieId]);
+
+  useEffect(() => {
+    const fetchTorrentHash = async () => {
+      if (APIProvider !== "YTS" && details && !isLoadingTorrent && !torrentHash) {
+        setIsLoadingTorrent(true);
+        try {
+          const hash = await getTorrentHashForTMDBMovie(details);
+          setTorrentHash(hash);
+        } catch (error) {
+          console.error("Error fetching torrent hash:", error);
+          setTorrentHash(null);
+        } finally {
+          setIsLoadingTorrent(false);
+        }
+      }
+    };
+
+    fetchTorrentHash();
+  }, [APIProvider, details]);
 
   // --- Data Accessor Helpers ---
   const getTitle = () => details?.title_english || details?.title || "Untitled";
@@ -406,27 +431,37 @@ export default function Movie() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                   
-                {" "}
-                <MdMovie /> Watch now
-                 {" "}
-              </motion.button>
+                    <MdMovie /> Watch now
+                  </motion.button>
                 </Link>
               ) : APIProvider !== "YTS" && details?.id ? (
-                 // For TMDB, we don't have a direct torrent hash. 
-                 // You might want to link to a search page or a placeholder, 
-                 // or if you have a way to get a torrent hash for TMDB movies, implement that here.
-                 // For now, let's assume we can't directly watch TMDB movies this way or we'd need another API call.
-                 // Option 1: Link to a generic watch page that might search for torrents (if you build such a page)
-                 // <Link href={`/watch/search?title=${encodeURIComponent(getTitle())}`} passHref>
-                 // Option 2: Disable or show a different button for TMDB
-                <button 
-                  className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
-                  disabled
-                  title="Direct watch not available for TMDB source currently"
-                >
-                  <MdMovie /> Watch (YTS only)
-                </button>
+                torrentHash ? (
+                  <Link href={`/watch/${torrentHash}?movieName=${encodeURIComponent(getTitle())}`} passHref>
+                    <motion.button 
+                      className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <MdMovie /> Watch now
+                    </motion.button>
+                  </Link>
+                ) : isLoadingTorrent ? (
+                  <button 
+                    className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-400 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-wait"
+                    disabled
+                  >
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                    Finding torrent...
+                  </button>
+                ) : (
+                  <button 
+                    className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
+                    disabled
+                    title="No torrent found for this movie"
+                  >
+                    <MdMovie /> No torrent available
+                  </button>
+                )
               ) : (
                 <button 
                   className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
@@ -952,7 +987,15 @@ export default function Movie() {
             </div>
           </motion.section>
         )}
-        <CommentsSection movieId={movieId as string} user={user.user} />
+        <CommentsSection 
+          movieId={movieId as string} 
+          user={user.user ? {
+            token: null, // Token should come from auth service or localStorage
+            id: user.user.id,
+            username: user.user.username,
+            profile_picture: user.user.profile_picture
+          } : { token: null }} 
+        />
       </div>
     </div>
   );

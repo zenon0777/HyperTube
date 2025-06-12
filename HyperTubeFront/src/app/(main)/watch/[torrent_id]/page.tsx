@@ -25,11 +25,12 @@ export default async function WatchPage({
   params,
   searchParams,
 }: {
-  params: { torrent_id: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: Promise<{ torrent_id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const torrentHash = params.torrent_id;
-  const movieName = searchParams?.movieName as string || "Unknown Movie";
+  const { torrent_id: torrentHash } = await params;
+  const searchParamsData = await searchParams;
+  const movieName = searchParamsData?.movieName as string || "Unknown Movie";
 
   if (!torrentHash) {
     return (
