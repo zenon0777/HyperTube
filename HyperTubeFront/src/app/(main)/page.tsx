@@ -3,7 +3,7 @@ import { Info } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -12,13 +12,14 @@ import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { MovieSection } from "../components/MovieSection/MovieSection";
 import { genres } from "../data/NavBarElements";
-import { RootState } from "../store";
+import { RootState, useAppSelector } from "../store";
+import { useAPIProvider } from "../hooks/useAPIProvider";
+import { useRouter } from "next/navigation";
+import { getUserProfile } from "../store/userSlice";
 
-export default function Home() {
+export default function Rootpage() {
   const [movies, setMovies] = useState([]);
-  const APIProvider = useSelector(
-    (state: RootState) => state.APIProviderSlice.APIProvider
-  );
+  const { APIProvider } = useAPIProvider();
   const [popularMovies, setPopularMovies] = useState([]);
   const [watchedMovies, setWatchedMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
@@ -36,15 +37,21 @@ export default function Home() {
         let NowPlayingMoviesUrl =
           baseUrl +
           "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
-        const response = await fetch(popularMoviesUrl);
+        const response = await fetch(popularMoviesUrl, {
+          credentials: "include",
+        });
         const data = await response.json();
         console.log("Popular movies : --------> ", data.movies?.results);
         setPopularMovies(data.movies?.results);
-        const response2 = await fetch(topRatedMoviesUrl);
+        const response2 = await fetch(topRatedMoviesUrl, {
+          credentials: "include",
+        });
         const data2 = await response2.json();
         console.log("Top Rated movies : --------> ", data2.movies?.results);
         setTopRatedMovies(data2.movies?.results);
-        const response3 = await fetch(NowPlayingMoviesUrl);
+        const response3 = await fetch(NowPlayingMoviesUrl, {
+          credentials: "include",
+        });
         const data3 = await response3.json();
         console.log("Now Playing movies : --------> ", data3.movies?.results);
         setNowPlayingMovies(data3.movies?.results);
@@ -53,17 +60,7 @@ export default function Home() {
         toast.error(error.message);
       }
     };
-    const getTrendingTvShows = async () => {
-      try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/trending_tv_shows?&language=en-US&page=1`;
-        const response = await fetch(baseUrl);
-        const data = await response.json();
-        console.log("Tv Shows : -----> :: ", data);
-        setTvShows(data.tv_shows.results);
-      } catch (error: any) {
-        toast.error(error.message);
-      }
-    };
+
     const getYTSFiltredMovies = async () => {
       try {
         let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
@@ -73,15 +70,21 @@ export default function Home() {
         PopularMoviesUrl += "&sort_by=download_count&order_by=desc";
         let nowPlayingMoviesUrl = baseUrl;
         nowPlayingMoviesUrl += "&sort_by=date_added&order_by=desc";
-        const response = await fetch(PopularMoviesUrl);
+        const response = await fetch(PopularMoviesUrl, {
+          credentials: "include",
+        });
         const data = await response.json();
         console.log("Popular : --------> ", data);
         setPopularMovies(data.data?.movies);
-        const response2 = await fetch(topRatedMoviesUrl);
+        const response2 = await fetch(topRatedMoviesUrl, {
+          credentials: "include",
+        });
         const data2 = await response2.json();
         console.log("Top Rated : --------> ", data2);
         setTopRatedMovies(data2.data?.movies);
-        const response3 = await fetch(nowPlayingMoviesUrl);
+        const response3 = await fetch(nowPlayingMoviesUrl, {
+          credentials: "include",
+        });
         const data3 = await response3.json();
         console.log("Now Playing : --------> ", data3);
         setNowPlayingMovies(data3.data?.movies);
@@ -90,7 +93,6 @@ export default function Home() {
       }
     };
     APIProvider === "TMDB" ? getTMDBFiltredMovies() : getYTSFiltredMovies();
-    APIProvider === "TMDB" && getTrendingTvShows();
     console.log("APIProvider : --------> :: ", APIProvider);
   }, [APIProvider]);
 
@@ -228,9 +230,6 @@ export default function Home() {
       <MovieSection title="Popular Movies" movies={popularMovies} />
       <MovieSection title="Top Rated Movies" movies={topRatedMovies} />
       {/* <MovieSection title="Watched Movies" movies={Watched Movies} /> */}
-      {APIProvider === "TMDB" && (
-        <MovieSection title="Tv Shows" movies={tvShows} />
-      )}
     </div>
   );
 }

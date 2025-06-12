@@ -14,16 +14,14 @@ import { MovieSection } from "../../components/MovieSection/MovieSection";
 import { genres } from "../../data/NavBarElements";
 import { RootState } from "../../store";
 import { headers } from "next/headers";
+import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 
 export default function Home() {
   const [movies, setMovies] = useState([]);
-  const APIProvider = useSelector(
-    (state: RootState) => state.APIProviderSlice.APIProvider
-  );
+  const { isTMDB } = useAPIProvider();
   const [popularMovies, setPopularMovies] = useState([]);
   const [watchedMovies, setWatchedMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
-  const [tvShows, setTvShows] = useState([]);
   const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
 
   useEffect(() => {
@@ -62,17 +60,6 @@ export default function Home() {
         toast.error(error.message);
       }
     };
-    const getTrendingTvShows = async () => {
-      try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/trending_tv_shows?&language=en-US&page=1`;
-        const response = await fetch(baseUrl);
-        const data = await response.json();
-        console.log("Tv Shows : -----> :: ", data);
-        setTvShows(data.tv_shows.results);
-      } catch (error: any) {
-        toast.error(error.message);
-      }
-    };
     const getYTSFiltredMovies = async () => {
       try {
         let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
@@ -104,16 +91,12 @@ export default function Home() {
         toast.error(error.message);
       }
     };
-    APIProvider === "TMDB" && getTMDBFiltredMovies();
-    APIProvider === "YTS" && getYTSFiltredMovies();
-    APIProvider === "TMDB" && getTrendingTvShows();
-    console.log("APIProvider : --------> :: ", APIProvider);
-  }, [APIProvider]);
+    isTMDB === true ? getTMDBFiltredMovies() : getYTSFiltredMovies();
+  }, [isTMDB]);
 
   return (
     <div className="min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
       <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
-        {/* latest movies */}
         <Swiper
           modules={[Navigation, Pagination]}
           navigation={false}
@@ -141,12 +124,10 @@ export default function Home() {
                   })`,
                 }}
               >
-                {/* Existing Gradient Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
                 <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-r from-black to-transparent opacity-70"></div>
                 <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-l from-black to-transparent opacity-70"></div>
 
-                {/* Movie Details with Staggered Animations */}
                 <div className="relative z-10 container justify-center px-4 sm:px-8 flex flex-col md:flex-row items-center gap-6 md:gap-11 w-5/6">
                   <motion.div
                     initial={{ opacity: 0, x: -50 }}
@@ -244,9 +225,6 @@ export default function Home() {
       <MovieSection title="Popular Movies" movies={popularMovies} />
       <MovieSection title="Top Rated Movies" movies={topRatedMovies} />
       {/* <MovieSection title="Watched Movies" movies={Watched Movies} /> */}
-      {APIProvider === "TMDB" && (
-        <MovieSection title="Tv Shows" movies={tvShows} />
-      )}
     </div>
   );
 }

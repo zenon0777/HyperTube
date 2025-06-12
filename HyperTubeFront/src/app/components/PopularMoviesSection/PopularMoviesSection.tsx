@@ -21,7 +21,9 @@ function PopularMoviesSection() {
   useEffect(() => {
     const fetchPopularMovies = async () => {
       try {
-        const res = await fetch("http://localhost:8000/movies/");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies`
+        );
         if (!res.ok) throw new Error("Failed to fetch movies");
         const data: any = await res.json();
         console.log("Response status:", data);
