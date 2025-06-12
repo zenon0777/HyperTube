@@ -27,79 +27,89 @@ import re
 
 class TorrentScraper:
     def __init__(self):
-        self.base_url = "https://1337x.to"
+        self.yts_api_url = "https://yts.mx/api/v2/list_movies.json"
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
 
     def search_torrent(self, query, year=None):
-        search_query = f"{query} {year}" if year else query
-        search_url = f"{self.base_url}/search/{search_query}/1/"
-        
         try:
-            response = requests.get(search_url, headers=self.headers)
-            soup = BeautifulSoup(response.text, 'html.parser')
+            params = {
+                'query_term': query,
+                'limit': 20,
+                'sort_by': 'seeds',
+                'order_by': 'desc'
+            }
+            if year:
+                params['query_term'] = f"{query} {year}"
             
-            results = []
-            for row in soup.select('tbody tr'):
-                name_cell = row.select_one('td.name')
-                if not name_cell:
-                    continue
-                
-                link = name_cell.select_one('a:nth-of-type(2)')
-                if not link:
-                    continue
-                
-                seeds = row.select_one('td.seeds').text
-                leeches = row.select_one('td.leeches').text
-                size = row.select_one('td.size').text
-                
-                # Get magnet link from torrent page
-                torrent_url = self.base_url + link['href']
-                magnet = self.get_magnet_link(torrent_url)
-                
-                results.append({
-                    'name': link.text,
-                    'url': torrent_url,
-                    'magnet': magnet,
-                    'seeds': int(seeds),
-                    'leeches': int(leeches),
-                    'size': size
-                })
+            print(f"Searching YTS API for: {params['query_term']}")
             
-            return sorted(results, key=lambda x: x['seeds'], reverse=True)
+            response = requests.get(self.yts_api_url, params=params, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            print(f"YTS API response status: {data.get('status')}")
+            
+            if data.get('status') == 'ok' and data.get('data', {}).get('movies'):
+                results = []
+                movies = data['data']['movies']
+                print(f"Found {len(movies)} movies from YTS")
+                
+                for movie in movies:
+                    if movie.get('torrents'):
+                        for torrent in movie['torrents']:
+                            torrent_hash = torrent.get('hash', '')
+                            if torrent_hash:
+                                magnet = f"magnet:?xt=urn:btih:{torrent_hash}&dn={requests.utils.quote(movie['title'])}&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80"
+                                
+                                results.append({
+                                    'name': f"{movie['title']} ({movie.get('year', 'Unknown')}) [{torrent.get('quality', 'Unknown')}]",
+                                    'url': movie.get('url', ''),
+                                    'magnet': magnet,
+                                    'seeds': torrent.get('seeds', 0),
+                                    'leeches': torrent.get('peers', 0),
+                                    'size': torrent.get('size', 'Unknown')
+                                })
+                
+                print(f"Generated {len(results)} torrent results")
+                return sorted(results, key=lambda x: x['seeds'], reverse=True)
+            
+            print("No movies found in YTS response")
+            return []
             
         except Exception as e:
-            print(f"Error searching torrents: {str(e)}")
+            print(f"Error searching YTS API: {str(e)}")
             return []
 
     def get_magnet_link(self, torrent_url):
-        try:
-            response = requests.get(torrent_url, headers=self.headers)
-            soup = BeautifulSoup(response.text, 'html.parser')
-            magnet_link = soup.select_one('a[href^="magnet:?"]')
-            return magnet_link['href'] if magnet_link else None
-        except Exception as e:
-            print(f"Error getting magnet link: {str(e)}")
-            return None
+        return None
 
-    def find_best_match(self, title, year=None, min_seeds=10):
+    def find_best_match(self, title, year=None, min_seeds=1):
         results = self.search_torrent(title, year)
         if not results:
+            print("No search results found")
             return None
         
         # Filter by minimum seeds
-        results = [r for r in results if r['seeds'] >= min_seeds]
+        filtered_results = [r for r in results if r['seeds'] >= min_seeds]
+        print(f"Found {len(filtered_results)} results with >= {min_seeds} seeds")
         
         if year:
             # Try to find exact match with year
             year_pattern = re.compile(rf'\b{year}\b')
-            exact_matches = [r for r in results if year_pattern.search(r['name'])]
+            exact_matches = [r for r in filtered_results if year_pattern.search(r['name'])]
             if exact_matches:
+                print(f"Found exact year match: {exact_matches[0]['name']}")
                 return exact_matches[0]
         
         # Return highest seeded result if no exact match
-        return results[0] if results else None
+        if filtered_results:
+            print(f"Returning best match: {filtered_results[0]['name']}")
+            return filtered_results[0]
+        
+        print("No suitable matches found")
+        return None
 
 
 api_view(["GET"])
@@ -129,16 +139,26 @@ def movie_list(request):
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 
 
-def test_scraper(request):
+@csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view(["GET"])
+def search_torrents(request):
     scraper = TorrentScraper()
+    title = request.GET.get("title", "")
+    year = request.GET.get("year", None)
+    
+    print(f"Searching for: {title} ({year})")
+    
     torrent = scraper.find_best_match(
-        title=request.GET.get("title", ""),
-        year=request.GET.get("year", None),
+        title=title,
+        year=year,
     )
     if torrent:
         print(f"Found: {torrent['name']}")
         print(f"Magnet: {torrent['magnet']}")
         return JsonResponse({"torrent": torrent}, status=200)
+    
+    print("No torrent found")
     return JsonResponse({"error": "No torrent found"}, status=404)
 
 def setFavorite(request):
