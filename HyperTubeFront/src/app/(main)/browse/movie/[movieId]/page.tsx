@@ -26,6 +26,7 @@ import { BsLightningChargeFill, BsSpeedometer2 } from "react-icons/bs";
 import CommentsSection from "./components/MovieComments";
 import { RootState } from "@/app/store";
 import { getUserProfile } from "@/app/store/userSlice";
+import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { getTorrentHashForTMDBMovie } from "@/api/torrent/torrentHelper";
 
 // Helper to format runtime
@@ -39,9 +40,7 @@ const formatRuntime = (minutes: number | undefined | null) => {
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
 export default function Movie() {
-  const APIProvider = useSelector(
-    (state: RootState) => state.APIProviderSlice.APIProvider
-  );
+  const { APIProvider, isYTS } = useAPIProvider();
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const { movieId } = useParams();
@@ -62,6 +61,7 @@ export default function Movie() {
       setIsError(true);
       return;
     }
+    console.log("is it YTS", isYTS);
 
     const fetchMovieDetails = async () => {
       setIsLoading(true);
@@ -71,14 +71,14 @@ export default function Movie() {
       setIsLoadingTorrent(false);
 
       let base_url =
-        APIProvider === "YTS"
+        isYTS === true
           ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_detail`
           : `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_detail`;
 
       const queryParams = new URLSearchParams({ movie_id: movieId as string });
 
       const full_url =
-        APIProvider === "YTS"
+        isYTS === true
           ? `${base_url}?${queryParams.toString()}`
           : `${base_url}/${movieId}`;
 
@@ -87,6 +87,7 @@ export default function Movie() {
 					method: "GET",
 					credentials: 'include',
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
         });
         if (!response.ok)
           throw new Error(
@@ -99,7 +100,7 @@ export default function Movie() {
         } else throw new Error("Movie data not found in response");
         setIsError(false);
       } catch (error) {
-        console.error("Error fetching movie details:", error);
+        console.log("Error fetching movie details:", error);
         setIsError(true);
         setDetails(null);
       } finally {
@@ -128,7 +129,6 @@ export default function Movie() {
     fetchTorrentHash();
   }, [APIProvider, details]);
 
-  // --- Data Accessor Helpers ---
   const getTitle = () => details?.title_english || details?.title || "Untitled";
   const getOverview = () =>
     details?.description_full ||
@@ -172,7 +172,6 @@ export default function Movie() {
   };
 
   const getGenres = () => {
-    /* ... same as before ... */
     if (details?.genres && Array.isArray(details.genres)) {
       if (APIProvider === "YTS") return details.genres.join(", ");
       return details.genres.map((g: any) => g.name).join(", ");
@@ -180,13 +179,11 @@ export default function Movie() {
     return "N/A";
   };
   const getRating = () => {
-    /* ... same as before ... */
     const rating = details?.rating ?? details?.vote_average;
     if (typeof rating === "number") return `${rating.toFixed(1)}/10`;
     return "N/A";
   };
   const getBackdropUrl = () => {
-    /* ... same as before ... */
     if (APIProvider !== "YTS" && details?.backdrop_path)
       return `${TMDB_IMAGE_BASE_URL}original${details.backdrop_path}`;
     if (APIProvider === "YTS" && details?.background_image_original)
@@ -200,7 +197,6 @@ export default function Movie() {
     )}`;
   };
   const getPosterUrl = (size: string = "w500") => {
-    /* ... same as before ... */
     if (APIProvider !== "YTS" && details?.poster_path)
       return `${TMDB_IMAGE_BASE_URL}${size}${details.poster_path}`;
     if (APIProvider === "YTS" && details?.large_cover_image)
@@ -210,11 +206,10 @@ export default function Movie() {
     )}`;
   };
   const getSmallCoverImage = (movie: any) => {
-    /* ... same as before ... */
     if (APIProvider === "YTS" && movie?.medium_cover_image)
-      return movie.medium_cover_image; // YTS similar uses medium
+      return movie.medium_cover_image;
     if (APIProvider !== "YTS" && movie?.poster_path)
-      return `${TMDB_IMAGE_BASE_URL}w342${movie.poster_path}`; // TMDB similar uses w342 for better quality
+      return `${TMDB_IMAGE_BASE_URL}w342${movie.poster_path}`;
     return `https://via.placeholder.com/200x300?text=${encodeURIComponent(
       movie?.title || "Movie"
     )}`;
@@ -223,8 +218,8 @@ export default function Movie() {
   const getSpokenLanguages = () => {
     if (APIProvider !== "YTS" && details?.spoken_languages?.length > 0) {
       return details.spoken_languages
-        .map((lang: any) => lang.english_name || lang.name) // Prefer english_name, fallback to name
-        .filter(Boolean) // Remove any null/empty names
+        .map((lang: any) => lang.english_name || lang.name)
+        .filter(Boolean)
         .join(", ");
     }
     if (APIProvider === "YTS" && details?.language) {
@@ -251,9 +246,7 @@ export default function Movie() {
   const title = getTitle();
   const tagline = getTagline();
 
-  // --- Render Logic ---
   if (isLoading) {
-    /* ... loading state (identical to before) ... */
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
@@ -263,7 +256,6 @@ export default function Movie() {
   }
 
   if (isError || !details) {
-    /* ... error state (identical to before) ... */
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-8 text-center">
         <MdInfoOutline className="text-6xl text-red-500 mb-4" />
@@ -289,7 +281,6 @@ export default function Movie() {
 
   return (
     <div className="min-h-screen bg-black text-white w-full flex flex-col">
-      {/* Hero Section (Identical to before) */}
       <div className="relative h-[70vh] sm:h-[80vh] md:h-[85vh] w-full">
         <motion.div
           initial={{ opacity: 0 }}
@@ -986,6 +977,9 @@ export default function Movie() {
               ))}
             </div>
           </motion.section>
+        )}
+        {user.user && (
+          <CommentsSection movieId={movieId as string} user={user.user} />
         )}
         <CommentsSection 
           movieId={movieId as string} 

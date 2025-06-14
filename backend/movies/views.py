@@ -521,6 +521,8 @@ def yts_movie_detail(request):
 
 
 @csrf_exempt
+@permission_classes([IsAuthenticated])
+@api_view (["GET"])
 def tmdb_movie_detail(request, id):
     if request.method == "GET":
         try:

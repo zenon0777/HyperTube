@@ -1,11 +1,9 @@
-// Add these imports to your existing imports
 import { MdComment, MdSend, MdPerson } from "react-icons/md";
 import { FaRegCommentDots } from "react-icons/fa";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
 
-// Add this component after your existing helper functions and before the main Movie component
 const CommentsSection = ({
   movieId,
   user,

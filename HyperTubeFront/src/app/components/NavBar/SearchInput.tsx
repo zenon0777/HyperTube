@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useSelector } from "react-redux";
 import Image from "next/image";
-import { RootState } from "@/app/store";
 import debounce from "lodash.debounce";
 import { LuLoader } from "react-icons/lu";
 import { SearchOffOutlined } from "@mui/icons-material";
 import { AiFillX } from "react-icons/ai";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 
 interface MovieResult {
   id: number;
@@ -21,9 +20,7 @@ interface MovieResult {
 }
 
 export default function SearchInput() {
-  const provider = useSelector(
-    (state: RootState) => state.APIProviderSlice.APIProvider
-  );
+  const { APIProvider } = useAPIProvider();
 
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<MovieResult[]>([]);
@@ -38,7 +35,7 @@ export default function SearchInput() {
 
   const debouncedSearch = useCallback(
     debounce(async (searchTerm: string) => {
-      if (!searchTerm || !provider) return;
+      if (!searchTerm || !APIProvider) return;
 
       setIsLoading(true);
       try {
@@ -48,12 +45,17 @@ export default function SearchInput() {
           TMDB: `${baseUrl}tmdb_multi_search?query=${searchTerm}`,
         };
 
-        const res = await fetch(endpoints[provider as keyof typeof endpoints]);
-        if (!res.ok) throw new Error(`No movies found on ${provider}`);
+        const res = await fetch(
+          endpoints[APIProvider as keyof typeof endpoints],
+          {
+            credentials: "include",
+          }
+        );
+        if (!res.ok) throw new Error(`No movies found on ${APIProvider}`);
 
         const data = await res.json();
         console.log("search data ====> ::: ", data);
-        provider === "YTS"
+        APIProvider === "YTS"
           ? setResults(data.data?.movies)
           : setResults(data.movies?.results);
       } catch (error: any) {
@@ -63,7 +65,7 @@ export default function SearchInput() {
         setIsLoading(false);
       }
     }, 300),
-    [provider]
+    [APIProvider]
   );
 
   useEffect(() => {

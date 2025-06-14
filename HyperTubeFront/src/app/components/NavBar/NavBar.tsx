@@ -38,9 +38,6 @@ export default function NavBar() {
   //   }
   // }, [user.error, router]);
 
-  useEffect(() => {
-    console.log("User data:", user);
-  }, [user]);
 
   return (
     <nav className="w-full px-8 md:px-12 py-4 flex justify-between items-center relative">

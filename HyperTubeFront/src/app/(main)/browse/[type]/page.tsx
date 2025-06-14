@@ -7,11 +7,12 @@ import {
   Remove,
   Sort,
 } from "@mui/icons-material";
-import { Chip, CircularProgress } from "@mui/material"; // Added CircularProgress
-import { useEffect, useState, useCallback } from "react"; // Added useCallback
+import { Chip, CircularProgress } from "@mui/material";
+import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import MoviesList from "./components/MovieList"; // Assuming MovieList is adapted
+import MoviesList from "./components/MovieList";
+import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 
 export interface categoryOptions {
   id: string;
@@ -27,11 +28,10 @@ export interface activeFilters {
 }
 
 export default function Browse() {
-  const APIProvider = useSelector(
-    (state: any) => state.APIProviderSlice.APIProvider
-  );
+  const { APIProvider } = useAPIProvider();
+
   const [hoveredMovie, setHoveredMovie] = useState<number | null>(null);
-  const [movies, setMovies] = useState<any[]>([]); // Ensure it's an array
+  const [movies, setMovies] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function Browse() {
     years: false,
     orderBy: false,
     categories: false,
-    provider: false, // Though provider isn't a toggleable section here
+    provider: false,
   });
   const [categoryOptions, setCategoryOptions] = useState<categoryOptions[]>([]);
 
@@ -135,7 +135,9 @@ export default function Browse() {
               ? (url += "&sort_by=popularity.asc")
               : (url += "&sort_by=popularity.desc");
           }
-          const response = await fetch(url);
+          const response = await fetch(url, {
+            credentials: "include",
+          });
           if (!response.ok)
             throw new Error(`TMDB API Error: ${response.statusText}`);
           const data = await response.json();
@@ -159,7 +161,9 @@ export default function Browse() {
               ? (url += "&order_by=asc")
               : (url += "&order_by=desc");
           }
-          const response = await fetch(url);
+          const response = await fetch(url, {
+            credentials: "include",
+          });
           if (!response.ok)
             throw new Error(`YTS API Error: ${response.statusText}`);
           const data = await response.json();

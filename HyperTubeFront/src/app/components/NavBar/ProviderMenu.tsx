@@ -1,4 +1,5 @@
 "use client";
+import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { setAPIProvider } from "@/app/store/apiProviderSlice";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Button from "@mui/material/Button";
@@ -62,6 +63,7 @@ export default function ProvidersMenu() {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const { APIProvider, changeProvider } = useAPIProvider();
 
   return (
     <div>
@@ -129,7 +131,7 @@ export default function ProvidersMenu() {
             justifyContent: "center",
           }}
           onClick={() => {
-            dispatch(setAPIProvider({ APIProvider: "YTS" }));
+            changeProvider("YTS");
             handleClose();
           }}
           disableRipple
@@ -147,7 +149,7 @@ export default function ProvidersMenu() {
             justifyContent: "center",
           }}
           onClick={() => {
-            dispatch(setAPIProvider({ APIProvider: "TMDB" }));
+            changeProvider("TMDB");
             handleClose();
           }}
           disableRipple
