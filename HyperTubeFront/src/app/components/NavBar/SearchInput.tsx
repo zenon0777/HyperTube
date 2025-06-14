@@ -7,6 +7,7 @@ import { AiFillX } from "react-icons/ai";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
+import { useTranslations } from "next-intl";
 
 interface MovieResult {
   id: number;
@@ -20,11 +21,10 @@ interface MovieResult {
 }
 
 export default function SearchInput() {
-  const { APIProvider } = useAPIProvider();
-
+  const t = useTranslations("searchInput");
+  const { APIProvider, isYTS } = useAPIProvider();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<MovieResult[]>([]);
-  const [tmdbList, setTmdbList] = useState<MovieResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isResultsVisible, setIsResultsVisible] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -55,7 +55,7 @@ export default function SearchInput() {
 
         const data = await res.json();
         console.log("search data ====> ::: ", data);
-        APIProvider === "YTS"
+        isYTS
           ? setResults(data.data?.movies)
           : setResults(data.movies?.results);
       } catch (error: any) {
@@ -125,9 +125,9 @@ export default function SearchInput() {
   }, [search, debouncedSearch]);
 
   const renderResultItem = (result: MovieResult, index: number) => {
-    const title = result.title ? result.title : result.name || "Unknown Title";
+    const title = result.title ? result.title : result.name || t("Unknown Title");
     const posterUrl =
-      provider === "YTS"
+      isYTS
         ? result.medium_cover_image
         : (result.poster_path &&
             `https://image.tmdb.org/t/p/w300${result.poster_path}`) ||
@@ -139,7 +139,6 @@ export default function SearchInput() {
     const id = result.id;
 
     const isActive = index === activeIndex;
-    console.log("title ====> ::: ", title);
     return (
       <div
         key={`${result.id}-${index}`}
@@ -178,9 +177,9 @@ export default function SearchInput() {
         <input
           ref={searchInputRef}
           type="text"
-          placeholder="Search movies or TV shows..."
+          placeholder={t("placeholder")}
           value={search}
-          className="w-full bg-gray-800 text-white pl-10 pr-10 py-2.5 rounded-lg placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+          className="w-full bg-gray-800 text-white pl-10 pr-10 py-2.5 rounded-lg placeholder:text-gray-400 ring-2 ring-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
           onChange={(e) => setSearch(e.target.value)}
         />
         {search && (
@@ -196,7 +195,7 @@ export default function SearchInput() {
       {isResultsVisible && (
         <div
           ref={resultsRef}
-          className="absolute top-full mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-[60vh] overflow-y-auto border border-gray-700/50"
+          className="absolute top-full mt-2 w-full bg-gray-800 rounded-lg shadow-lg max-h-[30vh] overflow-y-auto border border-gray-700/50"
         >
           {isLoading ? (
             <div className="flex items-center justify-center p-4">
@@ -206,7 +205,7 @@ export default function SearchInput() {
             displayResults.map(renderResultItem)
           ) : (
             <div className="text-center text-gray-400 p-4">
-              No results found
+              {t("noResults")}
             </div>
           )}
         </div>

@@ -8,8 +8,7 @@ import Menu, { MenuProps } from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { alpha, styled } from "@mui/material/styles";
 import * as React from "react";
-import { useDispatch } from "react-redux";
-
+import { useTranslations } from "next-intl";
 const StyledMenu = styled((props: MenuProps) => (
   <Menu
     elevation={0}
@@ -54,7 +53,7 @@ const StyledMenu = styled((props: MenuProps) => (
 }));
 
 export default function ProvidersMenu() {
-  const dispatch = useDispatch();
+  const t = useTranslations();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -86,7 +85,7 @@ export default function ProvidersMenu() {
           borderRadius: "5px",
         }}
       >
-        API Provider
+        {t("navBar.providers")}
       </Button>
       <StyledMenu
         id="demo-customized-menu"
@@ -136,7 +135,7 @@ export default function ProvidersMenu() {
           }}
           disableRipple
         >
-          YTS API
+          {t("navBar.providersYts")}
         </MenuItem>
         <Divider sx={{ my: 0.5 }} />
         <MenuItem
@@ -154,7 +153,7 @@ export default function ProvidersMenu() {
           }}
           disableRipple
         >
-          TMDB API
+          {t("navBar.providersTmdb")}
         </MenuItem>
       </StyledMenu>
     </div>

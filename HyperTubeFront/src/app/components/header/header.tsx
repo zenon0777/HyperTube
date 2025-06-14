@@ -1,6 +1,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
+import LanguageSwitcher from "../LanguageSwitcher";
+import { useTranslations } from "next-intl";
+
 function Header({ router }: { router: ReturnType<typeof useRouter> }) {
+  const t = useTranslations("Index");
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-lg border-b border-slate-700/50">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -13,22 +17,23 @@ function Header({ router }: { router: ReturnType<typeof useRouter> }) {
           </div>
           <span className="text-white">Tube</span>
           <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-            FREE
+            {t("free")}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <button
             onClick={() => router.push("/login")}
             className="text-gray-300 hover:text-white transition-colors font-medium"
           >
-            Sign In
+            {t("signIn")}
           </button>
           <button
             onClick={() => router.push("/register")}
             className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-6 py-2 rounded-xl font-bold transition-all duration-200 shadow-lg"
           >
-            Sign Up
+            {t("signUp")}
           </button>
         </div>
       </div>

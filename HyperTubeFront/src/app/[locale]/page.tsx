@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -13,79 +13,62 @@ import {
   Shield,
   Zap,
   Star,
-  Check,
   Film,
   Clock,
+  Check,
 } from "lucide-react";
-import Footer from "./components/Footer/Footer";
-import Header from "./components/header/header";
-import PopularMoviesSection from "./components/PopularMoviesSection/PopularMoviesSection";
+import Footer from "../components/Footer/Footer";
+import Header from "../components/header/header";
+import PopularMoviesSection from "../components/PopularMoviesSection/PopularMoviesSection";
+import { useTranslations } from "next-intl";
 
 export default function HomePage() {
   const router = useRouter();
+  const t = useTranslations("Index");
 
   const features = [
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "100% Free",
-      description:
-        "No subscription fees, no hidden costs, completely free forever",
+      title: t("featureCompletelyFree"),
+      description: t("featureCompletelyFreeDesc"),
     },
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "Lightning Fast",
-      description:
-        "Torrent-based technology ensures quick loading and smooth playback",
+      title: t("featureNoAds"),
+      description: t("featureNoAdsDesc"),
     },
     {
       icon: <Film className="w-8 h-8" />,
-      title: "Unlimited Movies",
-      description: "Access thousands of movies and TV shows from every genre",
+      title: t("featurePremiumQuality"),
+      description: t("featurePremiumQualityDesc"),
     },
     {
       icon: <Download className="w-8 h-8" />,
-      title: "Download & Watch",
-      description: "Save your favorites and watch offline anytime, anywhere",
+      title: t("featureDownloadWatch"),
+      description: t("featureDownloadWatchDesc"),
     },
     {
       icon: <Globe className="w-8 h-8" />,
-      title: "Global Access",
-      description: "Stream from anywhere in the world with no restrictions",
+      title: t("featureGlobalAccess"),
+      description: t("featureGlobalAccessDesc"),
     },
     {
       icon: <Star className="w-8 h-8" />,
-      title: "4K Quality",
-      description: "Enjoy ultra HD streaming on supported devices",
+      title: t("feature4KQuality"),
+      description: t("feature4KQualityDesc"),
     },
   ];
 
-  const devices = [
-    {
-      icon: <Tv className="w-12 h-12" />,
-      name: "Smart TV",
-      desc: "Cast to any TV",
-    },
-    {
-      icon: <Monitor className="w-12 h-12" />,
-      name: "Computer",
-      desc: "Windows, Mac & Linux",
-    },
-    {
-      icon: <Smartphone className="w-12 h-12" />,
-      name: "Mobile",
-      desc: "iOS & Android",
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
       <Header router={router} />
       <HeroSection router={router} />
-      <InfoSection devices={devices} />
+      <InfoSection />
       <FeaturesSection features={features} />
       <PopularMoviesSection />
 
-      <DeviceCompatibilitySection devices={devices} />
+      <DeviceCompatibilitySection />
 
       <FinalCTASection router={router} />
 
@@ -95,6 +78,8 @@ export default function HomePage() {
 }
 
 function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
+  const t = useTranslations("Index");
+
   return (
     <section className="relative pt-24 pb-16 px-6">
       <div className="absolute inset-0 z-0 overflow-hidden">
@@ -117,18 +102,19 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
             className="mb-8"
           >
             <h1 className="text-5xl md:text-7xl font-black mb-6 leading-tight">
-              Stream Movies
-              <br />
-              <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
-                Completely Free
-              </span>
+              {t.rich("title", {
+                br: () => <br />,
+                gradient: (chunks) => (
+                  <span className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-500 bg-clip-text text-transparent">
+                    {chunks}
+                  </span>
+                ),
+              })}
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed">
-              Watch unlimited movies and TV shows without subscription fees.
+              {t("heroSubtitle")}
               <br />
-              <span className="text-orange-400 font-semibold">No ads</span>,
-              <span className="text-pink-400 font-semibold"> no costs</span>,
-              <span className="text-purple-400 font-semibold"> no limits</span>.
+              <span className="text-orange-400 font-semibold">{t("benefitNoAds")}</span>
             </p>
           </motion.div>
 
@@ -140,22 +126,22 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
           >
             {[
               {
-                text: "Free Forever",
+                text: t("benefitFree"),
                 icon: <Shield className="w-5 h-5" />,
                 color: "text-green-400",
               },
               {
-                text: "No Ads",
+                text: t("benefitNoAds"),
                 icon: <Zap className="w-5 h-5" />,
                 color: "text-blue-400",
               },
               {
-                text: "4K Quality",
+                text: t("benefit4K"),
                 icon: <Star className="w-5 h-5" />,
                 color: "text-yellow-400",
               },
               {
-                text: "Instant Access",
+                text: t("benefitInstant"),
                 icon: <Clock className="w-5 h-5" />,
                 color: "text-purple-400",
               },
@@ -179,7 +165,7 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
             className="mb-8"
           >
             <p className="text-lg mb-6">
-              Ready to watch? Enter your email to get started.
+              {t("callToAction")}
             </p>
           </motion.div>
 
@@ -193,13 +179,13 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
               onClick={() => router.push("/register")}
               className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-200 shadow-xl"
             >
-              Sign Up Free
+              {t("signUpFree")}
             </button>
             <button
               onClick={() => router.push("/login")}
               className="border-2 border-white/30 text-white hover:bg-white/10 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-200 backdrop-blur-sm"
             >
-              Sign In
+              {t("signIn")}
             </button>
           </motion.div>
         </div>
@@ -208,47 +194,41 @@ function HeroSection({ router }: { router: ReturnType<typeof useRouter> }) {
   );
 }
 
-function InfoSection({
-  devices,
-}: {
-  devices: (typeof HomePage.prototype)["devices"];
-}) {
+function InfoSection() {
+  const t = useTranslations("Index");
   return (
     <section className="py-20 px-6 bg-slate-950/50">
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black mb-6">
-            What is <span className="text-orange-500">Z-tube</span>?
+            {t("infoTitle")}
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Z-tube is a revolutionary streaming platform that provides unlimited
-            access to movies and TV shows without any subscription fees. Using
-            advanced torrent-based technology, we deliver high-quality content
-            directly to your devices.
+            {t("infoDescription")}
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
           <div>
-            <h3 className="text-3xl font-bold mb-6">How Z-tube Works</h3>
+            <h3 className="text-3xl font-bold mb-6">{t("howItWorks")}</h3>
             <div className="space-y-4">
               {[
                 {
                   step: "1",
-                  title: "Create Your Free Account",
-                  desc: "Sign up with just your email - no credit card required",
+                  title: t("step1Title"),
+                  desc: t("step1Desc"),
                   color: "bg-orange-500",
                 },
                 {
                   step: "2",
-                  title: "Browse Our Library",
-                  desc: "Explore thousands of movies and TV shows across all genres",
+                  title: t("step2Title"),
+                  desc: t("step2Desc"),
                   color: "bg-pink-500",
                 },
                 {
                   step: "3",
-                  title: "Start Streaming",
-                  desc: "Watch instantly in HD/4K quality on any device",
+                  title: t("step3Title"),
+                  desc: t("step3Desc"),
                   color: "bg-purple-500",
                 },
               ].map((item, idx) => (
@@ -279,31 +259,31 @@ function InfoSection({
         </div>
 
         <div className="text-center mb-12">
-          <h3 className="text-3xl font-bold mb-4">Why Choose Z-tube?</h3>
+          <h3 className="text-3xl font-bold mb-4">{t("whyChoose")}</h3>
           <p className="text-gray-300 text-lg">
-            Unlike other streaming services, Z-tube is built for everyone
+            {t("whyChooseSubtitle")}
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <WhyChooseCard
             icon={<Shield className="w-8 h-8 text-green-400" />}
-            title="Completely Free"
-            desc="No monthly fees, no hidden costs, no credit card required. Free forever."
+            title={t("featureCompletelyFree")}
+            desc={t("featureCompletelyFreeDesc")}
             bg="bg-slate-800/50"
             border="border-slate-700/50"
           />
           <WhyChooseCard
             icon={<Zap className="w-8 h-8 text-blue-400" />}
-            title="No Advertisements"
-            desc="Enjoy uninterrupted streaming without any ads or commercial breaks."
+            title={t("featureNoAds")}
+            desc={t("featureNoAdsDesc")}
             bg="bg-slate-800/50"
             border="border-slate-700/50"
           />
           <WhyChooseCard
             icon={<Star className="w-8 h-8 text-purple-400" />}
-            title="Premium Quality"
-            desc="Stream in HD and 4K quality with crystal clear audio and video."
+            title={t("featurePremiumQuality")}
+            desc={t("featurePremiumQualityDesc")}
             bg="bg-slate-800/50"
             border="border-slate-700/50"
           />
@@ -342,16 +322,16 @@ function FeaturesSection({
 }: {
   features: (typeof HomePage.prototype)["features"];
 }) {
+  const t = useTranslations("Index");
   return (
     <section className="py-20 px-6">
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black mb-6">
-            Powerful <span className="text-pink-500">Features</span>
+            {t("featuresTitle")}
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Z-tube comes packed with features that make streaming effortless and
-            enjoyable
+            {t("featuresSubtitle")}
           </p>
         </div>
 
@@ -376,25 +356,33 @@ function FeaturesSection({
   );
 }
 
-function DeviceCompatibilitySection({
-  devices,
-}: {
-  devices: (typeof HomePage.prototype)["devices"];
-}) {
+function DeviceCompatibilitySection() {
+  const t = useTranslations("Index");
   return (
     <section className="py-20 px-6 bg-slate-950/50">
       <div className="container mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-black mb-6">
-            Stream on <span className="text-purple-500">Any Device</span>
+            {t("devicesTitle")}
           </h2>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Watch your favorite content on any device, anywhere, anytime
+            {t("devicesSubtitle")}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-12">
-          {devices.map((device: any, index: number) => (
+        <div className="grid md:grid-cols-2 gap-12">
+          {[
+            {
+              icon: <Monitor className="w-12 h-12" />,
+              name: t("deviceComputer"),
+              desc: t("deviceComputerDesc"),
+            },
+            {
+              icon: <Smartphone className="w-12 h-12" />,
+              name: t("deviceMobile"),
+              desc: t("deviceMobileDesc"),
+            },
+          ].map((device: any, index: number) => (
             <div
               key={index}
               className="text-center bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 hover:border-purple-500/30 transition-all duration-300"
@@ -413,16 +401,16 @@ function DeviceCompatibilitySection({
 }
 
 function FinalCTASection({ router }: { router: ReturnType<typeof useRouter> }) {
+  const t = useTranslations("Index");
   return (
     <section className="py-20 px-6">
       <div className="container mx-auto">
         <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 border border-slate-600/50 rounded-3xl p-12 text-center">
           <h2 className="text-4xl md:text-5xl font-black mb-6">
-            Ready to Start <span className="text-orange-500">Streaming</span>?
+            {t("finalCTATitle")}
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of users already enjoying unlimited free streaming on
-            Z-tube
+            {t("finalCTASubtitle")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
@@ -430,13 +418,13 @@ function FinalCTASection({ router }: { router: ReturnType<typeof useRouter> }) {
               onClick={() => router.push("/register")}
               className="bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white px-12 py-4 rounded-xl font-bold text-xl transition-all duration-200 shadow-xl"
             >
-              Create Free Account
+              {t("createFreeAccount")}
             </button>
             <button
               onClick={() => router.push("/login")}
               className="border-2 border-white/30 text-white hover:bg-white/10 px-12 py-4 rounded-xl font-bold text-xl transition-all duration-200"
             >
-              Sign In
+              {t("signIn")}
             </button>
           </div>
 
@@ -444,10 +432,10 @@ function FinalCTASection({ router }: { router: ReturnType<typeof useRouter> }) {
             {[
               {
                 icon: <Check className="w-5 h-5" />,
-                text: "No credit card required",
+                text: t("benefitNoCard"),
               },
-              { icon: <Check className="w-5 h-5" />, text: "Instant access" },
-              { icon: <Check className="w-5 h-5" />, text: "Cancel anytime" },
+              { icon: <Check className="w-5 h-5" />, text: t("benefitInstantAccess") },
+              { icon: <Check className="w-5 h-5" />, text: t("benefitCancelAnytime") },
             ].map((benefit, index) => (
               <div
                 key={index}

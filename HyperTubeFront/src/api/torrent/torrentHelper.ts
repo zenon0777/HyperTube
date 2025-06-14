@@ -15,7 +15,7 @@ export function extractHashFromMagnet(magnetLink: string): string | null {
     }
     return null;
   } catch (error) {
-    console.error('Error extracting hash from magnet link:', error);
+    console.log('Error extracting hash from magnet link:', error);
     return null;
   }
 }
@@ -60,7 +60,7 @@ export async function fetchTorrentForMovie(title: string, year?: string | number
     
     return null;
   } catch (error) {
-    console.error('Error fetching torrent for movie:', error);
+    console.log('Error fetching torrent for movie:', error);
     return null;
   }
 }
@@ -93,7 +93,7 @@ export async function getTorrentHashForTMDBMovie(movieData: any): Promise<string
 
     return null;
   } catch (error) {
-    console.error('Error getting torrent hash for TMDB movie:', error);
+    console.log('Error getting torrent hash for TMDB movie:', error);
     return null;
   }
 }

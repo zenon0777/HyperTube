@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface Movie {
   id: number;
@@ -17,6 +18,7 @@ function PopularMoviesSection() {
   const [loadingMovies, setLoadingMovies] = useState<boolean>(true);
   const [moviesError, setMoviesError] = useState<string | null>(null);
   const router = useRouter();
+  const t = useTranslations("PopularMoviesSection");
 
   useEffect(() => {
     const fetchPopularMovies = async () => {
@@ -26,7 +28,6 @@ function PopularMoviesSection() {
         );
         if (!res.ok) throw new Error("Failed to fetch movies");
         const data: any = await res.json();
-        console.log("Response status:", data);
         setPopularMovies(data.movies.results);
       } catch (err: any) {
         setMoviesError(err.message);
@@ -41,7 +42,7 @@ function PopularMoviesSection() {
     <section className="py-20 px-6 bg-slate-900/80">
       <div className="container mx-auto">
         <h2 className="text-4xl md:text-5xl font-black text-center mb-10">
-          Popular Movies
+          {t("title")}
         </h2>
 
         {loadingMovies ? (
@@ -50,7 +51,7 @@ function PopularMoviesSection() {
           <div className="text-center text-red-500">{moviesError}</div>
         ) : popularMovies.length === 0 ? (
           <div className="text-center text-gray-300">
-            No popular movies available.
+            {t("nomovie")}
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -79,7 +80,7 @@ function PopularMoviesSection() {
                     onClick={() => router.push(`/browse/movie/${movie.id}`)}
                     className="mt-2 inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 font-medium"
                   >
-                    View Details <ChevronRight className="w-4 h-4" />
+                    {t("viewDetails")} <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </motion.div>

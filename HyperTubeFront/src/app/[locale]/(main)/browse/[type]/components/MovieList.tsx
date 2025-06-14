@@ -4,6 +4,7 @@ import React, { useRef, useCallback } from "react";
 import { CircularProgress } from "@mui/material";
 import { activeFilters } from "../page";
 import MovieCard from "./MovieCard";
+import { useTranslations } from "next-intl";
 
 interface MovieListProps {
   movies: any[];
@@ -45,21 +46,26 @@ const MoviesList: React.FC<MovieListProps> = ({
     [isFetchingMore, isLoading, hasMore, loadMoreItems]
   );
 
+  const t = useTranslations();
+
   if (isLoading) {
     // Initial loading state (page 1)
     return (
       <div className="lg:col-span-3 flex justify-center items-center min-h-[50vh]">
         <CircularProgress color="primary" size={60} />
-        <p className="ml-4 text-xl">Loading Movies...</p>
+        <p className="ml-4 text-xl">{t('browse.loading.movies')}</p>
       </div>
     );
   }
 
   if (!movies || movies.length === 0) {
     return (
-      <div className="lg:col-span-3 flex justify-center items-center min-h-[50vh]">
-        <p className="text-xl text-gray-400">
-          No movies found for the selected filters. Try adjusting your search!
+      <div className="lg:col-span-3 flex flex-col justify-center items-center min-h-[50vh] text-center px-4">
+        <h3 className="text-2xl font-semibold text-gray-300 mb-2">
+          {t('browse.noResults.title')}
+        </h3>
+        <p className="text-lg text-gray-400">
+          {t('browse.noResults.description')}
         </p>
       </div>
     );
@@ -104,13 +110,13 @@ const MoviesList: React.FC<MovieListProps> = ({
       {isFetchingMore && (
         <div className="flex justify-center items-center py-8">
           <CircularProgress color="secondary" size={40} />
-          <p className="ml-3 text-lg">Loading more...</p>
+          <p className="ml-3 text-lg">{t('browse.loading.more')}</p>
         </div>
       )}
 
       {!hasMore && movies.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          <p>You've reached the end of the list!</p>
+          <p>{t('browse.loading.endOfList')}</p>
         </div>
       )}
     </div>

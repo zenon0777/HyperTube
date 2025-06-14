@@ -2,11 +2,11 @@
 import { motion } from "framer-motion";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Footer from "../components/Footer/Footer";
-import NavBar from "../components/NavBar/NavBar";
+import Footer from "../../components/Footer/Footer";
+import NavBar from "../../components/NavBar/NavBar";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor } from "../store";
+import { store, persistor } from "../../store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export default function ClientLayout({

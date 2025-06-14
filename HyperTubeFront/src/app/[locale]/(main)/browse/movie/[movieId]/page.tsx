@@ -28,8 +28,9 @@ import { RootState } from "@/app/store";
 import { getUserProfile } from "@/app/store/userSlice";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { getTorrentHashForTMDBMovie } from "@/api/torrent/torrentHelper";
+import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
-// Helper to format runtime
 const formatRuntime = (minutes: number | undefined | null) => {
   if (minutes === undefined || minutes === null || minutes <= 0) return "N/A";
   const h = Math.floor(minutes / 60);
@@ -40,6 +41,7 @@ const formatRuntime = (minutes: number | undefined | null) => {
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";
 
 export default function Movie() {
+  const t = useTranslations("movie");
   const { APIProvider, isYTS } = useAPIProvider();
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
@@ -61,7 +63,6 @@ export default function Movie() {
       setIsError(true);
       return;
     }
-    console.log("is it YTS", isYTS);
 
     const fetchMovieDetails = async () => {
       setIsLoading(true);
@@ -84,10 +85,9 @@ export default function Movie() {
 
       try {
         const response = await fetch(full_url, {
-					method: "GET",
-					credentials: 'include',
-          headers: { "Content-Type": "application/json" },
+          method: "GET",
           credentials: "include",
+          headers: { "Content-Type": "application/json" },
         });
         if (!response.ok)
           throw new Error(
@@ -95,12 +95,10 @@ export default function Movie() {
           );
         const data = await response.json();
         if (data?.movie) {
-          console.log("Full Movie Details Data ===> ::: ", data.movie);
           setDetails(data.movie);
         } else throw new Error("Movie data not found in response");
         setIsError(false);
       } catch (error) {
-        console.log("Error fetching movie details:", error);
         setIsError(true);
         setDetails(null);
       } finally {
@@ -112,13 +110,18 @@ export default function Movie() {
 
   useEffect(() => {
     const fetchTorrentHash = async () => {
-      if (APIProvider !== "YTS" && details && !isLoadingTorrent && !torrentHash) {
+      if (
+        APIProvider !== "YTS" &&
+        details &&
+        !isLoadingTorrent &&
+        !torrentHash
+      ) {
         setIsLoadingTorrent(true);
         try {
           const hash = await getTorrentHashForTMDBMovie(details);
           setTorrentHash(hash);
         } catch (error) {
-          console.error("Error fetching torrent hash:", error);
+          toast.error("Could not load torrent hash.");
           setTorrentHash(null);
         } finally {
           setIsLoadingTorrent(false);
@@ -250,7 +253,7 @@ export default function Movie() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-orange-500"></div>
-        <p className="ml-4 text-xl">Loading movie details...</p>
+        <p className="ml-4 text-xl">{t("loading")}</p>
       </div>
     );
   }
@@ -259,10 +262,9 @@ export default function Movie() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-8 text-center">
         <MdInfoOutline className="text-6xl text-red-500 mb-4" />
-        <h1 className="text-3xl font-bold mb-2">Oops! Something went wrong.</h1>
+        <h1 className="text-3xl font-bold mb-2">{t("error")}</h1>
         <p className="text-lg text-gray-400">
-          We couldn't fetch the movie details. Please try again later or check
-          the movie ID.
+          {t("errorDescription")}
         </p>
         {APIProvider && movieId && (
           <button
@@ -272,7 +274,7 @@ export default function Movie() {
             className="mt-6 px-6 py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition transform hover:scale-105 active:scale-95"
           >
             {" "}
-            Try Again{" "}
+            {t("tryAgain")}{" "}
           </button>
         )}
       </div>
@@ -415,55 +417,67 @@ export default function Movie() {
               transition={{ duration: 0.5, delay: 0.7 }}
               className="flex flex-wrap gap-3 sm:gap-4"
             >
-              {APIProvider === "YTS" && details?.torrents && details.torrents.length > 0 ? (
-                <Link href={`/watch/${details.torrents[0].hash}?movieName=${encodeURIComponent(getTitle())}`} passHref>
-                  <motion.button 
+              {isYTS === true &&
+              details?.torrents &&
+              details.torrents.length > 0 ? (
+                <Link
+                  href={`/watch/${
+                    details.torrents[0].hash
+                  }?movieName=${encodeURIComponent(getTitle())}`}
+                  passHref
+                >
+                  <motion.button
                     className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <MdMovie /> Watch now
+                    <MdMovie /> {t("watch")}
                   </motion.button>
                 </Link>
-              ) : APIProvider !== "YTS" && details?.id ? (
+              ) : !isYTS && details?.id ? (
                 torrentHash ? (
-                  <Link href={`/watch/${torrentHash}?movieName=${encodeURIComponent(getTitle())}`} passHref>
-                    <motion.button 
+                  <Link
+                    href={`/watch/${torrentHash}?movieName=${encodeURIComponent(
+                      getTitle()
+                    )}`}
+                    passHref
+                  >
+                    <motion.button
                       className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <MdMovie /> Watch now
+                      <MdMovie /> {t("watch")}
                     </motion.button>
                   </Link>
                 ) : isLoadingTorrent ? (
-                  <button 
+                  <button
                     className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-400 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-wait"
                     disabled
                   >
                     <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                    Finding torrent...
+                    {t("findingTorrent")}
                   </button>
                 ) : (
-                  <button 
+                  <button
                     className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
                     disabled
-                    title="No torrent found for this movie"
+                    title={t("noTorrentFound")}
                   >
-                    <MdMovie /> No torrent available
+                    <MdMovie /> {t("noTorrentAvailable")}
                   </button>
                 )
               ) : (
-                <button 
+                <button
                   className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
                   disabled
                 >
-                  <MdMovie /> Watch now
+                  <MdMovie /> {t("watch")}
                 </button>
               )}
               <button className="px-5 sm:px-7 py-2.5 sm:py-3 border-2 border-white/80 text-white/90 rounded-full flex items-center justify-center space-x-1.5 font-semibold text-sm sm:text-base hover:bg-white/20 hover:text-white transition transform hover:scale-105 active:scale-95">
                 {" "}
-                <span>Add to Watchlist</span>{" "}
+                <span>{t("addToWatchlist")}</span>{" "}
                 <MdOutlineFavorite className="text-red-500 text-lg" />{" "}
               </button>
             </motion.div>
@@ -471,12 +485,9 @@ export default function Movie() {
         </div>
       </div>
 
-      {/* Main Content Area below Hero */}
       <div className="container mx-auto px-4 sm:px-8 lg:px-16 py-10 sm:py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12">
-          {/* Left Column (Main Details) */}
           <div className="md:col-span-8 space-y-10">
-            {/* Trailer Section (Generic) */}
             {bestTrailerUrl && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -484,7 +495,7 @@ export default function Movie() {
                 transition={{ duration: 0.5, delay: 0.75 }}
               >
                 <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <FaYoutube /> Official Trailer
+                  <FaYoutube /> {t("officialTrailer")}
                 </h2>
                 <div className="aspect-video rounded-lg overflow-hidden shadow-xl bg-black">
                   <iframe
@@ -500,7 +511,6 @@ export default function Movie() {
               </motion.section>
             )}
 
-            {/* Cast Section (Generic) */}
             {details?.cast?.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -509,7 +519,7 @@ export default function Movie() {
               >
                 {" "}
                 <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <FaUsers /> Cast
+                  <FaUsers /> {t("cast")}
                 </h2>{" "}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                   {" "}
@@ -554,7 +564,6 @@ export default function Movie() {
               </motion.section>
             )}
 
-            {/* Torrents Section (YTS Specific) - Identical to before */}
             {APIProvider === "YTS" && details?.torrents?.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -563,7 +572,7 @@ export default function Movie() {
               >
                 {" "}
                 <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <MdCloudDownload /> Available Torrents
+                  <MdCloudDownload /> {t("availableTorrents")}
                 </h2>{" "}
                 <div className="space-y-4">
                   {" "}
@@ -587,18 +596,18 @@ export default function Movie() {
                         </span>{" "}
                         <span className="text-gray-400 mx-2">|</span>{" "}
                         <span className="text-gray-300">
-                          Size: {torrent.size}
+                          {t("size")}: {torrent.size}
                         </span>{" "}
                       </div>{" "}
                       <div className="flex items-center gap-3 text-sm text-gray-400 mt-2 sm:mt-0">
                         {" "}
                         <span className="flex items-center gap-1">
                           <BsLightningChargeFill className="text-green-500" />{" "}
-                          {torrent.seeds} Seeds
+                          {torrent.seeds} {t("seeds")}
                         </span>{" "}
                         <span className="flex items-center gap-1">
                           <BsSpeedometer2 className="text-red-500" />{" "}
-                          {torrent.peers} Peers
+                          {torrent.peers} {t("peers")}
                         </span>{" "}
                       </div>{" "}
                       <a
@@ -620,7 +629,6 @@ export default function Movie() {
               </motion.section>
             )}
 
-            {/* Media Gallery (YTS Screenshots or TMDB Backdrops) - Identical to before */}
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -632,7 +640,7 @@ export default function Movie() {
               {" "}
               <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
                 {" "}
-                <MdPhotoLibrary /> Media Gallery{" "}
+                <MdPhotoLibrary /> {t("mediaGallery")}{" "}
               </h2>{" "}
               {APIProvider === "YTS" &&
                 (details?.medium_screenshot_image1 ||
@@ -703,11 +711,10 @@ export default function Movie() {
                   APIProvider !== "YTS" &&
                   details?.images?.backdrops?.length > 0
                 ) && (
-                  <p className="text-gray-400">No gallery images available.</p>
+                  <p className="text-gray-400">{t("noGalleryImagesAvailable")}</p>
                 )}{" "}
             </motion.section>
 
-            {/* Movie Logos (TMDB Specific) */}
             {APIProvider !== "YTS" && details?.images?.logos?.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -715,7 +722,7 @@ export default function Movie() {
                 transition={{ duration: 0.5, delay: 1.15 }}
               >
                 <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <MdVideocam /> Title Logos
+                  <MdVideocam /> {t("titleLogos")}
                 </h2>
                 <div className="flex overflow-x-auto space-x-4 pb-4 -mb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800/50">
                   {details.images.logos.slice(0, 10).map(
@@ -739,8 +746,7 @@ export default function Movie() {
               </motion.section>
             )}
 
-            {/* Production Companies (TMDB Specific) - Identical to before */}
-            {APIProvider !== "YTS" &&
+            {APIProvider === "TMDB" &&
               details?.production_companies?.length > 0 && (
                 <motion.section
                   initial={{ opacity: 0, y: 20 }}
@@ -749,7 +755,7 @@ export default function Movie() {
                 >
                   {" "}
                   <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                    <BiCameraMovie /> Production Companies
+                    <BiCameraMovie /> {t("productionCompanies")}
                   </h2>{" "}
                   <div className="flex flex-wrap gap-4 items-center">
                     {" "}
@@ -778,8 +784,7 @@ export default function Movie() {
                 </motion.section>
               )}
 
-            {/* Movie Collection (TMDB Specific) - Identical to before */}
-            {APIProvider !== "YTS" && details?.belongs_to_collection && (
+            {APIProvider === "TMDB" && details?.belongs_to_collection && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -787,7 +792,7 @@ export default function Movie() {
               >
                 {" "}
                 <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <HiOutlineCollection /> Part of a Collection
+                  <HiOutlineCollection /> {t("partOfACollection")}
                 </h2>{" "}
                 <div className="bg-gray-800/30 p-4 rounded-lg flex items-center gap-4 hover:bg-gray-700/50 transition-colors">
                   {" "}
@@ -804,7 +809,7 @@ export default function Movie() {
                       {details.belongs_to_collection.name}
                     </h3>{" "}
                     <p className="text-sm text-gray-400">
-                      View collection (linking not implemented)
+                      {t("viewCollection")}
                     </p>{" "}
                   </div>{" "}
                 </div>{" "}
@@ -812,7 +817,6 @@ export default function Movie() {
             )}
           </div>
 
-          {/* Right Column (Poster and More Info Sidebar) - Identical to before (with updated IMDb and YTS Page logic) */}
           <motion.aside
             className="md:col-span-4"
             initial={{ opacity: 0, x: 50 }}
@@ -828,46 +832,46 @@ export default function Movie() {
             <div className="mt-6 p-4 bg-gray-800/50 rounded-lg">
               {" "}
               <h3 className="text-xl font-semibold mb-3 text-orange-300">
-                More Information
+                {t("moreInformation")}
               </h3>{" "}
               <ul className="space-y-2.5 text-sm text-gray-300">
                 {" "}
                 {details?.original_title &&
                   details.original_title !== title && (
                     <li>
-                      <strong>Original Title:</strong> {details.original_title}
+                      <strong>{t("originalTitle")}:</strong> {details.original_title}
                     </li>
                   )}{" "}
                 <li>
-                  <strong>Status:</strong>{" "}
+                  <strong>{t("status")}:</strong>{" "}
                   {details?.status ||
                     (APIProvider === "YTS" ? "Available" : "N/A")}
                 </li>{" "}
                 <li>
-                  <strong>Languages:</strong> {getSpokenLanguages()}
+                  <strong>{t("languages")}:</strong> {getSpokenLanguages()}
                 </li>{" "}
                 {APIProvider === "YTS" &&
                   details?.mpa_rating &&
                   details.mpa_rating.trim() !== "" && (
                     <li>
-                      <strong>MPA Rating:</strong> {details.mpa_rating}
+                      <strong>{t("mpaRating")}:</strong> {details.mpa_rating}
                     </li>
                   )}{" "}
                 {APIProvider !== "YTS" && details?.budget > 0 && (
                   <li>
-                    <strong>Budget:</strong> ${details.budget.toLocaleString()}
+                    <strong>{t("budget")}:</strong> ${details.budget.toLocaleString()}
                   </li>
                 )}{" "}
                 {APIProvider !== "YTS" && details?.revenue > 0 && (
                   <li>
-                    <strong>Revenue:</strong> $
+                    <strong>{t("revenue")}:</strong> $
                     {details.revenue.toLocaleString()}
                   </li>
                 )}{" "}
                 {APIProvider !== "YTS" &&
                   details?.production_countries?.length > 0 && (
                     <li>
-                      <strong>Production:</strong>{" "}
+                      <strong>{t("production")}:</strong>{" "}
                       {details.production_countries
                         .map((pc: any) => pc.name)
                         .join(", ")}
@@ -892,34 +896,34 @@ export default function Movie() {
                 {details?.homepage && APIProvider !== "YTS" && (
                   <li>
                     {" "}
-                    <strong>Homepage:</strong>{" "}
+                    <strong>{t("homepage")}:</strong>{" "}
                     <a
                       href={details.homepage}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-orange-400 hover:underline flex items-center gap-1 truncate"
                     >
-                      <MdLink /> Visit Site
+                      <MdLink /> {t("visitSite")}
                     </a>{" "}
                   </li>
                 )}{" "}
                 {APIProvider === "YTS" && details?.url && (
                   <li>
                     {" "}
-                    <strong>YTS Page:</strong>{" "}
+                    <strong>{t("ytsPage")}:</strong>{" "}
                     <a
                       href={details.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-orange-400 hover:underline flex items-center gap-1 truncate"
                     >
-                      <MdLink /> View on YTS
+                      <MdLink /> {t("viewOnYTS")}
                     </a>{" "}
                   </li>
                 )}{" "}
                 {APIProvider === "YTS" && details?.like_count > 0 && (
                   <li>
-                    <strong>Likes:</strong>{" "}
+                    <strong>{t("likes")}:</strong>{" "}
                     {details.like_count.toLocaleString()}
                   </li>
                 )}{" "}
@@ -940,7 +944,7 @@ export default function Movie() {
           >
             <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-orange-400 flex items-center gap-2">
               {" "}
-              <BiSolidMoviePlay /> You Might Also Like{" "}
+              <BiSolidMoviePlay /> {t("youMightAlsoLike")}{" "}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
               {(APIProvider === "YTS"
@@ -954,8 +958,7 @@ export default function Movie() {
                   transition={{ duration: 0.3, delay: 1.4 + index * 0.05 }}
                   className="bg-gray-800/30 rounded-lg overflow-hidden shadow-lg hover:shadow-orange-500/30 transition-shadow duration-300 group"
                 >
-                  <Link href={`${movie.id}`} legacyBehavior>
-                    <a className="block">
+                  <Link href={`${movie.id}`} className="block">
                       <img
                         src={getSmallCoverImage(movie)}
                         alt={movie.title_english || movie.title}
@@ -971,24 +974,24 @@ export default function Movie() {
                           {movie.year || movie.release_date?.split("-")[0]}
                         </p>{" "}
                       </div>
-                    </a>
                   </Link>
                 </motion.div>
               ))}
             </div>
           </motion.section>
         )}
-        {user.user && (
-          <CommentsSection movieId={movieId as string} user={user.user} />
-        )}
-        <CommentsSection 
-          movieId={movieId as string} 
-          user={user.user ? {
-            token: null, // Token should come from auth service or localStorage
-            id: user.user.id,
-            username: user.user.username,
-            profile_picture: user.user.profile_picture
-          } : { token: null }} 
+        <CommentsSection
+          movieId={movieId as string}
+          user={
+            user.user
+              ? {
+                  token: null,
+                  id: user.user.id,
+                  username: user.user.username,
+                  profile_picture: user.user.profile_picture,
+                }
+              : { token: null }
+          }
         />
       </div>
     </div>

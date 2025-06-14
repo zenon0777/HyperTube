@@ -3,25 +3,27 @@ import { Info } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { MovieSection } from "../../components/MovieSection/MovieSection";
-import { genres } from "../../data/NavBarElements";
-import { RootState } from "../../store";
-import { headers } from "next/headers";
+import { MovieSection } from "@/app/components/MovieSection/MovieSection";
+import { genres } from "@/app/data/NavBarElements";
+import { RootState, useAppSelector } from "@/app/store";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
+import { useRouter } from "next/navigation";
+import { getUserProfile } from "@/app/store/userSlice";
 
-export default function Home() {
+export default function Rootpage() {
   const [movies, setMovies] = useState([]);
-  const { isTMDB } = useAPIProvider();
+  const { APIProvider } = useAPIProvider();
   const [popularMovies, setPopularMovies] = useState([]);
   const [watchedMovies, setWatchedMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [tvShows, setTvShows] = useState([]);
   const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
 
   useEffect(() => {
@@ -30,10 +32,8 @@ export default function Home() {
         let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list`;
         let popularMoviesUrl = baseUrl + "?popular";
         popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
-        let topRatedMoviesUrl =
-          baseUrl +
-          "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=vote_average.desc&without_genres=99,10755&vote_count.gte=200";
-        // topRatedMoviesUrl += "?language=en-US&page=1&include_adult=false";
+        let topRatedMoviesUrl = baseUrl + "?top_rated";
+        topRatedMoviesUrl += "?language=en-US&page=1&include_adult=false";
         let NowPlayingMoviesUrl =
           baseUrl +
           "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
@@ -60,6 +60,7 @@ export default function Home() {
         toast.error(error.message);
       }
     };
+
     const getYTSFiltredMovies = async () => {
       try {
         let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
@@ -91,12 +92,14 @@ export default function Home() {
         toast.error(error.message);
       }
     };
-    isTMDB === true ? getTMDBFiltredMovies() : getYTSFiltredMovies();
-  }, [isTMDB]);
+    APIProvider === "TMDB" ? getTMDBFiltredMovies() : getYTSFiltredMovies();
+    console.log("APIProvider : --------> :: ", APIProvider);
+  }, [APIProvider]);
 
   return (
     <div className="min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
       <div className=" h-[60vh] sm:h-[70vh] md:h-[75vh] w-full">
+        {/* latest movies */}
         <Swiper
           modules={[Navigation, Pagination]}
           navigation={false}
@@ -124,10 +127,12 @@ export default function Home() {
                   })`,
                 }}
               >
+                {/* Existing Gradient Overlays */}
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
                 <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-r from-black to-transparent opacity-70"></div>
                 <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-16 bg-gradient-to-l from-black to-transparent opacity-70"></div>
 
+                {/* Movie Details with Staggered Animations */}
                 <div className="relative z-10 container justify-center px-4 sm:px-8 flex flex-col md:flex-row items-center gap-6 md:gap-11 w-5/6">
                   <motion.div
                     initial={{ opacity: 0, x: -50 }}

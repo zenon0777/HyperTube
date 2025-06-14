@@ -8,6 +8,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import * as React from "react";
+import { useTranslations } from "next-intl";
 
 interface user {
   id: string;
@@ -16,6 +17,7 @@ interface user {
   profile_picture: string;
 }
 export default function ProfileMenu(props: user) {
+  const t = useTranslations();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -77,19 +79,19 @@ export default function ProfileMenu(props: user) {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
         <MenuItem onClick={handleClose}>
-          <Avatar /> Profile
+          <Avatar /> {t("navBar.profile")}
         </MenuItem>
         <MenuItem onClick={handleClose}>
           <ListItemIcon>
             <Settings fontSize="small" />
           </ListItemIcon>
-          Settings
+          {t("navBar.settings")}
         </MenuItem>
         <MenuItem onClick={handleClose}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>
-          Logout
+          {t("navBar.logout")}
         </MenuItem>
       </Menu>
     </React.Fragment>

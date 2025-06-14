@@ -16,9 +16,9 @@ import {
   Download
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { RootState } from "../../store";
-import { getUserProfile } from "../../store/userSlice";
-import { authService } from "@/lib/auth";
+import { RootState } from "@/app/store";
+import { getUserProfile } from "@/app/store/userSlice";
+import { authService } from "@/lib/auth"; 
 
 interface UserStats {
   watchedMovies: number;

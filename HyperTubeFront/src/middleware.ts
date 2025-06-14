@@ -1,71 +1,80 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import createIntlMiddleware from 'next-intl/middleware';
 
-const PUBLIC_ROUTES = ['/login', '/register', '/reset-password', '/'];
+// Routes that are public and do not require authentication
+const PUBLIC_PAGES = ['/', '/login', '/register', '/reset-password'];
 
-const AUTH_ROUTES = ['/auth/token/refresh', '/auth/success'];
+// Initialize next-intl middleware
+const intlMiddleware = createIntlMiddleware({
+  locales: ['en', 'fr'],
+  defaultLocale: 'en',
+  localePrefix: 'always', // Ensures all paths have a locale prefix (e.g., /en/about)
+});
 
-function isPublicRoute(pathname: string): boolean {
-    if (pathname === '/') {
-        return true;
-    }
-    const publicRoutesWithSubpaths = ['/login', '/register', '/reset-password'];
-    return publicRoutesWithSubpaths.some(route => pathname.startsWith(route));
-}
-
-function isAuthRoute(pathname: string): boolean {
-    return AUTH_ROUTES.some(route => pathname.startsWith(route));
-}
-
-async function checkTokenValidity(request: NextRequest): Promise<{ isValid: boolean; needsRefresh: boolean }> {
-    try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me/`, {
-            headers: {
-                cookie: request.headers.get('cookie') || '',
-            },
-            credentials: 'include',
-            cache: 'no-store',
-        });
-
-        if (res.ok) {
-            return { isValid: true, needsRefresh: false };
-        }
-
-        if (res.status === 401) {
-            return { isValid: false, needsRefresh: true };
-        }
-
-        return { isValid: false, needsRefresh: false };
-    } catch (err) {
-        console.error('Token validation failed:', err);
-        return { isValid: false, needsRefresh: false };
-    }
-}
-
+// The main middleware function that handles both i18n and authentication
 export async function middleware(request: NextRequest) {
-    const { pathname } = request.nextUrl;
+  const { pathname } = request.nextUrl;
 
-    if (isPublicRoute(pathname) || isAuthRoute(pathname)) {
-        return NextResponse.next();
+  // Strip the locale prefix from the pathname to check against the public pages list
+  const pathnameWithoutLocale = pathname.replace(/^\/(en|fr)/, '') || '/';
+
+  const isPublicPage = PUBLIC_PAGES.some((p) =>
+    p === '/' ? pathnameWithoutLocale === p : pathnameWithoutLocale.startsWith(p)
+  );
+
+  // First, let the i18n middleware handle the request
+  const i18nResponse = intlMiddleware(request);
+
+  // If the page is public, no authentication is needed.
+  // Return the response from the i18n middleware.
+  if (isPublicPage) {
+    return i18nResponse;
+  }
+
+  // For protected pages, perform an authentication check
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me/`, {
+      headers: {
+        cookie: request.headers.get('cookie') || '',
+      },
+      credentials: 'include',
+      cache: 'no-store',
+    });
+
+    // If the token is valid, allow the request to proceed
+    if (res.ok) {
+      return i18nResponse;
     }
 
-    const { isValid, needsRefresh } = await checkTokenValidity(request);    if (isValid) {
-        return NextResponse.next();
+    // Extract locale for redirect URLs
+    const locale = pathname.split('/')[1] || 'en';
+
+    // If the token needs to be refreshed (e.g., 401 Unauthorized)
+    if (res.status === 401) {
+      const refreshUrl = new URL('/auth/token/refresh', request.url);
+      refreshUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(refreshUrl);
     }
 
-    if (needsRefresh) {
-        // Redirect to refresh API route with the original destination
-        const refreshUrl = new URL('/auth/token/refresh', request.url);
-        refreshUrl.searchParams.set('redirect', pathname);
-        return NextResponse.redirect(refreshUrl);
-    }
-
-    // Token is invalid and can't be refreshed, redirect to login
-    const loginUrl = new URL('/login', request.url);
+    // If the token is invalid and cannot be refreshed, redirect to the login page
+    const loginUrl = new URL(`/${locale}/login`, request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
+
+  } catch (err) {
+    console.error('Middleware auth check failed:', err);
+    // In case of a network error or other exception, redirect to login
+    const locale = pathname.split('/')[1] || 'en';
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    return NextResponse.redirect(loginUrl);
+  }
 }
 
 export const config = {
-    matcher: ['/((?!_next|favicon.ico|api|static|.*\\..*).*)'],
+  // This matcher excludes routes that should not be processed by the middleware.
+  // - api: API routes
+  // - auth: Authentication-related API routes
+  // - _next: Next.js internal files
+  // - files with extensions (e.g., .ico, .svg)
+  matcher: ['/((?!api|auth|_next|.*\\..*).*)'],
 };

@@ -8,12 +8,30 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import { elements } from "@/app/data/NavBarElements";
+import { getNavElements } from "@/app/data/NavBarElements";
 import { MdMenu } from "react-icons/md";
 import ProvidersMenu from "./ProviderMenu";
+import LanguageSwitcher from "../LanguageSwitcher";
+import SearchInput from "./SearchInput";
+import { useSelector } from "react-redux";
+import { RootState } from "@/app/store";
+import { useDispatch } from "react-redux";
+import { getUserProfile } from "@/app/store/userSlice";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { authService } from "@/lib/auth";
+import { useTranslations } from "next-intl";
 
 export default function MenuDrawer() {
+  const t = useTranslations();
   const [open, setOpen] = React.useState(false);
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  useEffect(() => {
+    dispatch(getUserProfile() as any);
+  }, [dispatch]);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -41,7 +59,7 @@ export default function MenuDrawer() {
           padding: "1rem",
         }}
       >
-        {elements.map((element) => (
+        {getNavElements(t).map((element) => (
           <ListItem
             key={element.name}
             disablePadding
@@ -89,32 +107,97 @@ export default function MenuDrawer() {
         >
           <ProvidersMenu />
         </ListItem>
+        <ListItem
+          key={"Language"}
+          disablePadding
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <LanguageSwitcher />
+        </ListItem>
       </List>
 
-      <List>
-        <Divider
-          sx={{
-            backgroundColor: "#fff",
-            color: "#fff",
-            size: "0.001rem",
-            margin: "0.5rem",
+      {!user.user ? (
+        <List>
+          <Divider
+            sx={{
+              backgroundColor: "#fff",
+              color: "#fff",
+              size: "0.001rem",
+              margin: "0.5rem",
+            }}
+          />
+          <ListItem
+            key={"login"}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#4b5563",
+                color: "#f97316",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-center",
+                gap: "1rem",
+              },
+            }}
+          >
+            <ListItemButton
+              href="/login"
+              sx={{
+                color: "#fff",
+                bgcolor: "#f97316",
+                size: "1rem",
+                border: "1px solid #f97316",
+                borderRadius: "9999px",
+                paddingBottom: "0.5rem",
+                paddingTop: "0.5rem",
+                textAlign: "center",
+                width: "90%",
+              }}
+            >
+              <ListItemText primary={t("navBar.signIn")} />
+            </ListItemButton>
+          </ListItem>
+          <ListItem
+            key={"SignUp"}
+            sx={{
+              "&:hover": {
+                backgroundColor: "#4b5563",
+                color: "#f97316",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-center",
+                gap: "1rem",
+              },
+            }}
+          >
+            <ListItemButton
+              href="/register"
+              sx={{
+                color: "#fff",
+                bgcolor: "transparent",
+                size: "1rem",
+                border: "1px solid #fff",
+                borderRadius: "9999px",
+                paddingBottom: "0.5rem",
+                paddingTop: "0.5rem",
+                textAlign: "center",
+                width: "90%",
+              }}
+            >
+              <ListItemText primary={t("navBar.signUp")} />
+            </ListItemButton>
+          </ListItem>
+        </List>) : (
+        <div className="flex flex- items-center gap-2">
+          <Button onClick={() => {
+            authService.logout();
+            setOpen(false);
+            router.push("/login");
           }}
-        />
-        <ListItem
-          key={"login"}
-          sx={{
-            "&:hover": {
-              backgroundColor: "#4b5563",
-              color: "#f97316",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-center",
-              gap: "1rem",
-            },
-          }}
-        >
-          <ListItemButton
-            href="/login"
             sx={{
               color: "#fff",
               bgcolor: "#f97316",
@@ -124,43 +207,13 @@ export default function MenuDrawer() {
               paddingBottom: "0.5rem",
               paddingTop: "0.5rem",
               textAlign: "center",
-              width: "90%",
+              width: "100%",
             }}
           >
-            <ListItemText primary="Sign in" />
-          </ListItemButton>
-        </ListItem>
-        <ListItem
-          key={"SignUp"}
-          sx={{
-            "&:hover": {
-              backgroundColor: "#4b5563",
-              color: "#f97316",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-center",
-              gap: "1rem",
-            },
-          }}
-        >
-          <ListItemButton
-            href="/register"
-            sx={{
-              color: "#fff",
-              bgcolor: "transparent",
-              size: "1rem",
-              border: "1px solid #fff",
-              borderRadius: "9999px",
-              paddingBottom: "0.5rem",
-              paddingTop: "0.5rem",
-              textAlign: "center",
-              width: "90%",
-            }}
-          >
-            <ListItemText primary="Sign up" />
-          </ListItemButton>
-        </ListItem>
-      </List>
+            {t("navBar.logout")}
+          </Button>
+        </div>
+      )}
     </Box>
   );
 

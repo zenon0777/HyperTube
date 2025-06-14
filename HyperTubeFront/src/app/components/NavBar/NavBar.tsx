@@ -1,5 +1,5 @@
 "use client";
-import { elements } from "@/app/data/NavBarElements";
+import { getNavElements } from "@/app/data/NavBarElements";
 import Image from "next/image";
 import Link from "next/link";
 import MenuDrawer from "./Drawer";
@@ -11,8 +11,11 @@ import ProfileMenu from "./ProfileMenu";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserProfile } from "@/app/store/userSlice";
+import LanguageSwitcher from "../LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 export default function NavBar() {
+  const t = useTranslations();
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
@@ -60,8 +63,9 @@ export default function NavBar() {
       <div className="hidden lg:flex flex-wrap items-center gap-4 xl:gap-6">
         <div className="flex items-center gap-2 xl:gap-4">
           <SearchInput />
+          <LanguageSwitcher />
           <ProvidersMenu />
-          {elements.map((element, index) => (
+          {getNavElements(t).map((element, index) => (
             <Link
               href={element.path}
               key={index}
@@ -78,7 +82,7 @@ export default function NavBar() {
       </div>
 
       <div className="lg:hidden flex flex-wrap items-center gap-2">
-        <SearchInput />
+        {user.user && <ProfileMenu {...user.user} />}
         <MenuDrawer />
       </div>
     </nav>

@@ -3,6 +3,8 @@ import { FaRegCommentDots } from "react-icons/fa";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
+import { toast } from "react-toastify";
+import { useTranslations } from "next-intl";
 
 const CommentsSection = ({
   movieId,
@@ -27,10 +29,7 @@ const CommentsSection = ({
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  useEffect(() => {
-    console.log("user  ===> ::: ", user);
-  }, [user]);
-  // Fetch comments
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -50,7 +49,8 @@ const CommentsSection = ({
           setComments(data.comments || []);
         }
       } catch (error) {
-        console.error("Error fetching comments:", error);
+        toast.error("Error fetching comments");
+        console.log("Error fetching comments:", error);
       } finally {
         setIsLoadingComments(false);
       }
@@ -61,7 +61,6 @@ const CommentsSection = ({
     }
   }, [movieId]);
 
-  // Add comment
   const handleAddComment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!newComment.trim()) {
@@ -87,7 +86,7 @@ const CommentsSection = ({
           headers: {
             "Content-Type": "application/json",
           },
-          withCredentials: true, // Include cookies in the request
+          withCredentials: true,
         }
       );
 
@@ -109,7 +108,7 @@ const CommentsSection = ({
         setError("Failed to add comment. Please try again.");
       }
     } catch (error: any) {
-      console.error("Error adding comment:", error);
+      toast.error("Error adding comment");
       setError(error.message || "Failed to add comment. Please try again.");
     }
     setIsSubmitting(false);
@@ -117,7 +116,6 @@ const CommentsSection = ({
     setError("");
   };
 
-  // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -128,6 +126,7 @@ const CommentsSection = ({
       minute: "2-digit",
     });
   };
+  const t = useTranslations("movie");
 
   return (
     <motion.section
@@ -137,20 +136,19 @@ const CommentsSection = ({
       className="mt-10"
     >
       <h2 className="text-2xl sm:text-3xl font-semibold mb-6 text-orange-400 flex items-center gap-2">
-        <FaRegCommentDots /> Comments ({comments.length})
+        <FaRegCommentDots /> {t("comments")} ({comments.length})
       </h2>
 
-      {/* Add Comment Form */}
       <div className="mb-8 p-4 bg-gray-800/30 rounded-lg">
         <h3 className="text-xl font-semibold mb-4 text-gray-200 flex items-center gap-2">
-          <MdComment /> Add Your Comment
+          <MdComment /> {t("addComment")}
         </h3>
 
         {!user?.id ? (
           <div className="text-center py-6">
-            <p className="text-gray-400 mb-4">Please log in to add a comment</p>
+            <p className="text-gray-400 mb-4">{t("addCommentPleaseLogIn")}</p>
             <button className="px-6 py-2 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition">
-              Log In
+              {t("logIn")}
             </button>
           </div>
         ) : (
@@ -159,7 +157,7 @@ const CommentsSection = ({
               <textarea
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Share your thoughts about this movie..."
+                placeholder={t("addCommentPlaceholder")}
                 className="w-full p-3 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                 rows={4}
                 maxLength={500}
@@ -181,11 +179,11 @@ const CommentsSection = ({
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                  Posting...
+                  {t("posting")}
                 </>
               ) : (
                 <>
-                  <MdSend /> Post Comment
+                  <MdSend /> {t("postComment")}
                 </>
               )}
             </button>
@@ -198,13 +196,13 @@ const CommentsSection = ({
         {isLoadingComments ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-orange-500"></div>
-            <p className="ml-3 text-gray-400">Loading comments...</p>
+            <p className="ml-3 text-gray-400">{t("loadingComments")}</p>
           </div>
         ) : comments.length === 0 ? (
           <div className="text-center py-8">
             <MdComment className="text-4xl text-gray-500 mx-auto mb-3" />
             <p className="text-gray-400">
-              No comments yet. Be the first to share your thoughts!
+              {t("noComments")}
             </p>
           </div>
         ) : (

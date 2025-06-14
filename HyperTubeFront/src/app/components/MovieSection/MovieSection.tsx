@@ -1,4 +1,3 @@
-import { genres } from "@/app/data/NavBarElements";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import React from "react";
@@ -7,6 +6,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/app/store";
+import { getGenres } from "@/app/data/NavBarElements";
+import { useTranslations } from "next-intl";
 
 export const MovieSection = ({
   title,
@@ -21,6 +22,8 @@ export const MovieSection = ({
       router.push(`/browse/movie/${movieId}`);
     }
   };
+
+  const t = useTranslations();
 
   return (
     <motion.section
@@ -52,7 +55,7 @@ export const MovieSection = ({
               href="#"
               className="text-white text-sm sm:text-md relative group hover:text-[#FB9722] transition"
             >
-              View all
+              {t("movieSection.viewAll")}
             </a>
           </motion.div>
         </div>
@@ -88,8 +91,7 @@ export const MovieSection = ({
                     (movie.large_cover_image && movie.large_cover_image) ||
                     (movie.poster_path &&
                       `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
-                    `https://via.placeholder.com/300x450?text=${
-                      movie.name || movie.title
+                    `https://via.placeholder.com/300x450?text=${movie.name || movie.title
                     }`
                   }
                   alt={movie.title || movie.name}
@@ -114,7 +116,7 @@ export const MovieSection = ({
                     {movie.genres?.map((genre: string) => genre).join(", ") ||
                       movie.genre_ids
                         .map((id: number) => {
-                          const genre = genres.find(
+                          const genre = getGenres(t).find(
                             (genre: any) => genre.id === id
                           );
                           return genre?.name;

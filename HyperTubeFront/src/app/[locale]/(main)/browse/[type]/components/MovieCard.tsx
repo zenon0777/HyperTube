@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { PlayArrow, InfoOutlined } from "@mui/icons-material";
 import { useRouter } from "next/navigation"; // For Next.js App Router
+import { useTranslations } from "next-intl";
 
 interface MovieCardProps {
   movie: any; // Movie data can vary between providers
@@ -19,36 +20,37 @@ const MovieCard: React.FC<MovieCardProps> = ({
   const router = useRouter();
   const tmdbImageUrlBase = "https://image.tmdb.org/t/p/w500"; // Standard TMDB image size
 
-  // --- Adaptable data extraction based on provider ---
-  let title: string = "N/A";
+  const t = useTranslations();
+
+  let title: string = t('browse.movieCard.unknownTitle');
   let posterUrl: string | null = null;
   let year: string | number = "N/A";
   let rating: string | number = "N/A";
-  let overview: string = "No overview available.";
+  let overview: string = t('browse.movieCard.noOverview');
   let movieId: string | number | null = null;
 
   if (provider === "TMDB") {
-    title = movie?.title || movie?.name || "Untitled";
+    title = movie?.title || movie?.name || t('browse.movieCard.unknownTitle');
     if (movie?.poster_path) {
       posterUrl = `${tmdbImageUrlBase}${movie.poster_path}`;
     }
     year = movie?.release_date
       ? new Date(movie.release_date).getFullYear()
       : movie?.first_air_date
-      ? new Date(movie.first_air_date).getFullYear()
-      : "N/A";
+        ? new Date(movie.first_air_date).getFullYear()
+        : "N/A";
     rating = movie?.vote_average ? movie.vote_average.toFixed(1) : "N/A";
-    overview = movie?.overview || "No overview available.";
+    overview = movie?.overview || t('browse.movieCard.noOverview');
     movieId = movie?.id;
   } else if (provider === "YTS") {
-    title = movie?.title_long || movie?.title || "Untitled";
+    title = movie?.title_long || movie?.title || t('browse.movieCard.unknownTitle');
     posterUrl = movie?.medium_cover_image || movie?.large_cover_image || null;
     year = movie?.year || "N/A";
     rating = movie?.rating || "N/A";
-    overview = movie?.summary || movie?.synopsis || "No overview available.";
+    overview = movie?.summary || movie?.synopsis || t('browse.movieCard.noOverview');
     movieId = movie?.id;
   } else {
-    title = movie?.title || "Unknown Title";
+    title = movie?.title || t('browse.movieCard.unknownTitle');
     posterUrl = movie?.poster_path
       ? `${tmdbImageUrlBase}${movie.poster_path}`
       : movie?.poster || null;
@@ -58,7 +60,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
     rating = movie?.vote_average
       ? movie.vote_average.toFixed(1)
       : movie?.rating || "N/A";
-    overview = movie?.overview || movie?.summary || "No overview available.";
+    overview = movie?.overview || movie?.summary || t('browse.movieCard.noOverview');
     movieId = movie?.id;
   }
 
@@ -68,15 +70,15 @@ const MovieCard: React.FC<MovieCardProps> = ({
         bg-[#1f1f1f] rounded-lg overflow-hidden shadow-lg
         transform transition-all duration-300 ease-out
         flex flex-col relative cursor-pointer
-        ${
-          isHovered
-            ? "scale-105 ring-2 ring-orange-500 z-20"
-            : "hover:scale-102 z-10"
+        ${isHovered
+          ? "scale-105 ring-2 ring-orange-500 z-20"
+          : "hover:scale-102 z-10"
         }
       `}
-      // onClick={handleDetailsClick}
+      onClick={() => {
+        router.push(`/browse/movie/${movieId}`);
+      }}
     >
-      {/* Poster */}
       <div className="relative w-full aspect-[2/3]">
         {posterUrl ? (
           <Image
@@ -94,11 +96,15 @@ const MovieCard: React.FC<MovieCardProps> = ({
           />
         ) : (
           <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-            {/* placeholder SVG */}
+            <Image
+              src="/placeholder-poster.png"
+              alt="Image not available"
+              layout="fill"
+              objectFit="cover"
+            />
           </div>
         )}
 
-        {/* Hover Overlay */}
         <div
           className={`
             absolute inset-0 bg-black/70
@@ -106,14 +112,13 @@ const MovieCard: React.FC<MovieCardProps> = ({
             ${isHovered ? "opacity-100" : "opacity-0 pointer-events-none"}
           `}
         >
-          {/* Centered buttons */}
           <div className="flex-grow flex items-center justify-center space-x-3">
             <button
               onClick={() => {
-                router.push(`/watch/${movieId}`);
+                router.push(`/browse/movie/${movieId}`);
               }}
               className="px-2 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-full flex items-center space-x-1 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-400"
-              aria-label={`Watch ${title}`}
+              aria-label={`${t('browse.movieCard.watch')} ${title}`}
             >
               <PlayArrow fontSize="medium" />
             </button>
@@ -122,7 +127,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
                 router.push(`/browse/movie/${movieId}`);
               }}
               className="px-2 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-full flex items-center space-x-1 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
-              aria-label={`View details for ${title}`}
+              aria-label={`${t('browse.movieCard.details')} ${title}`}
             >
               <InfoOutlined fontSize="medium" />
             </button>
@@ -136,9 +141,8 @@ const MovieCard: React.FC<MovieCardProps> = ({
       </div>
 
       <div
-        className={`p-3 transition-all duration-300 ${
-          isHovered ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
-        }`}
+        className={`p-3 transition-all duration-300 ${isHovered ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
+          }`}
       >
         <h3 className="text-sm font-semibold text-gray-100 truncate h-6">
           {title}

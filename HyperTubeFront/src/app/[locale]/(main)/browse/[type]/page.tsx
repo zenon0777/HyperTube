@@ -7,12 +7,12 @@ import {
   Remove,
   Sort,
 } from "@mui/icons-material";
-import { Chip, CircularProgress } from "@mui/material";
+import { Chip } from "@mui/material";
 import { useEffect, useState, useCallback } from "react";
-import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import MoviesList from "./components/MovieList";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
+import { useTranslations } from "next-intl";
 
 export interface categoryOptions {
   id: string;
@@ -28,8 +28,8 @@ export interface activeFilters {
 }
 
 export default function Browse() {
+  const t = useTranslations();
   const { APIProvider } = useAPIProvider();
-
   const [hoveredMovie, setHoveredMovie] = useState<number | null>(null);
   const [movies, setMovies] = useState<any[]>([]);
   const [page, setPage] = useState<number>(1);
@@ -56,7 +56,7 @@ export default function Browse() {
 
   const qualityOptions = ["480p", "720p", "1080p", "2160p"];
   const yearOptions = ["2020", "2021", "2022", "2023", "2024"];
-  const orderOptions = ["Ascending", "descending"];
+  const orderOptions = [t('browse.filters.ascending'), t('browse.filters.descending')];
 
   useEffect(() => {
     const getGenres = async () => {
@@ -87,7 +87,6 @@ export default function Browse() {
   ]);
 
   useEffect(() => {
-    console.log("Provider ID from Redux : ===> : ", APIProvider);
     setActiveFilters((prev) => ({
       ...prev,
       provider: APIProvider as string,
@@ -248,7 +247,7 @@ export default function Browse() {
               >
                 <div className="flex items-center space-x-2">
                   <FilterList className="text-orange-500 group-hover:rotate-45 transition-transform" />
-                  <h2 className="text-lg font-semibold">Quality</h2>
+                  <h2 className="text-lg font-semibold">{t('browse.filters.quality')}</h2>
                 </div>
                 {openSections.quality ? (
                   <Remove className="text-orange-500" />
@@ -287,7 +286,7 @@ export default function Browse() {
             >
               <div className="flex items-center space-x-2">
                 <CalendarMonth className="text-orange-500 group-hover:scale-110 transition-transform" />
-                <h2 className="text-lg font-semibold">Release Year</h2>
+                <h2 className="text-lg font-semibold">{t('browse.filters.releaseYear')}</h2>
               </div>
               {openSections.years ? (
                 <Remove className="text-orange-500" />
@@ -324,7 +323,7 @@ export default function Browse() {
             >
               <div className="flex items-center space-x-2">
                 <Sort className="text-orange-500 group-hover:rotate-180 transition-transform" />
-                <h2 className="text-lg font-semibold">Order By</h2>
+                <h2 className="text-lg font-semibold">{t('browse.filters.orderBy')}</h2>
               </div>
               {openSections.orderBy ? (
                 <Remove className="text-orange-500" />
@@ -361,7 +360,7 @@ export default function Browse() {
             >
               <div className="flex items-center space-x-2">
                 <Category className="text-orange-500 group-hover:scale-110 transition-transform" />
-                <h2 className="text-lg font-semibold">Categories</h2>
+                <h2 className="text-lg font-semibold">{t('browse.filters.categories')}</h2>
               </div>
               {openSections.categories ? (
                 <Remove className="text-orange-500" />
@@ -394,7 +393,7 @@ export default function Browse() {
             )}
             {openSections.categories && categoryOptions.length === 0 && (
               <p className="p-4 text-gray-400">
-                Loading categories or none available.
+                {t('browse.filters.loadingCategories')}
               </p>
             )}
           </div>

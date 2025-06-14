@@ -227,7 +227,7 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
         crossOrigin="anonymous"
         className="w-full h-auto"
         style={{ maxHeight: '80vh' }}
-        onError={(e) => console.error('Video Error:', e)}
+        onError={(e) => console.log('Video Error:', e)}
         onLoadedData={() => console.log('Video loaded data')}
         onLoadStart={() => console.log('Video load started')}
         onWaiting={() => console.log('Video waiting for data')}
