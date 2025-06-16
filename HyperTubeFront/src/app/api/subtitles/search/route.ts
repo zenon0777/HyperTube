@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const movieName = searchParams.get('movieName');
+    const localeParam = searchParams.get('locale');
 
     if (!movieName) {
       return NextResponse.json(
@@ -13,12 +14,59 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const getUserLocale = (): string => {
+      if (localeParam && (localeParam === 'en' || localeParam === 'fr')) {
+        // console.log(`[Subtitle Search API] Using explicit locale parameter: ${localeParam}`);
+        return localeParam;
+      }
+      
+      const referer = request.headers.get('referer');
+      if (referer) {
+        const refererUrl = new URL(referer);
+        const pathSegments = refererUrl.pathname.split('/');
+        const localeFromPath = pathSegments[1];
+        if (localeFromPath === 'en' || localeFromPath === 'fr') {
+          // console.log(`[Subtitle Search API] Using locale from referer path: ${localeFromPath}`);
+          return localeFromPath;
+        }
+      }
+      
+      const cookieHeader = request.headers.get('cookie');
+      if (cookieHeader) {
+        const cookies = cookieHeader.split(';');
+        
+        const possibleCookieNames = ['NEXT_LOCALE', 'locale', 'next-intl-locale'];
+        for (const cookieName of possibleCookieNames) {
+          const localeCookie = cookies.find(cookie => cookie.trim().startsWith(`${cookieName}=`));
+          if (localeCookie) {
+            const locale = localeCookie.split('=')[1];
+            if (locale === 'en' || locale === 'fr') {
+              // console.log(`[Subtitle Search API] Using locale from cookie ${cookieName}: ${locale}`);
+              return locale;
+            }
+          }
+        }
+      }
+      
+      const acceptLanguage = request.headers.get('accept-language');
+      if (acceptLanguage && acceptLanguage.includes('fr')) {
+        // console.log(`[Subtitle Search API] Using locale from Accept-Language header: fr`);
+        return 'fr';
+      }
+      
+      // console.log(`[Subtitle Search API] Falling back to default locale: en`);
+      return 'en';
+    };
+
+    const preferredLanguage = getUserLocale();
+    console.log(`[Subtitle Search API] Detected preferred language: ${preferredLanguage}`);
+
     // console.log(`[Subtitle Search API] Searching subtitles for: ${movieName}`);
 
     const movieInfo = extractMovieInfoFromName(movieName);
     // console.log(`[Subtitle Search API] Extracted movie info:`, movieInfo);
 
-    const subtitles = await fetchSubtitlesForMovie(movieInfo);
+    const subtitles = await fetchSubtitlesForMovie(movieInfo, preferredLanguage);
     // console.log(`[Subtitle Search API] Found ${subtitles.length} subtitle tracks`);
 
     const subtitleResults = subtitles.map(track => {

@@ -13,10 +13,11 @@ import { MovieSection } from "@/app/components/MovieSection/MovieSection";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { getGenres } from "@/app/data/NavBarElements";
 import { useTranslations } from "next-intl";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const { isTMDB } = useAPIProvider();
+  const router = useRouter();
   const [popularMovies, setPopularMovies] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [nowPlayingMovies, setNowPlayingMovies] = useState([]);

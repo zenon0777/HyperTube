@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useLocale } from 'next-intl';
 
 interface Track {
   kind: string;
@@ -18,6 +19,7 @@ interface CustomReactPlayerProps {
 
 const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks, movieId }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const locale = useLocale();
   const [isClient, setIsClient] = useState(false);
   const [loadingSubtitles, setLoadingSubtitles] = useState(true);
   const [selectedSubtitleLang, setSelectedSubtitleLang] = useState<string | null>(null);
@@ -30,6 +32,33 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
       return sessionStorage.getItem(sessionStorageKey);
     }
     return null;
+  };
+  
+  const getUserPreferredLanguage = (): string => {
+    if (locale && (locale === 'en' || locale === 'fr')) {
+      // console.log(`[CustomReactPlayer] Using locale from useLocale(): ${locale}`);
+      return locale;
+    }
+    
+    if (typeof window !== 'undefined') {
+      const nextLocale = localStorage.getItem('NEXT_LOCALE');
+      if (nextLocale && (nextLocale === 'en' || nextLocale === 'fr')) {
+        // console.log(`[CustomReactPlayer] Using locale from localStorage: ${nextLocale}`);
+        return nextLocale;
+      }
+      
+      const cookies = document.cookie.split(';');
+      const localeCookie = cookies.find(cookie => cookie.trim().startsWith('NEXT_LOCALE='));
+      if (localeCookie) {
+        const cookieLocale = localeCookie.split('=')[1];
+        if (cookieLocale === 'en' || cookieLocale === 'fr') {
+          // console.log(`[CustomReactPlayer] Using locale from cookie: ${cookieLocale}`);
+          return cookieLocale;
+        }
+      }
+    }
+    // console.log(`[CustomReactPlayer] Falling back to default locale: en`);
+    return 'en';
   };
   
   const setSessionSubtitlePref = (lang: string | null) => {
@@ -118,11 +147,16 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
         }
         
         if (!selectedSubtitleLang) {
+          const preferredLang = getUserPreferredLanguage();
+          // console.log(`[CustomReactPlayer] No subtitle selected, trying to auto-select. Preferred language: ${preferredLang}`);
+          // console.log(`[CustomReactPlayer] Available tracks:`, tracks.map(t => ({ lang: t.srcLang, label: t.label, default: t.default })));
+          
           for (let i = 0; i < textTracks.length; i++) {
             const track = textTracks[i];
             
             if (track.kind === 'subtitles' && 
-                (tracks[i]?.default || track.language === 'en' || i === 0)) {
+                (tracks[i]?.default || track.language === preferredLang || i === 0)) {
+              // console.log(`[CustomReactPlayer] Auto-selecting track: ${track.language} (reason: ${tracks[i]?.default ? 'default' : track.language === preferredLang ? 'preferred language' : 'first available'})`);
               track.mode = 'showing';
               setSelectedSubtitleLang(track.language);
               setSessionSubtitlePref(track.language);

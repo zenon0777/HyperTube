@@ -6,7 +6,7 @@ interface MovieInfo {
   imdbId?: string;
 }
 
-export async function fetchSubtitlesForMovie(movieInfo: MovieInfo): Promise<SubtitleTrack[]> {
+export async function fetchSubtitlesForMovie(movieInfo: MovieInfo, preferredLanguage: string = 'en'): Promise<SubtitleTrack[]> {
   try {
     // console.log('Fetching subtitles for:', movieInfo);
     
@@ -14,7 +14,8 @@ export async function fetchSubtitlesForMovie(movieInfo: MovieInfo): Promise<Subt
       movieInfo.name,
       movieInfo.year,
       movieInfo.imdbId,
-      ['en', 'fr', 'es', 'ar']
+      ['en', 'fr', 'es', 'ar'],
+      preferredLanguage
     );
 
     // console.log(`Found ${subtitles.length} subtitle tracks`);
@@ -25,7 +26,8 @@ export async function fetchSubtitlesForMovie(movieInfo: MovieInfo): Promise<Subt
         movieInfo.name,
         undefined,
         movieInfo.imdbId,
-        ['en', 'fr', 'es', 'ar']
+        ['en', 'fr', 'es', 'ar'],
+        preferredLanguage
       );
       // console.log(`Found ${fallbackSubtitles.length} subtitle tracks without year`);
       return fallbackSubtitles.length > 0 ? fallbackSubtitles : getFallbackSubtitles();

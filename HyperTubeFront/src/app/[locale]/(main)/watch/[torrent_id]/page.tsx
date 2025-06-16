@@ -25,10 +25,10 @@ export default async function WatchPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ torrent_id: string }>;
+  params: Promise<{ locale: string; torrent_id: string }>;
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { torrent_id: torrentHash } = await params;
+  const { locale, torrent_id: torrentHash } = await params;
   const searchParamsData = await searchParams;
   const movieName = searchParamsData?.movieName as string || "Unknown Movie";
 
@@ -45,7 +45,8 @@ export default async function WatchPage({
   const streamId = await initStream(torrentHash, movieName);
 
   const movieInfo = extractMovieInfoFromName(movieName);
-  const tracks = await fetchSubtitlesForMovie(movieInfo);
+  const preferredLanguage = locale === 'fr' ? 'fr' : 'en';
+  const tracks = await fetchSubtitlesForMovie(movieInfo, preferredLanguage);
 
   return (
     <div className="w-full h-screen flex justify-center items-center bg-black text-white">

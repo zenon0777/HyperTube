@@ -105,7 +105,8 @@ class OpenSubtitlesService {
     movieName: string,
     year?: string,
     imdbId?: string,
-    languages: string[] = ['en', 'fr']
+    languages: string[] = ['en', 'fr'],
+    preferredLanguage: string = 'en'
   ): Promise<SubtitleTrack[]> {
     try {
       const searchParams: Record<string, any> = {
@@ -135,14 +136,14 @@ class OpenSubtitlesService {
         return [];
       }
       
-      return this.processSubtitleResults(response.data);
+      return this.processSubtitleResults(response.data, preferredLanguage);
     } catch (error) {
       console.error('Error searching subtitles:', error);
       return [];
     }
   }
 
-  private processSubtitleResults(results: OpenSubtitlesSearchResult[]): SubtitleTrack[] {
+  private processSubtitleResults(results: OpenSubtitlesSearchResult[], preferredLanguage: string = 'en'): SubtitleTrack[] {
     const tracks: SubtitleTrack[] = [];
     const languageMap = new Map<string, OpenSubtitlesSearchResult>();
 
@@ -199,7 +200,7 @@ class OpenSubtitlesService {
           src: `/api/subtitles/download?file_id=${fileId}`,
           srcLang: lang,
           label,
-          default: lang === 'en' && !result.attributes.hearing_impaired,
+          default: lang === preferredLanguage && !result.attributes.hearing_impaired,
         });
         
         // console.log(`Added subtitle track: ${label} (${lang}) - File ID: ${fileId}`);
