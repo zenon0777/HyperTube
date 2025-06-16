@@ -28,6 +28,7 @@ import { RootState } from "@/app/store";
 import { getUserProfile } from "@/app/store/userSlice";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { getTorrentHashForTMDBMovie } from "@/api/torrent/torrentHelper";
+import { getFirstNon3DTorrent, filterOut3DTorrents } from "@/utils/torrentUtils";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 
@@ -420,20 +421,33 @@ export default function Movie() {
               {isYTS === true &&
               details?.torrents &&
               details.torrents.length > 0 ? (
-                <Link
-                  href={`/watch/${
-                    details.torrents[0].hash
-                  }?movieName=${encodeURIComponent(getTitle())}`}
-                  passHref
-                >
-                  <motion.button
-                    className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <MdMovie /> {t("watch")}
-                  </motion.button>
-                </Link>
+                (() => {
+                  const firstNon3DTorrent = getFirstNon3DTorrent(details.torrents);
+                  return firstNon3DTorrent ? (
+                    <Link
+                      href={`/watch/${
+                        firstNon3DTorrent.hash
+                      }?movieName=${encodeURIComponent(getTitle())}`}
+                      passHref
+                    >
+                      <motion.button
+                        className="px-5 sm:px-7 py-2.5 sm:py-3 bg-orange-500 text-white rounded-full font-semibold text-sm sm:text-base hover:bg-orange-600 transition transform hover:scale-105 active:scale-95 flex items-center gap-2"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <MdMovie /> {t("watch")}
+                      </motion.button>
+                    </Link>
+                  ) : (
+                    <button
+                      className="px-5 sm:px-7 py-2.5 sm:py-3 bg-gray-600 text-white rounded-full font-semibold text-sm sm:text-base flex items-center gap-2 cursor-not-allowed"
+                      disabled
+                      title={t("no2DTorrentFound")}
+                    >
+                      <MdMovie /> {t("only3DAvailable")}
+                    </button>
+                  );
+                })()
               ) : !isYTS && details?.id ? (
                 torrentHash ? (
                   <Link
@@ -564,7 +578,7 @@ export default function Movie() {
               </motion.section>
             )}
 
-            {APIProvider === "YTS" && details?.torrents?.length > 0 && (
+            {APIProvider === "YTS" && details?.torrents?.length > 0 && filterOut3DTorrents(details.torrents).length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -576,7 +590,7 @@ export default function Movie() {
                 </h2>{" "}
                 <div className="space-y-4">
                   {" "}
-                  {details.torrents.map((torrent: any, index: number) => (
+                  {filterOut3DTorrents(details.torrents).map((torrent: any, index: number) => (
                     <motion.div
                       key={torrent.hash || index}
                       className="p-4 bg-gray-800/50 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"

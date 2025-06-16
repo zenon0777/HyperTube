@@ -157,6 +157,8 @@
     "tryAgain": "Réessayer",
     "noTorrentFound": "Aucun torrent trouvé",
     "noTorrentAvailable": "Aucun torrent disponible",
+    "no2DTorrentFound": "Aucun torrent 2D trouvé",
+    "only3DAvailable": "Seul 3D disponible",
     "seeds": "Seeders",
     "peers": "Peers",
     "size": "Taille",

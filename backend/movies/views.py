@@ -85,6 +85,34 @@ class TorrentScraper:
     def get_magnet_link(self, torrent_url):
         return None
 
+    def is_3d_torrent(self, torrent_name):
+        torrent_name_lower = torrent_name.lower()
+        
+        three_d_indicators = [
+            '3d', 
+            'sbs',
+            'hsbs',
+            'tab',
+            'htab',
+            'ou',
+            'anaglyph',
+            'stereoscopic',
+            '3-d',
+            '.3d.',
+            ' 3d ',
+            '[3d]',
+            '(3d)',
+            'imax.3d',
+            'hsou',
+        ]
+        
+        for indicator in three_d_indicators:
+            if indicator in torrent_name_lower:
+                print(f"====> Filtering out 3D torrent: {torrent_name} (matched: {indicator})")
+                return True
+        
+        return False
+
     def find_best_match(self, title, year=None, min_seeds=1):
         results = self.search_torrent(title, year)
         if not results:
@@ -94,6 +122,12 @@ class TorrentScraper:
         # Filter by minimum seeds
         filtered_results = [r for r in results if r['seeds'] >= min_seeds]
         print(f"Found {len(filtered_results)} results with >= {min_seeds} seeds")
+        
+        # Filter out 3D torrents (never stream 3D content)
+        non_3d_results = [r for r in filtered_results if not self.is_3d_torrent(r['name'])]
+        print(f"Found {len(non_3d_results)} non-3D results after filtering 3D torrents")
+        
+        filtered_results = non_3d_results
         
         if year:
             # Try to find exact match with year
@@ -108,7 +142,7 @@ class TorrentScraper:
             print(f"Returning best match: {filtered_results[0]['name']}")
             return filtered_results[0]
         
-        print("No suitable matches found")
+        print("No suitable non-3D matches found - all available torrents are 3D")
         return None
 
 
