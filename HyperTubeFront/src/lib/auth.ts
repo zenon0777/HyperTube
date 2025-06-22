@@ -41,9 +41,17 @@ export const authService = {
     return response.data;
   },
 
-
   async updateProfile(userId: string, data: any) {
     const response = await api.patch(`/users/${userId}/`, data);
+    return response.data;
+  },
+  async changePassword(passwordData: { old_password: string; new_password: string }) {
+    const response = await api.post("/auth/change-password/", passwordData);
+    return response.data;
+  },
+
+  async deleteAccount(userId: string) {
+    const response = await api.delete(`/users/${userId}/`);
     return response.data;
   },
 

@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
       }, {
         protocol: 'https',
         hostname: "hypertube.nyc3.digitaloceanspaces.com"
+      },{
+        protocol: 'https',
+        hostname: 'cdn.intra.42.fr',
+      },{
+        protocol: 'https',
+        hostname: 'z-tube.nyc3.digitaloceanspaces.com'
       }
     ],
   },
