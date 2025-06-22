@@ -142,7 +142,7 @@ class LogoutView(APIView):
             print(f"Logout token handling failed: {e}")
         
         response = Response()
-        response.delete_cookie('refresh_token', path='/')
+        response.delete_cookie('refresh_token', path='/auth/token/refresh')
         response.delete_cookie('access_token', path='/')
         response.data = {'message': 'Logout successful'}
         return response
@@ -200,10 +200,26 @@ class CookieTokenRefreshView(APIView):
 User = get_user_model()
 
 class UserListView(APIView):
-
     def get(self, request):
-        users = User.objects.all().values('id', 'username')
-        return Response(users, status=status.HTTP_200_OK)
+        users = User.objects.all().values(
+            'id', 
+            'username', 
+            'first_name', 
+            'last_name',
+            'profile_picture_url'
+        )
+        user_list = []
+        for user in users:
+            user_data = {
+                'id': str(user['id']),
+                'username': user['username'],
+                'first_name': user['first_name'],
+                'last_name': user['last_name'],
+                'profile_picture': user['profile_picture_url']
+            }
+            user_list.append(user_data)
+            
+        return Response(user_list, status=status.HTTP_200_OK)
 
 
 class UserManagementView(APIView):
@@ -212,13 +228,19 @@ class UserManagementView(APIView):
     def get(self, request, id):
         try:
             user = User.objects.get(id=id)
+            is_own_profile = request.user.is_authenticated and request.user.id == user.id
+            
             data = {
+                'id': user.id,
                 'username': user.username,
-                'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
-                'profile_picture': user.profile_picture.url if hasattr(user, 'profile_picture') and user.profile_picture else None
+                'profile_picture': user.profile_picture_url if hasattr(user, 'profile_picture_url') and user.profile_picture_url else None,
+                'is_own_profile': is_own_profile
             }
+            if is_own_profile:
+                data['email'] = user.email
+            
             return Response(data, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)

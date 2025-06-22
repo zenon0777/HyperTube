@@ -315,7 +315,7 @@ def get_movie_comments(request, movie_id):
                 "id": comment.user.id,
                 "username": comment.user.username,
                 "email": getattr(comment.user, "email", None),
-                "profile_picture": getattr(comment.user, "profile_picture", None)
+                "profile_picture": getattr(comment.user, "profile_picture_url", None)
             },
             "created_at": comment.created_at.isoformat(),
             "updated_at": comment.updated_at.isoformat(),

@@ -31,6 +31,9 @@ const nextConfig: NextConfig = {
       },{
         protocol: 'https',
         hostname: 'z-tube.nyc3.digitaloceanspaces.com'
+      },{
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com'
       }
     ],
   },

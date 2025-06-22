@@ -65,8 +65,7 @@
     "placeholder": "Rechercher des films et séries",
     "noResults": "Aucun résultat trouvé",
     "unknownTitle": "Titre inconnu"
-  },
-  "navBar": {
+  },  "navBar": {
     "logout": "Déconnexion",
     "home": "Accueil",
     "movies": "Films",
@@ -233,8 +232,7 @@
     "failedToUpdateProfile": "Échec de la mise à jour du profil",
     "passwordChangedSuccess": "Mot de passe modifié avec succès !",
     "failedToChangePassword": "Échec du changement de mot de passe",
-    "passwordsDontMatch": "Les nouveaux mots de passe ne correspondent pas !",
-    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères !",
+    "passwordsDontMatch": "Les nouveaux mots de passe ne correspondent pas !",    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères !",
     "errorLoadingProfile": "Erreur lors du chargement du profil"
   }
 }

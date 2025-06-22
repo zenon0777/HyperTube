@@ -9,6 +9,9 @@ import MenuItem from "@mui/material/MenuItem";
 import Tooltip from "@mui/material/Tooltip";
 import * as React from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { authService } from "@/lib/auth";
+import { toast } from "react-toastify";
 
 interface user {
   id: string;
@@ -18,13 +21,33 @@ interface user {
 }
 export default function ProfileMenu(props: user) {
   const t = useTranslations();
+  const router = useRouter();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+  
   const handleClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleProfileClick = () => {
+    handleClose();
+    router.push('/profile');
+  };
+
+  const handleLogoutClick = async () => {
+    handleClose();
+    try {
+      await authService.logout();
+      toast.success('Logged out successfully');
+      router.push('/login');
+    } catch (error) {
+      toast.error('Error logging out');
+      console.error('Logout error:', error);
+    }
   };
   return (
     <React.Fragment>
@@ -77,8 +100,7 @@ export default function ProfileMenu(props: user) {
         }}
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      >
-        <MenuItem onClick={handleClose}>
+      >        <MenuItem onClick={handleProfileClick}>
           <Avatar /> {t("navBar.profile")}
         </MenuItem>
         <MenuItem onClick={handleClose}>
@@ -87,7 +109,7 @@ export default function ProfileMenu(props: user) {
           </ListItemIcon>
           {t("navBar.settings")}
         </MenuItem>
-        <MenuItem onClick={handleClose}>
+        <MenuItem onClick={handleLogoutClick}>
           <ListItemIcon>
             <Logout fontSize="small" />
           </ListItemIcon>

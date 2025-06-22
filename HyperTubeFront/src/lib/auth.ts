@@ -30,9 +30,13 @@ export const authService = {
       throw new Error('Failed to login');
     }
   },
-
   async getUserProfile() {
     const response = await api.get("/auth/me/");
+    return response.data;
+  },
+
+  async getUserById(userId: string) {
+    const response = await api.get(`/users/${userId}/`);
     return response.data;
   },
 

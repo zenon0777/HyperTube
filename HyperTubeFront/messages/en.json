@@ -65,8 +65,7 @@
     "placeholder": "Search for movies and TV shows",
     "noResults": "No results found",
     "unknownTitle": "Unknown Title"
-  },
-  "navBar": {
+  },  "navBar": {
     "logout": "Logout",
     "home": "Home",
     "movies": "Movies",
@@ -233,8 +232,7 @@
     "failedToUpdateProfile": "Failed to update profile",
     "passwordChangedSuccess": "Password changed successfully!",
     "failedToChangePassword": "Failed to change password",
-    "passwordsDontMatch": "New passwords don't match!",
-    "passwordTooShort": "Password must be at least 8 characters long!",
+    "passwordsDontMatch": "New passwords don't match!",    "passwordTooShort": "Password must be at least 8 characters long!",
     "errorLoadingProfile": "Error loading profile"
   }
 }

@@ -13,8 +13,7 @@ import {
   VisibilityOff,
   Save,
   AccountCircle,
-  Security,
-  Language
+  Security
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import { RootState } from "@/app/store";
@@ -27,7 +26,7 @@ interface PasswordChangeData {
   confirm_password: string;
 }
 
-type ActiveTab = 'profile' | 'security' | 'preferences';
+type ActiveTab = 'profile' | 'security';
 
 export default function ProfilePage() {
   const dispatch = useDispatch();
@@ -222,8 +221,7 @@ export default function ProfilePage() {
               <nav className="space-y-2">
                 {[
                   { id: 'profile', label: t('profileInfo'), icon: AccountCircle },
-                  { id: 'security', label: t('security'), icon: Security },
-                  { id: 'preferences', label: t('preferences'), icon: Settings }
+                  { id: 'security', label: t('security'), icon: Security }
                 ].map((tab) => (
                   <motion.button
                     key={tab.id}
@@ -474,38 +472,6 @@ export default function ProfilePage() {
                         </motion.button>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'preferences' && (
-                <motion.div
-                  key="preferences"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50"
-                >                  <div className="flex items-center gap-3 mb-8">
-                    <Settings className="w-8 h-8 text-orange-500" />
-                    <h2 className="text-3xl font-bold text-white">{t("preferences")}</h2>
-                  </div>
-                  <div className="space-y-6">
-                    {[
-                      { icon: Language, label: t("language"), value: t("english"), desc: t("selectLanguage") }
-                    ].map((pref) => (
-                      <div key={pref.label} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/50">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-700 rounded-xl flex items-center justify-center">
-                            <pref.icon className="w-6 h-6 text-orange-500" />
-                          </div>
-                          <div>
-                            <h3 className="text-white font-medium">{pref.label}</h3>
-                            <p className="text-gray-400 text-sm">{pref.desc}</p>
-                          </div>
-                        </div>
-                        <div className="text-orange-500 font-medium">{pref.value}</div>
-                      </div>
-                    ))}
                   </div>
                 </motion.div>
               )}

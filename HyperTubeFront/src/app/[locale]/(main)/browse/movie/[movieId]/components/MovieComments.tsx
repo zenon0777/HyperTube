@@ -5,6 +5,8 @@ import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import UserCard from "@/components/UserCard";
 
 const CommentsSection = ({
   movieId,
@@ -29,6 +31,7 @@ const CommentsSection = ({
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -215,24 +218,21 @@ const CommentsSection = ({
               className="p-4 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors"
             >
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
-                    <img
-                      src={
-                        comment.user?.profile_picture || "/default-avatar.png"
-                      }
-                      alt="User Avatar"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  </div>
-                </div>
+                {comment.user?.id && (
+                  <UserCard
+                    user={{
+                      id: comment.user.id,
+                      username: comment.user.username || "Anonymous",
+                      profile_picture: comment.user.profile_picture
+                    }}
+                    size="sm"
+                    className="flex-shrink-0"
+                  />
+                )}
 
                 <div className="flex-grow">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-200">
-                        {comment.user?.username || "Anonymous"}
-                      </h4>
                       <span className="text-xs text-gray-500">
                         {formatDate(comment.created_at)}
                       </span>

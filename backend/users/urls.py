@@ -8,7 +8,7 @@ urlpatterns = [
 	path('auth/register/', UserRegistrationView.as_view(), name='register'),
 	path('auth/me/', UserProfileView.as_view(), name='profile'),
 	path('auth/login/', UserLoginView.as_view(), name='login'),
-	path('logout/', LogoutView.as_view(), name='logout'),
+	path('auth/logout/', LogoutView.as_view(), name='logout'),
 	path('auth/token/refresh/', CookieTokenRefreshView.as_view(), name='token_refresh'),
 
 	path('auth/<str:provider>/', OAuthLoginView.as_view(), name='oauth_login'),
