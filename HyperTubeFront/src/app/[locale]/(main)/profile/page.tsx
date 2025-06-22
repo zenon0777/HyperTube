@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
   Edit,
   Settings,
@@ -31,6 +32,7 @@ type ActiveTab = 'profile' | 'security' | 'preferences';
 export default function ProfilePage() {
   const dispatch = useDispatch();
   const { user, loading, error } = useSelector((state: RootState) => state.user);
+  const t = useTranslations("Profile");
   const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -105,15 +107,14 @@ export default function ProfilePage() {
       [field]: !prev[field]
     }));
   };
-
   const handleChangePassword = async () => {
     if (passwordData.new_password !== passwordData.confirm_password) {
-      toast.error("New passwords don't match!");
+      toast.error(t("passwordsDontMatch"));
       return;
     }
 
     if (passwordData.new_password.length < 8) {
-      toast.error("Password must be at least 8 characters long!");
+      toast.error(t("passwordTooShort"));
       return;
     }
 
@@ -129,9 +130,9 @@ export default function ProfilePage() {
         confirm_password: ""
       });
 
-      toast.success("Password changed successfully!");
+      toast.success(t("passwordChangedSuccess"));
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to change password");
+      toast.error(error.response?.data?.error || t("failedToChangePassword"));
     }
   };
 
@@ -147,14 +148,12 @@ export default function ProfilePage() {
 
       if (profileFile) {
         updateData.append('profile_picture', profileFile);
-      }
-
-      await authService.updateProfile(user.id, updateData);
+      } await authService.updateProfile(user.id, updateData);
       dispatch(getUserProfile() as any);
       setIsEditing(false);
-      toast.success("Profile updated successfully!");
+      toast.success(t("profileUpdatedSuccess"));
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Failed to update profile");
+      toast.error(error.response?.data?.error || t("failedToUpdateProfile"));
     }
   };
   const handleEditProfile = () => {
@@ -174,17 +173,16 @@ export default function ProfilePage() {
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Error loading profile</h2>
-          <p className="text-gray-400">{error}</p>
-        </div>
+    return (<div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="text-center text-white">
+        <h2 className="text-2xl font-bold mb-4">{t("errorLoadingProfile")}</h2>
+        <p className="text-gray-400">{error}</p>
       </div>
+    </div>
     );
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800 pt-24">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -inset-10 opacity-10">
@@ -193,18 +191,7 @@ export default function ProfilePage() {
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
         </div>
       </div>
-
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-
-          <p className="text-gray-400 text-lg mt-6">Manage your account and preferences</p>
-        </motion.div>
-
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Sidebar Navigation */}
           <motion.div
@@ -231,28 +218,27 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-semibold text-white mb-1">
                   {user?.username || "User"}
                 </h3>
-              </div>
-
-              {/* Navigation Tabs */}
-              <nav className="space-y-2">                {[
-                { id: 'profile', label: 'Profile Info', icon: AccountCircle },
-                { id: 'security', label: 'Security', icon: Security },
-                { id: 'preferences', label: 'Preferences', icon: Settings }
-              ].map((tab) => (
-                <motion.button
-                  key={tab.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setActiveTab(tab.id as ActiveTab)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === tab.id
-                    ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                    }`}
-                >
-                  <tab.icon className="w-5 h-5" />
-                  <span className="font-medium">{tab.label}</span>
-                </motion.button>
-              ))}
+              </div>              {/* Navigation Tabs */}
+              <nav className="space-y-2">
+                {[
+                  { id: 'profile', label: t('profileInfo'), icon: AccountCircle },
+                  { id: 'security', label: t('security'), icon: Security },
+                  { id: 'preferences', label: t('preferences'), icon: Settings }
+                ].map((tab) => (
+                  <motion.button
+                    key={tab.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveTab(tab.id as ActiveTab)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === tab.id
+                      ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      }`}
+                  >
+                    <tab.icon className="w-5 h-5" />
+                    <span className="font-medium">{tab.label}</span>
+                  </motion.button>
+                ))}
               </nav>
             </div>
           </motion.div>
@@ -267,9 +253,8 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50"
-                >
-                  <div className="flex items-center justify-between mb-8">
-                    <h2 className="text-3xl font-bold text-white">Profile Information</h2>
+                >                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-3xl font-bold text-white">{t("profileInformation")}</h2>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -280,7 +265,7 @@ export default function ProfilePage() {
                         }`}
                     >
                       {isEditing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-                      {isEditing ? 'Save Changes' : 'Edit Profile'}
+                      {isEditing ? t('saveChanges') : t('editProfile')}
                     </motion.button>
                   </div>
 
@@ -316,12 +301,10 @@ export default function ProfilePage() {
                           </label>
                         )}
                       </div>
-                    </div>
-
-                    {/* Form Fields */}
+                    </div>                    {/* Form Fields */}
                     <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("username")}</label>
                         {isEditing ? (
                           <input
                             type="text"
@@ -332,13 +315,13 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
-                            {user?.username || "Not set"}
+                            {user?.username || t("notSet")}
                           </div>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("email")}</label>
                         {isEditing ? (
                           <input
                             type="email"
@@ -349,15 +332,13 @@ export default function ProfilePage() {
                           />
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
-                            {user?.email || "Not set"}
+                            {user?.email || t("notSet")}
                           </div>
                         )}
                       </div>
-                    </div>
-
-                    <div className="space-y-6">
+                    </div>                    <div className="space-y-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">First Name</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("firstName")}</label>
                         {isEditing ? (
                           <input
                             type="text"
@@ -365,17 +346,17 @@ export default function ProfilePage() {
                             value={formData.first_name}
                             onChange={handleInputChange}
                             className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                            placeholder="Enter first name"
+                            placeholder={t("enterFirstName")}
                           />
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
-                            {user?.first_name || "Not set"}
+                            {user?.first_name || t("notSet")}
                           </div>
                         )}
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">Last Name</label>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("lastName")}</label>
                         {isEditing ? (
                           <input
                             type="text"
@@ -383,11 +364,11 @@ export default function ProfilePage() {
                             value={formData.last_name}
                             onChange={handleInputChange}
                             className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                            placeholder="Enter last name"
+                            placeholder={t("enterLastName")}
                           />
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
-                            {user?.last_name || "Not set"}
+                            {user?.last_name || t("notSet")}
                           </div>
                         )}
                       </div>
@@ -403,23 +384,20 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50"
-                >
-                  <div className="flex items-center gap-3 mb-8">
+                >                  <div className="flex items-center gap-3 mb-8">
                     <Security className="w-8 h-8 text-orange-500" />
-                    <h2 className="text-3xl font-bold text-white">Security Settings</h2>
+                    <h2 className="text-3xl font-bold text-white">{t("securitySettings")}</h2>
                   </div>
 
                   <div className="max-w-md mx-auto">
                     <div className="bg-gray-900/50 rounded-xl p-6 border border-gray-600/50">
                       <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
                         <Lock className="w-5 h-5 text-orange-500" />
-                        Change Password
-                      </h3>
-
-                      <div className="space-y-4">
+                        {t("changePassword")}
+                      </h3>                      <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Current Password
+                            {t("currentPassword")}
                           </label>
                           <div className="relative">
                             <input
@@ -428,7 +406,7 @@ export default function ProfilePage() {
                               value={passwordData.old_password}
                               onChange={handlePasswordChange}
                               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all pr-12"
-                              placeholder="Enter current password"
+                              placeholder={t("enterCurrentPassword")}
                             />
                             <button
                               type="button"
@@ -442,7 +420,7 @@ export default function ProfilePage() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
-                            New Password
+                            {t("newPassword")}
                           </label>
                           <div className="relative">
                             <input
@@ -451,7 +429,7 @@ export default function ProfilePage() {
                               value={passwordData.new_password}
                               onChange={handlePasswordChange}
                               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all pr-12"
-                              placeholder="Enter new password"
+                              placeholder={t("enterNewPassword")}
                             />
                             <button
                               type="button"
@@ -465,7 +443,7 @@ export default function ProfilePage() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Confirm New Password
+                            {t("confirmNewPassword")}
                           </label>
                           <div className="relative">
                             <input
@@ -474,7 +452,7 @@ export default function ProfilePage() {
                               value={passwordData.confirm_password}
                               onChange={handlePasswordChange}
                               className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all pr-12"
-                              placeholder="Confirm new password"
+                              placeholder={t("confirmNewPasswordPlaceholder")}
                             />
                             <button
                               type="button"
@@ -492,7 +470,7 @@ export default function ProfilePage() {
                           onClick={handleChangePassword}
                           className="w-full mt-6 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-medium rounded-xl transition-all shadow-lg"
                         >
-                          Update Password
+                          {t("updatePassword")}
                         </motion.button>
                       </div>
                     </div>
@@ -507,13 +485,13 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   className="bg-gray-800/50 backdrop-blur-xl rounded-2xl p-8 border border-gray-700/50"
-                >
-                  <div className="flex items-center gap-3 mb-8">
+                >                  <div className="flex items-center gap-3 mb-8">
                     <Settings className="w-8 h-8 text-orange-500" />
-                    <h2 className="text-3xl font-bold text-white">Preferences</h2>
-                  </div>                  <div className="space-y-6">
+                    <h2 className="text-3xl font-bold text-white">{t("preferences")}</h2>
+                  </div>
+                  <div className="space-y-6">
                     {[
-                      { icon: Language, label: "Language", value: "English", desc: "Select your language" }
+                      { icon: Language, label: t("language"), value: t("english"), desc: t("selectLanguage") }
                     ].map((pref) => (
                       <div key={pref.label} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl border border-gray-600/50">
                         <div className="flex items-center gap-4">
