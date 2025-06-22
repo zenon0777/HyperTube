@@ -69,6 +69,8 @@ class UserProfileView(APIView):
             'id': user.id,
             'username': user.username,
             'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
             'profile_picture': user.profile_picture_url if hasattr(user, 'profile_picture_url') and user.profile_picture_url else None
         }
 
@@ -213,6 +215,8 @@ class UserManagementView(APIView):
             data = {
                 'username': user.username,
                 'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
                 'profile_picture': user.profile_picture.url if hasattr(user, 'profile_picture') and user.profile_picture else None
             }
             return Response(data, status=status.HTTP_200_OK)
@@ -224,19 +228,22 @@ class UserManagementView(APIView):
            user = User.objects.get(id=id)
            if request.user != user:
                return Response({'error': 'Permission denied'}, status=403)
-
            data = request.data
            if 'username' in data:
                user.username = data['username']
            if 'email' in data:
                user.email = data['email']
+           if 'first_name' in data:
+               user.first_name = data['first_name']
+           if 'last_name' in data:
+               user.last_name = data['last_name']
            if 'password' in data:
                user.set_password(data['password'])
            if 'profile_picture' in data:
                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                unique_name = f"{timestamp}_{uuid.uuid4().hex[:8]}_{data['profile_picture'].name}"
                file_name = default_storage.save(f'profile_pictures/{unique_name}', data['profile_picture'])
-               user.profile_picture_url = f"{settings.AWS_S3_ENDPOINT_URL}/hypertube/profile_pictures/{unique_name}"
+               user.profile_picture_url = f"{settings.AWS_S3_ENDPOINT_URL}/z-tube/profile_pictures/{unique_name}"
 
            user.save()
            return Response({'message': 'User updated successfully'}, status=200)
@@ -309,6 +316,7 @@ class PasswordResetConfirmView(APIView):
 
 
 class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
