@@ -13,22 +13,24 @@ export default function AuthLayout({
   const queryClient = new QueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        className="z-[9999]"
-      />
-      <Provider store={store}>
-        {children}
-      </Provider>
-    </QueryClientProvider>
+    <html lang="en">
+      <body>
+        <QueryClientProvider client={queryClient}>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            className="z-[9999]"
+          />
+          <Provider store={store}>{children}</Provider>
+        </QueryClientProvider>
+      </body>
+    </html>
   );
 }

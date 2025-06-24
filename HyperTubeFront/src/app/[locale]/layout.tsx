@@ -42,10 +42,11 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html suppressHydrationWarning lang={locale}>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${PraiseRegular.variable} antialiased bg-black`}
-      >
+    <html
+      lang={locale}
+      className={`${geistSans.variable} ${geistMono.variable} ${PraiseRegular.variable} antialiased`}
+    >
+      <body className="bg-black">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
         </NextIntlClientProvider>
