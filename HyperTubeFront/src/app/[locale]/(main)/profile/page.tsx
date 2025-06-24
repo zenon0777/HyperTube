@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import {
   Edit,
-  Settings,
   PhotoCamera,
   Lock,
   Visibility,
@@ -16,7 +15,7 @@ import {
   Security
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
-import { RootState } from "@/app/store";
+import { RootState, AppDispatch } from "@/app/store";
 import { getUserProfile } from "@/app/store/userSlice";
 import { authService } from "@/lib/auth";
 
@@ -29,7 +28,7 @@ interface PasswordChangeData {
 type ActiveTab = 'profile' | 'security';
 
 export default function ProfilePage() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user, loading, error } = useSelector((state: RootState) => state.user);
   const t = useTranslations("Profile");
   const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
@@ -57,7 +56,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) {
-      dispatch(getUserProfile() as any);
+      dispatch(getUserProfile());
     }
   }, [dispatch, user]);
 
@@ -130,8 +129,11 @@ export default function ProfilePage() {
       });
 
       toast.success(t("passwordChangedSuccess"));
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || t("failedToChangePassword"));
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || t("failedToChangePassword")
+        : t("failedToChangePassword");
+      toast.error(errorMessage);
     }
   };
 
@@ -147,12 +149,17 @@ export default function ProfilePage() {
 
       if (profileFile) {
         updateData.append('profile_picture', profileFile);
-      } await authService.updateProfile(user.id, updateData);
-      dispatch(getUserProfile() as any);
+      }
+
+      await authService.updateProfile(user.id, updateData);
+      dispatch(getUserProfile());
       setIsEditing(false);
       toast.success(t("profileUpdatedSuccess"));
-    } catch (error: any) {
-      toast.error(error.response?.data?.error || t("failedToUpdateProfile"));
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error
+        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || t("failedToUpdateProfile")
+        : t("failedToUpdateProfile");
+      toast.error(errorMessage);
     }
   };
   const handleEditProfile = () => {

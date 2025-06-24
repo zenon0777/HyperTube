@@ -15,74 +15,114 @@ import { getGenres } from "@/app/data/NavBarElements";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
+interface MovieData {
+  id: number;
+  title: string;
+  backdrop_path?: string;
+  medium_cover_image?: string;
+  large_cover_image?: string;
+  poster_path?: string;
+  summary?: string;
+  overview?: string;
+  release_date?: string;
+  year?: number;
+  genres?: string[];
+  genre_ids?: number[];
+  rating?: number;
+  vote_average?: number;
+}
+
+interface TMDBMovieListResponse {
+  movies?: {
+    results: MovieData[];
+  };
+}
+
+interface YTSMovieListResponse {
+  data?: {
+    movies: MovieData[];
+  };
+}
+
+interface Genre {
+  id: number;
+  name: string;
+}
+
 export default function Home() {
   const { isTMDB } = useAPIProvider();
   const router = useRouter();
-  const [popularMovies, setPopularMovies] = useState([]);
-  const [topRatedMovies, setTopRatedMovies] = useState([]);
-  const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
+  const [popularMovies, setPopularMovies] = useState<MovieData[]>([]);
+  const [topRatedMovies, setTopRatedMovies] = useState<MovieData[]>([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState<MovieData[]>([]);
   const t = useTranslations();
 
   useEffect(() => {
     const getTMDBFiltredMovies = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list`;
+        const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list`;
         let popularMoviesUrl = baseUrl + "?popular";
         popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
-        let topRatedMoviesUrl =
+        const topRatedMoviesUrl =
           baseUrl +
           "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=vote_average.desc&without_genres=99,10755&vote_count.gte=200";
-        let NowPlayingMoviesUrl =
+        const nowPlayingMoviesUrl =
           baseUrl +
           "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
         const response = await fetch(popularMoviesUrl, {
           credentials: "include",
         });
-        const data = await response.json();
-        setPopularMovies(data.movies?.results);
+        const data: TMDBMovieListResponse = await response.json();
+        setPopularMovies(data.movies?.results || []);
         const response2 = await fetch(topRatedMoviesUrl, {
           credentials: "include",
         });
-        const data2 = await response2.json();
-        setTopRatedMovies(data2.movies?.results);
-        const response3 = await fetch(NowPlayingMoviesUrl, {
+        const data2: TMDBMovieListResponse = await response2.json();
+        setTopRatedMovies(data2.movies?.results || []);
+        const response3 = await fetch(nowPlayingMoviesUrl, {
           credentials: "include",
         });
-        const data3 = await response3.json();
-        setNowPlayingMovies(data3.movies?.results);
-      } catch (error: any) {
-        toast.error(error.message);
+        const data3: TMDBMovieListResponse = await response3.json();
+        setNowPlayingMovies(data3.movies?.results || []);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        toast.error(message);
       }
     };
     const getYTSFiltredMovies = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
-        let PopularMoviesUrl = baseUrl;
+        const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
+        let popularMoviesUrl = baseUrl;
         let topRatedMoviesUrl = baseUrl;
         topRatedMoviesUrl += "&sort_by=rating&order_by=desc";
-        PopularMoviesUrl += "&sort_by=download_count&order_by=desc";
+        popularMoviesUrl += "&sort_by=download_count&order_by=desc";
         let nowPlayingMoviesUrl = baseUrl;
         nowPlayingMoviesUrl += "&sort_by=date_added&order_by=desc";
-        const response = await fetch(PopularMoviesUrl, {
+        const response = await fetch(popularMoviesUrl, {
           credentials: "include",
         });
-        const data = await response.json();
-        setPopularMovies(data.data?.movies);
+        const data: YTSMovieListResponse = await response.json();
+        setPopularMovies(data.data?.movies || []);
         const response2 = await fetch(topRatedMoviesUrl, {
           credentials: "include",
         });
-        const data2 = await response2.json();
-        setTopRatedMovies(data2.data?.movies);
+        const data2: YTSMovieListResponse = await response2.json();
+        setTopRatedMovies(data2.data?.movies || []);
         const response3 = await fetch(nowPlayingMoviesUrl, {
           credentials: "include",
         });
-        const data3 = await response3.json();
-        setNowPlayingMovies(data3.data?.movies);
-      } catch (error: any) {
-        toast.error(error.message);
+        const data3: YTSMovieListResponse = await response3.json();
+        setNowPlayingMovies(data3.data?.movies || []);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        toast.error(message);
       }
     };
-    isTMDB === true ? getTMDBFiltredMovies() : getYTSFiltredMovies();
+    if (isTMDB === true) {
+      getTMDBFiltredMovies();
+    } else {
+      getYTSFiltredMovies();
+    }
   }, [isTMDB]);
 
   return (
@@ -99,7 +139,7 @@ export default function Home() {
           spaceBetween={20}
           className="h-full swiper-container"
         >
-          {nowPlayingMovies?.map((movie: any, index: number) => (
+          {nowPlayingMovies?.map((movie: MovieData, index: number) => (
             <SwiperSlide key={index}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -156,9 +196,9 @@ export default function Home() {
                       {movie.release_date?.split("-")[0] || movie.year} |{" "}
                       {movie.genres?.map((genre: string) => genre).join(", ") ||
                         movie.genre_ids
-                          .map((id: number) => {
+                          ?.map((id: number) => {
                             const genre = getGenres(t).find(
-                              (genre: any) => genre.id === id
+                              (genreItem: Genre) => genreItem.id === id
                             );
                             return genre?.name;
                           })

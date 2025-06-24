@@ -4,20 +4,38 @@ import React from "react";
 import { Navigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useRouter } from 'next/navigation';
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/app/store";
 import { getGenres } from "@/app/data/NavBarElements";
 import { useTranslations } from "next-intl";
+
+interface Movie {
+  id: string | number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  large_cover_image?: string;
+  release_date?: string;
+  first_air_date?: string;
+  year?: number;
+  vote_average?: number;
+  rating?: number;
+  genres?: string[];
+  genre_ids?: number[];
+}
+
+interface Genre {
+  id: number;
+  name: string;
+}
 
 export const MovieSection = ({
   title,
   movies,
 }: {
   title: string;
-  movies: any[];
+  movies: Movie[];
 }) => {
   const router = useRouter();
-  const handleMovieClick = (movieId: string) => {
+  const handleMovieClick = (movieId: string | number) => {
     if (typeof window !== "undefined") {
       router.push(`/browse/movie/${movieId}`);
     }
@@ -94,7 +112,7 @@ export const MovieSection = ({
                     `https://via.placeholder.com/300x450?text=${movie.name || movie.title
                     }`
                   }
-                  alt={movie.title || movie.name}
+                  alt={movie.title || movie.name || "Movie"}
                   width={300}
                   height={400}
                   priority
@@ -115,13 +133,13 @@ export const MovieSection = ({
                   <p className="text-gray-100 text-xs sm:text-sm">
                     {movie.genres?.map((genre: string) => genre).join(", ") ||
                       movie.genre_ids
-                        .map((id: number) => {
+                        ?.map((id: number) => {
                           const genre = getGenres(t).find(
-                            (genre: any) => genre.id === id
+                            (genre: Genre) => genre.id === id
                           );
                           return genre?.name;
                         })
-                        .join(", ")}
+                        .join(", ") || ""}
                   </p>
                   <motion.div className="flex items-center justify-center gap-2">
                     <p className="text-gray-100 text-xs sm:text-sm">

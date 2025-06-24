@@ -3,6 +3,17 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/lib/auth";
 import { toast } from "react-toastify";
 
+interface RegisterUserData {
+	username: string;
+	email: string;
+	password: string;
+	password2: string;
+	first_name?: string;
+	last_name?: string;
+	profile_picture?: File;
+	[key: string]: unknown;
+}
+
 interface FormData {
 	email: string;
 	username: string;
@@ -110,7 +121,7 @@ export const useRegistrationForm = () => {
 	};
 
 	// Utility function to parse backend errors
-	const parseBackendErrors = (errorResponse: any): FormErrors => {
+	const parseBackendErrors = (errorResponse: { data?: Record<string, string | string[]> }): FormErrors => {
 		const newErrors: FormErrors = {};
 
 		if (errorResponse?.data) {
@@ -124,15 +135,17 @@ export const useRegistrationForm = () => {
 		return newErrors;
 	};
 
-	// Utility function to create FormData for submission
-	const createSubmissionData = () => {
-		const data = new FormData();
-		Object.entries(formData).forEach(([key, value]) => {
-			if (value !== null) {
-				data.append(key, value);
-			}
-		});
-		return data;
+	// Utility function to create submission data
+	const createSubmissionData = (): RegisterUserData => {
+		return {
+			username: formData.username,
+			email: formData.email,
+			password: formData.password,
+			password2: formData.password2,
+			first_name: formData.first_name,
+			last_name: formData.last_name,
+			profile_picture: formData.profile_picture || undefined,
+		};
 	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,10 +204,10 @@ export const useRegistrationForm = () => {
 			await authService.register(submissionData);
 			toast.success("Account created successfully! Welcome to MovieTube!");
 			router.push("/home");
-		} catch (error: any) {
+		} catch (error: unknown) {
 			setErrors({});
 
-			const backendErrors = parseBackendErrors(error.response);
+			const backendErrors = parseBackendErrors((error as { response?: { data?: Record<string, string | string[]>; message?: string } }).response || {});
 
 			if (Object.keys(backendErrors).length > 0) {
 				// Field-specific errors - go back to step 1
@@ -203,8 +216,9 @@ export const useRegistrationForm = () => {
 				toast.error("Please correct the highlighted fields and try again.");
 			} else {
 				// General error handling
-				const errorMessage = error.response?.data?.message ||
-					error.message ||
+				const errorResponse = error as { response?: { data?: { message?: string } }; message?: string };
+				const errorMessage = errorResponse.response?.data?.message ||
+					errorResponse.message ||
 					"Registration failed. Please check your connection and try again.";
 				toast.error(errorMessage);
 			}

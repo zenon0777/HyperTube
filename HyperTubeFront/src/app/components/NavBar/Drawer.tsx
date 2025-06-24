@@ -12,11 +12,11 @@ import { getNavElements } from "@/app/data/NavBarElements";
 import { MdMenu } from "react-icons/md";
 import ProvidersMenu from "./ProviderMenu";
 import LanguageSwitcher from "../LanguageSwitcher";
-import SearchInput from "./SearchInput";
 import { useSelector } from "react-redux";
 import { RootState } from "@/app/store";
 import { useDispatch } from "react-redux";
 import { getUserProfile } from "@/app/store/userSlice";
+import { AppDispatch } from "@/app/store";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/auth";
@@ -26,11 +26,11 @@ export default function MenuDrawer() {
   const t = useTranslations();
   const [open, setOpen] = React.useState(false);
   const user = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
   useEffect(() => {
-    dispatch(getUserProfile() as any);
+    dispatch(getUserProfile());
   }, [dispatch]);
 
   const toggleDrawer = (newOpen: boolean) => () => {

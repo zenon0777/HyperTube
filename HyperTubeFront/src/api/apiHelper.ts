@@ -14,7 +14,6 @@ axios.interceptors.response.use(
   },
   async function (error) {
     let message;
-    const originalRequest = error.config;
     switch (error?.response?.status) {
       case 500:
         message = 'Internal Server Error';
@@ -37,11 +36,11 @@ const setAuthorization = (token: string) => {
 };
 
 class APIClient {
-get = (url: string, params: any) => {
+get = (url: string, params?: Record<string, unknown>) => {
     const token = '';
     let response;
 
-    let paramKeys: string[] = [];
+    const paramKeys: string[] = [];
 
     if (params) {
       Object.keys(params).map(key => {
@@ -51,14 +50,12 @@ get = (url: string, params: any) => {
 
       const queryString = paramKeys && paramKeys.length ? paramKeys.join('&') : '';
       response = axios.get(`${url}?${queryString}`, {
-        ...params,
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
     } else {
       response = axios.get(`${url}`, {
-        ...params,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -67,17 +64,17 @@ get = (url: string, params: any) => {
 
     return response;
   };
-post = (url: string, data: any, config = {}) => {
+post = (url: string, data: unknown, config: { headers?: Record<string, string> } = {}) => {
     const token = '';
     return axios.post(url, data, {
         ...config,
         headers: {
-            ...config.headers,
+            ...(config.headers || {}),
             Authorization: `Bearer ${token}`,
         },
     });
 };
-put = (url: string, data: any) => {
+put = (url: string, data: unknown) => {
     const token = '';
     return axios.put(url, data, {
         headers: {
@@ -85,7 +82,7 @@ put = (url: string, data: any) => {
         },
     });
 };
-delete = (url: string, data: any) => {
+delete = (url: string) => {
     const token = '';
     return axios.delete(url, {
         headers: {

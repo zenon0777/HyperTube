@@ -6,8 +6,32 @@ import { PlayArrow, InfoOutlined } from "@mui/icons-material";
 import { useRouter } from "next/navigation"; // For Next.js App Router
 import { useTranslations } from "next-intl";
 
+interface MovieData {
+  // TMDB fields
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average?: number;
+  overview?: string;
+  id?: string | number;
+  
+  // YTS fields
+  title_long?: string;
+  medium_cover_image?: string;
+  large_cover_image?: string;
+  year?: string | number;
+  rating?: string | number;
+  summary?: string;
+  synopsis?: string;
+  
+  // Generic fields
+  poster?: string;
+}
+
 interface MovieCardProps {
-  movie: any; // Movie data can vary between providers
+  movie: MovieData;
   isHovered: boolean;
   provider: "TMDB" | "YTS" | string; // Specify known providers or allow any string
 }
@@ -26,7 +50,6 @@ const MovieCard: React.FC<MovieCardProps> = ({
   let posterUrl: string | null = null;
   let year: string | number = "N/A";
   let rating: string | number = "N/A";
-  let overview: string = t('browse.movieCard.noOverview');
   let movieId: string | number | null = null;
 
   if (provider === "TMDB") {
@@ -40,15 +63,13 @@ const MovieCard: React.FC<MovieCardProps> = ({
         ? new Date(movie.first_air_date).getFullYear()
         : "N/A";
     rating = movie?.vote_average ? movie.vote_average.toFixed(1) : "N/A";
-    overview = movie?.overview || t('browse.movieCard.noOverview');
-    movieId = movie?.id;
+    movieId = movie?.id || null;
   } else if (provider === "YTS") {
     title = movie?.title_long || movie?.title || t('browse.movieCard.unknownTitle');
     posterUrl = movie?.medium_cover_image || movie?.large_cover_image || null;
     year = movie?.year || "N/A";
     rating = movie?.rating || "N/A";
-    overview = movie?.summary || movie?.synopsis || t('browse.movieCard.noOverview');
-    movieId = movie?.id;
+    movieId = movie?.id || null;
   } else {
     title = movie?.title || t('browse.movieCard.unknownTitle');
     posterUrl = movie?.poster_path
@@ -60,8 +81,7 @@ const MovieCard: React.FC<MovieCardProps> = ({
     rating = movie?.vote_average
       ? movie.vote_average.toFixed(1)
       : movie?.rating || "N/A";
-    overview = movie?.overview || movie?.summary || t('browse.movieCard.noOverview');
-    movieId = movie?.id;
+    movieId = movie?.id || null;
   }
 
   return (

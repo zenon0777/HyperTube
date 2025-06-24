@@ -6,22 +6,23 @@ import MenuDrawer from "./Drawer";
 import ProvidersMenu from "./ProviderMenu";
 import SearchInput from "./SearchInput";
 import { useRouter } from "next/navigation";
-import { RootState, useAppSelector } from "@/app/store";
+import { RootState } from "@/app/store";
 import ProfileMenu from "./ProfileMenu";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUserProfile } from "@/app/store/userSlice";
+import { AppDispatch } from "@/app/store";
 import LanguageSwitcher from "../LanguageSwitcher";
 import { useTranslations } from "next-intl";
 
 export default function NavBar() {
   const t = useTranslations();
   const user = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
   useEffect(() => {
-    dispatch(getUserProfile() as any);
+    dispatch(getUserProfile());
   }, [dispatch]);
 
   // if (user.error) {

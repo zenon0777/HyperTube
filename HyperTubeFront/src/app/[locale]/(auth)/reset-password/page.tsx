@@ -6,9 +6,7 @@ import { toast } from 'react-toastify';
 import { authService } from '@/lib/auth';
 import { FormInput } from '../components/FormInput';
 
-interface FormInputEvent extends React.ChangeEvent<HTMLInputElement> {}
-
-export const PasswordResetRequest = () => {
+export default function PasswordResetRequest() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const router = useRouter();
@@ -21,9 +19,10 @@ export const PasswordResetRequest = () => {
       await authService.requestPasswordReset(email);
       toast.success('Password reset link has been sent to your email');
       router.push('/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log('Password reset request error:', error);
-      toast.error(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +52,7 @@ export const PasswordResetRequest = () => {
             value={email}
             Icon={Mail}
             placeholder="Enter your email"
-            onChange={(e: FormInputEvent) => setEmail(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           />
 
           <button
@@ -85,6 +84,4 @@ export const PasswordResetRequest = () => {
       </div>
     </div>
   );
-};
-
-export default PasswordResetRequest;
+}

@@ -1,5 +1,10 @@
 import axios from "axios";
 
+interface QueueItem {
+  resolve: (value?: unknown) => void;
+  reject: (error?: unknown) => void;
+}
+
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
@@ -11,12 +16,9 @@ const api = axios.create({
 // Flag to track if we're already refreshing to avoid multiple refresh requests
 let isRefreshing = false;
 // Queue to hold requests while token is being refreshed
-let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (error?: any) => void;
-}> = [];
+let failedQueue: QueueItem[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) {
       reject(error);

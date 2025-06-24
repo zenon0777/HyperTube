@@ -27,14 +27,14 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
   
   const sessionStorageKey = `subtitle_pref_${movieId}`;
   
-  const getSessionSubtitlePref = () => {
+  const getSessionSubtitlePref = React.useCallback(() => {
     if (typeof window !== 'undefined') {
       return sessionStorage.getItem(sessionStorageKey);
     }
     return null;
-  };
+  }, [sessionStorageKey]);
   
-  const getUserPreferredLanguage = (): string => {
+  const getUserPreferredLanguage = React.useCallback((): string => {
     if (locale && (locale === 'en' || locale === 'fr')) {
       // console.log(`[CustomReactPlayer] Using locale from useLocale(): ${locale}`);
       return locale;
@@ -59,9 +59,9 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
     }
     // console.log(`[CustomReactPlayer] Falling back to default locale: en`);
     return 'en';
-  };
+  }, [locale]);
   
-  const setSessionSubtitlePref = (lang: string | null) => {
+  const setSessionSubtitlePref = React.useCallback((lang: string | null) => {
     if (typeof window !== 'undefined') {
       if (lang === null) {
         sessionStorage.setItem(sessionStorageKey, 'null');
@@ -69,7 +69,7 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
         sessionStorage.setItem(sessionStorageKey, lang);
       }
     }
-  };
+  }, [sessionStorageKey]);
 
   const forceSubtitleApplication = (targetLang: string) => {
     if (!videoRef.current) return;
@@ -102,7 +102,7 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
         setSelectedSubtitleLang(savedLang);
       }
     }
-  }, [isClient, movieId]);
+  }, [isClient, movieId, getSessionSubtitlePref]);
 
   useEffect(() => {
     setIsClient(true);
@@ -240,7 +240,7 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
         clearInterval(intervalId);
       };
     }
-  }, [isClient, loadingSubtitles, tracks, selectedSubtitleLang]);
+  }, [isClient, loadingSubtitles, tracks, selectedSubtitleLang, getSessionSubtitlePref, getUserPreferredLanguage, movieId, setSessionSubtitlePref]);
 
 
 
@@ -271,7 +271,7 @@ const CustomReactPlayer: React.FC<CustomReactPlayerProps> = ({ streamUrl, tracks
         {tracks.map((track, index) => (
           <track
             key={`${track.srcLang}-${track.label}-${index}`}
-            kind={track.kind as any}
+            kind={track.kind as "subtitles" | "captions" | "descriptions" | "chapters" | "metadata"}
             src={track.src}
             srcLang={track.srcLang}
             label={track.label}

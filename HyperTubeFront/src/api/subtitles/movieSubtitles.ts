@@ -66,7 +66,11 @@ export function extractMovieInfoFromName(movieName: string): MovieInfo {
   };
 }
 
-export function extractImdbIdFromTorrent(torrentData: any): string | undefined {
+export function extractImdbIdFromTorrent(torrentData: {
+  imdb_id?: string;
+  description?: string;
+  comment?: string;
+} | null | undefined): string | undefined {
   if (torrentData?.imdb_id) {
     return torrentData.imdb_id;
   }

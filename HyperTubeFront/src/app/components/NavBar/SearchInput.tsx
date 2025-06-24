@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import Image from "next/image";
 import debounce from "lodash.debounce";
 import { LuLoader } from "react-icons/lu";
@@ -33,39 +33,43 @@ export default function SearchInput() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  const debouncedSearch = useCallback(
-    debounce(async (searchTerm: string) => {
-      if (!searchTerm || !APIProvider) return;
+  const searchFunction = useCallback(async (searchTerm: string) => {
+    if (!searchTerm || !APIProvider) return;
 
-      setIsLoading(true);
-      try {
-        const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/`;
-        const endpoints = {
-          YTS: `${baseUrl}yts_movie_list?query_term=${searchTerm}&limit=5`,
-          TMDB: `${baseUrl}tmdb_multi_search?query=${searchTerm}`,
-        };
+    setIsLoading(true);
+    try {
+      const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/`;
+      const endpoints = {
+        YTS: `${baseUrl}yts_movie_list?query_term=${searchTerm}&limit=5`,
+        TMDB: `${baseUrl}tmdb_multi_search?query=${searchTerm}`,
+      };
 
-        const res = await fetch(
-          endpoints[APIProvider as keyof typeof endpoints],
-          {
-            credentials: "include",
-          }
-        );
-        if (!res.ok) throw new Error(`No movies found on ${APIProvider}`);
+      const res = await fetch(
+        endpoints[APIProvider as keyof typeof endpoints],
+        {
+          credentials: "include",
+        }
+      );
+      if (!res.ok) throw new Error(`No movies found on ${APIProvider}`);
 
-        const data = await res.json();
-        console.log("search data ====> ::: ", data);
-        isYTS
-          ? setResults(data.data?.movies)
-          : setResults(data.movies?.results);
-      } catch (error: any) {
-        console.log("error ====> ::: ", error);
-        setResults([]);
-      } finally {
-        setIsLoading(false);
+      const data = await res.json();
+      console.log("search data ====> ::: ", data);
+      if (isYTS) {
+        setResults(data.data?.movies || []);
+      } else {
+        setResults(data.movies?.results || []);
       }
-    }, 300),
-    [APIProvider]
+    } catch (error: unknown) {
+      console.log("error ====> ::: ", error);
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [APIProvider, isYTS]);
+
+  const debouncedSearch = useMemo(
+    () => debounce(searchFunction, 300),
+    [searchFunction]
   );
 
   useEffect(() => {

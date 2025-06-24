@@ -10,8 +10,6 @@ import { toast } from 'react-toastify';
 import { FormInput } from '../components/FormInput';
 import { SocialLoginButtons } from '../components/SocialLoginButtons';
 
-interface FormInputEvent extends React.ChangeEvent<HTMLInputElement> { }
-
 export default function RegisterPage() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +21,7 @@ export default function RegisterPage() {
 	const dispatch = useDispatch<AppDispatch>();
 	const router = useRouter();
 	
-	const handleChange = (e: FormInputEvent) => {
+	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setFormData(prev => ({
 			...prev,
 			[e.target.name]: e.target.value
@@ -41,9 +39,10 @@ export default function RegisterPage() {
 			await authService.login(formData);
 			await dispatch(getUserProfile()).unwrap();
 			router.push('/home');
-		} catch (error : any) {
+		} catch (error: unknown) {
 			console.log('Login error:', error);
-			toast.error(error.message);
+			const errorMessage = error instanceof Error ? error.message : 'Login failed. Please try again.';
+			toast.error(errorMessage);
 		} finally {
 			setIsLoading(false);
 		}
@@ -120,7 +119,7 @@ export default function RegisterPage() {
 					</button>					<SocialLoginButtons onOAuthLogin={handleOAuthLogin} />
 
 					<div className="text-center text-sm pt-4">
-						<span className="text-gray-400">Don't have an account? </span>
+						<span className="text-gray-400">Don&apos;t have an account? </span>
 						<button
 							type="button"
 							onClick={() => router.push('/register')}

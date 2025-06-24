@@ -1,4 +1,28 @@
 /**
+ * Interface for torrent data returned from the API
+ */
+interface TorrentData {
+  magnet?: string;
+  hash?: string;
+  title?: string;
+  seeders?: number;
+  leechers?: number;
+  size?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Interface for TMDB movie data
+ */
+interface TMDBMovieData {
+  title?: string;
+  original_title?: string;
+  release_date?: string;
+  id?: number;
+  [key: string]: unknown;
+}
+
+/**
  * Extracts torrent hash from magnet link
  * @param magnetLink - The magnet link string
  * @returns The extracted hash or null if not found
@@ -26,7 +50,7 @@ export function extractHashFromMagnet(magnetLink: string): string | null {
  * @param year - Movie release year (optional)
  * @returns Promise resolving to torrent data or null
  */
-export async function fetchTorrentForMovie(title: string, year?: string | number): Promise<any> {
+export async function fetchTorrentForMovie(title: string, year?: string | number): Promise<TorrentData | null> {
   try {
     const params = new URLSearchParams({
       title: title.trim(),
@@ -70,13 +94,17 @@ export async function fetchTorrentForMovie(title: string, year?: string | number
  * @param movieData - TMDB movie data object
  * @returns Promise resolving to torrent hash or null
  */
-export async function getTorrentHashForTMDBMovie(movieData: any): Promise<string | null> {
+export async function getTorrentHashForTMDBMovie(movieData: TMDBMovieData): Promise<string | null> {
   try {
-    if (!movieData || !movieData.title) {
+    if (!movieData) {
       return null;
     }
 
     const title = movieData.title || movieData.original_title;
+    if (!title) {
+      return null;
+    }
+
     const year = movieData.release_date ? new Date(movieData.release_date).getFullYear() : undefined;
 
     console.log(`Searching torrent for TMDB movie: "${title}" (${year})`);

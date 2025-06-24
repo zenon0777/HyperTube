@@ -8,21 +8,38 @@ import {
   Sort,
 } from "@mui/icons-material";
 import { Chip } from "@mui/material";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
 import MoviesList from "./components/MovieList";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { useTranslations } from "next-intl";
 
-export interface categoryOptions {
+export interface CategoryOptions {
   id: string;
   name: string;
 }
 
-export interface activeFilters {
+export interface MovieData {
+  id: number;
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  large_cover_image?: string;
+  release_date?: string;
+  year?: number;
+  overview?: string;
+  summary?: string;
+  vote_average?: number;
+  rating?: number;
+  genre_ids?: number[];
+  genres?: string[];
+  [key: string]: unknown;
+}
+
+export interface ActiveFilters {
   quality: string | null;
   years: string | null;
-  categories: categoryOptions[];
+  categories: CategoryOptions[];
   orderBy: string | null;
   provider: string;
 }
@@ -31,18 +48,16 @@ export default function Browse() {
   const t = useTranslations();
   const { APIProvider } = useAPIProvider();
   const [hoveredMovie, setHoveredMovie] = useState<number | null>(null);
-  const [movies, setMovies] = useState<any[]>([]);
+  const [movies, setMovies] = useState<MovieData[]>([]);
   const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [hasMore, setHasMore] = useState<boolean>(true);
 
-  const [activeFilters, setActiveFilters] = useState<activeFilters>({
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>({
     quality: null,
     years: null,
     orderBy: null,
-    categories: [] as categoryOptions[],
+    categories: [] as CategoryOptions[],
     provider: APIProvider as string,
   });
   const [openSections, setOpenSections] = useState({
@@ -52,11 +67,17 @@ export default function Browse() {
     categories: false,
     provider: false,
   });
-  const [categoryOptions, setCategoryOptions] = useState<categoryOptions[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<CategoryOptions[]>([]);
 
   const qualityOptions = ["480p", "720p", "1080p", "2160p"];
   const yearOptions = ["2020", "2021", "2022", "2023", "2024"];
   const orderOptions = [t('browse.filters.ascending'), t('browse.filters.descending')];
+
+  // Memoize category IDs for stable dependency tracking
+  const categoryIds = useMemo(() => 
+    activeFilters.categories.map(cat => cat.id).join(','), 
+    [activeFilters.categories]
+  );
 
   useEffect(() => {
     const getGenres = async () => {
@@ -65,8 +86,9 @@ export default function Browse() {
         if (!response.ok) throw new Error("Failed to fetch genres");
         const data = await response.json();
         setCategoryOptions(data.genres || []);
-      } catch (err: any) {
-        console.error("Error fetching genres:", err);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch genres';
+        console.error("Error fetching genres:", errorMessage);
         toast.error("Could not load genre options.");
         setCategoryOptions([]);
       }
@@ -82,12 +104,12 @@ export default function Browse() {
     activeFilters.quality,
     activeFilters.years,
     activeFilters.orderBy,
-    activeFilters.categories,
+    categoryIds,
     activeFilters.provider,
   ]);
 
   useEffect(() => {
-    setActiveFilters((prev) => ({
+    setActiveFilters((prev: ActiveFilters) => ({
       ...prev,
       provider: APIProvider as string,
     }));
@@ -103,18 +125,17 @@ export default function Browse() {
       }
 
       setIsLoading(true);
-      setError(null);
       console.log(
         `Fetching page ${page} for provider ${activeFilters.provider}`
       );
 
-      let newMovies: any[] = [];
+      let newMovies: MovieData[] = [];
       let newTotalPages: number = 1;
       let success = false;
 
       try {
         if (activeFilters.provider === "TMDB") {
-          let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list?language=en-US&page=${page}&include_adult=false`;
+          const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list?language=en-US&page=${page}&include_adult=false`;
           let url = baseUrl;
           if (activeFilters.quality) {
             console.warn(
@@ -126,13 +147,15 @@ export default function Browse() {
           }
           if (activeFilters.categories.length > 0) {
             url += `&with_genres=${activeFilters.categories
-              .map((category) => category.id)
+              .map((category: CategoryOptions) => category.id)
               .join(",")}`;
           }
           if (activeFilters.orderBy) {
-            activeFilters.orderBy === "Ascending"
-              ? (url += "&sort_by=popularity.asc")
-              : (url += "&sort_by=popularity.desc");
+            if (activeFilters.orderBy === "Ascending") {
+              url += "&sort_by=popularity.asc";
+            } else {
+              url += "&sort_by=popularity.desc";
+            }
           }
           const response = await fetch(url, {
             credentials: "include",
@@ -144,7 +167,7 @@ export default function Browse() {
           newTotalPages = data.movies?.total_pages || 1;
           success = true;
         } else if (activeFilters.provider === "YTS") {
-          let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=${page}&limit=20`;
+          const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=${page}&limit=20`;
           let url = baseUrl;
           if (activeFilters.quality) {
             url += `&quality=${activeFilters.quality}`;
@@ -156,9 +179,11 @@ export default function Browse() {
             url += `&genre=${activeFilters.categories[0].name}`;
           }
           if (activeFilters.orderBy) {
-            activeFilters.orderBy === "Ascending"
-              ? (url += "&order_by=asc")
-              : (url += "&order_by=desc");
+            if (activeFilters.orderBy === "Ascending") {
+              url += "&order_by=asc";
+            } else {
+              url += "&order_by=desc";
+            }
           }
           const response = await fetch(url, {
             credentials: "include",
@@ -176,12 +201,11 @@ export default function Browse() {
           setMovies((prevMovies) =>
             page === 1 ? newMovies : [...prevMovies, ...newMovies]
           );
-          setTotalPages(newTotalPages);
           setHasMore(page < newTotalPages && newMovies.length > 0);
         }
-      } catch (err: any) {
-        setError(err.message);
-        toast.error(`Error fetching movies: ${err.message}`);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch movies';
+        toast.error(`Error fetching movies: ${errorMessage}`);
         setHasMore(false);
       } finally {
         setIsLoading(false);
@@ -189,7 +213,16 @@ export default function Browse() {
     };
 
     fetchMovies();
-  }, [activeFilters, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    page,
+    activeFilters.quality,
+    activeFilters.years,
+    activeFilters.orderBy,
+    categoryIds,
+    activeFilters.provider,
+    hasMore
+  ]);
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections((prev) => ({
@@ -198,23 +231,25 @@ export default function Browse() {
     }));
   };
 
-  const toggleFilter = (type: string, value: any) => {
-    setActiveFilters((prev) => {
+  const toggleFilter = (type: string, value: string | CategoryOptions) => {
+    setActiveFilters((prev: ActiveFilters) => {
       let newFilters = { ...prev };
       if (type === "quality" || type === "years" || type === "orderBy") {
+        const stringValue = value as string;
         newFilters = {
           ...prev,
-          [type]: prev[type] === value ? null : value,
+          [type]: prev[type] === stringValue ? null : stringValue,
         };
       } else if (type === "categories") {
+        const categoryValue = value as CategoryOptions;
         const currentCategories = [...prev.categories];
         const index = currentCategories.findIndex(
-          (filter) => filter.id === value.id
+          (filter) => filter.id === categoryValue.id
         );
         if (index === -1) {
           newFilters = {
             ...prev,
-            categories: [...currentCategories, value],
+            categories: [...currentCategories, categoryValue],
           };
         } else {
           currentCategories.splice(index, 1);
@@ -371,13 +406,13 @@ export default function Browse() {
             {openSections.categories && categoryOptions.length > 0 && (
               <div className="p-4 space-y-2">
                 <div className="flex flex-wrap gap-2">
-                  {categoryOptions.map((category: categoryOptions) => (
+                  {categoryOptions.map((category: CategoryOptions) => (
                     <Chip
                       key={category.id as string}
                       label={category.name as string}
                       variant={
                         activeFilters.categories.find(
-                          (cat) => cat.id === category.id
+                          (cat: CategoryOptions) => cat.id === category.id
                         )
                           ? "filled"
                           : "outlined"

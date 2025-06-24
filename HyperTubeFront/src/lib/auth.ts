@@ -1,7 +1,32 @@
 import api from "./axios";
 
+interface RegisterUserData {
+  username: string;
+  email: string;
+  password: string;
+  password2: string;
+  first_name?: string;
+  last_name?: string;
+  profile_picture?: File;
+  [key: string]: unknown;
+}
+
+interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
+interface UpdateProfileData {
+  username?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  profile_picture?: File;
+  [key: string]: unknown;
+}
+
 export const authService = {
-  async register(userData: any) {
+  async register(userData: RegisterUserData) {
     try {
       const response = await api.post("/auth/register/", userData, {
         headers: {
@@ -9,23 +34,26 @@ export const authService = {
         },
       });
       return response.data;
-    } catch (error: any) {
-      if (error.response?.data) {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
         throw error;
       }
       throw new Error('Failed to register');
     }
   },
-  async login(credentials: any) {
+  async login(credentials: LoginCredentials) {
     try {
       const response = await api.post("/auth/login/", credentials);
       return response.data;
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        throw new Error('Username or password incorrect');
-      }
-      if (error.response?.data) {
-        throw error;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const errorWithResponse = error as { response: { status?: number; data?: unknown } };
+        if (errorWithResponse.response?.status === 401) {
+          throw new Error('Username or password incorrect');
+        }
+        if (errorWithResponse.response?.data) {
+          throw error;
+        }
       }
       throw new Error('Failed to login');
     }
@@ -45,8 +73,11 @@ export const authService = {
     return response.data;
   },
 
-  async updateProfile(userId: string, data: any) {
-    const response = await api.patch(`/users/${userId}/`, data);
+  async updateProfile(userId: string, data: UpdateProfileData | FormData) {
+    const config = data instanceof FormData 
+      ? { headers: { "Content-Type": "multipart/form-data" } }
+      : {};
+    const response = await api.patch(`/users/${userId}/`, data, config);
     return response.data;
   },
   async changePassword(passwordData: { old_password: string; new_password: string }) {

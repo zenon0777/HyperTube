@@ -6,9 +6,7 @@ import { toast } from 'react-toastify';
 import { authService } from '@/lib/auth';
 import { FormInput } from '../../components/FormInput';
 
-interface FormInputEvent extends React.ChangeEvent<HTMLInputElement> {}
-
-export const PasswordResetConfirm = () => {
+export default function PasswordResetConfirm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -19,7 +17,7 @@ export const PasswordResetConfirm = () => {
   
   const router = useRouter();
 
-  const handleChange = (e: FormInputEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -42,9 +40,10 @@ export const PasswordResetConfirm = () => {
       await authService.resetPassword(token!, formData.password, formData.password2 , user!);
       toast.success('Password has been reset successfully');
       router.push('/login');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.log('Password reset error:', error);
-      toast.error(error.message);
+      const errorMessage = error instanceof Error ? error.message : 'Password reset failed. Please try again.';
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -113,6 +112,4 @@ export const PasswordResetConfirm = () => {
       </div>
     </div>
   );
-};
-
-export default PasswordResetConfirm;
+}

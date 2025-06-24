@@ -2,15 +2,39 @@
 
 import React, { useRef, useCallback } from "react";
 import { CircularProgress } from "@mui/material";
-import { activeFilters } from "../page";
+import { ActiveFilters } from "../page";
 import MovieCard from "./MovieCard";
 import { useTranslations } from "next-intl";
 
+interface MovieData {
+  // TMDB fields
+  title?: string;
+  name?: string;
+  poster_path?: string;
+  release_date?: string;
+  first_air_date?: string;
+  vote_average?: number;
+  overview?: string;
+  id?: string | number;
+  
+  // YTS fields
+  title_long?: string;
+  medium_cover_image?: string;
+  large_cover_image?: string;
+  year?: string | number;
+  rating?: string | number;
+  summary?: string;
+  synopsis?: string;
+  
+  // Generic fields
+  poster?: string;
+}
+
 interface MovieListProps {
-  movies: any[];
+  movies: MovieData[];
   hoveredMovie: number | null;
   setHoveredMovie: (id: number | null) => void;
-  activeFilters: activeFilters;
+  activeFilters: ActiveFilters;
   isLoading: boolean;
   loadMoreItems: () => void;
   hasMore: boolean;
@@ -75,17 +99,19 @@ const MoviesList: React.FC<MovieListProps> = ({
     <div className="lg:col-span-3">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {movies.map((movie, index) => {
+          const movieId = typeof movie.id === 'number' ? movie.id : null;
+          
           if (movies.length === index + 1) {
             return (
               <div
                 ref={lastMovieElementRef}
                 key={`${movie.id}-${index}-${activeFilters.provider}`}
-                onMouseEnter={() => setHoveredMovie(movie.id)}
+                onMouseEnter={() => setHoveredMovie(movieId)}
                 onMouseLeave={() => setHoveredMovie(null)}
               >
                 <MovieCard
                   movie={movie}
-                  isHovered={hoveredMovie === movie.id}
+                  isHovered={hoveredMovie === movieId}
                   provider={activeFilters.provider}
                 />
               </div>
@@ -94,12 +120,12 @@ const MoviesList: React.FC<MovieListProps> = ({
           return (
             <div
               key={`${movie.id}-${index}-${activeFilters.provider}`}
-              onMouseEnter={() => setHoveredMovie(movie.id)}
+              onMouseEnter={() => setHoveredMovie(movieId)}
               onMouseLeave={() => setHoveredMovie(null)}
             >
               <MovieCard
                 movie={movie}
-                isHovered={hoveredMovie === movie.id}
+                isHovered={hoveredMovie === movieId}
                 provider={activeFilters.provider}
               />
             </div>

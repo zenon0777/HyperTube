@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
 import {
   AccountCircle,
   ArrowBack,
@@ -28,7 +27,6 @@ interface UserProfile {
 export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const t = useTranslations("Profile");
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,9 +39,16 @@ export default function UserProfilePage() {
         setLoading(true);
         const userData = await authService.getUserById(userId);
         setUser(userData);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error("Error fetching user profile:", error);
-        setError(error.response?.data?.error || "Failed to load user profile");
+        let errorMessage = "Failed to load user profile";
+        
+        if (error && typeof error === 'object' && 'response' in error) {
+          const errorResponse = error as { response?: { data?: { error?: string } } };
+          errorMessage = errorResponse.response?.data?.error || errorMessage;
+        }
+        
+        setError(errorMessage);
         toast.error("Failed to load user profile");
       } finally {
         setLoading(false);

@@ -69,7 +69,7 @@ class OpenSubtitlesService {
   private readonly baseUrl = 'https://api.opensubtitles.com/api/v1';
   private readonly apiKey = process.env.OPENSUBTITLES_API_KEY;
 
-  private async makeRequest(endpoint: string, params: Record<string, any> = {}) {
+  private async makeRequest(endpoint: string, params: Record<string, string | number> = {}) {
     if (!this.apiKey) {
       console.error('OpenSubtitles API key is not configured. Please set OPENSUBTITLES_API_KEY in your environment variables.');
       throw new Error('OpenSubtitles API key is not configured');
@@ -109,7 +109,7 @@ class OpenSubtitlesService {
     preferredLanguage: string = 'en'
   ): Promise<SubtitleTrack[]> {
     try {
-      const searchParams: Record<string, any> = {
+      const searchParams: Record<string, string | number> = {
         languages: languages.join(','),
         order_by: 'download_count',
         order_direction: 'desc',

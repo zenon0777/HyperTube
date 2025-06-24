@@ -13,6 +13,12 @@ interface Movie {
   backdrop_path: string;
 }
 
+interface MoviesResponse {
+  movies: {
+    results: Movie[];
+  };
+}
+
 function PopularMoviesSection() {
   const [popularMovies, setPopularMovies] = useState<Movie[]>([]);
   const [loadingMovies, setLoadingMovies] = useState<boolean>(true);
@@ -27,10 +33,11 @@ function PopularMoviesSection() {
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies`
         );
         if (!res.ok) throw new Error("Failed to fetch movies");
-        const data: any = await res.json();
+        const data: MoviesResponse = await res.json();
         setPopularMovies(data.movies.results);
-      } catch (err: any) {
-        setMoviesError(err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to fetch movies";
+        setMoviesError(errorMessage);
       } finally {
         setLoadingMovies(false);
       }

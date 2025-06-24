@@ -1,4 +1,9 @@
-export function is3DTorrent(torrent: any): boolean {
+interface Torrent {
+  quality?: string;
+  [key: string]: unknown;
+}
+
+export function is3DTorrent(torrent: Torrent | null | undefined): boolean {
   if (!torrent || !torrent.quality) {
     return false;
   }
@@ -33,7 +38,7 @@ export function is3DTorrent(torrent: any): boolean {
   return false;
 }
 
-export function getFirstNon3DTorrent(torrents: any[]): any | null {
+export function getFirstNon3DTorrent(torrents: Torrent[]): Torrent | null {
   if (!torrents || !Array.isArray(torrents)) {
     return null;
   }
@@ -49,7 +54,7 @@ export function getFirstNon3DTorrent(torrents: any[]): any | null {
   return null;
 }
 
-export function filterOut3DTorrents(torrents: any[]): any[] {
+export function filterOut3DTorrents(torrents: Torrent[]): Torrent[] {
   if (!torrents || !Array.isArray(torrents)) {
     return [];
   }

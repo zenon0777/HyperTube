@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Download,
-  Tv,
   Smartphone,
   Monitor,
   Globe,
@@ -21,6 +20,18 @@ import Footer from "../components/Footer/Footer";
 import Header from "../components/header/header";
 import PopularMoviesSection from "../components/PopularMoviesSection/PopularMoviesSection";
 import { useTranslations } from "next-intl";
+
+interface Feature {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+interface Device {
+  icon: React.ReactNode;
+  name: string;
+  desc: string;
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -320,7 +331,7 @@ function WhyChooseCard({
 function FeaturesSection({
   features,
 }: {
-  features: (typeof HomePage.prototype)["features"];
+  features: Feature[];
 }) {
   const t = useTranslations("Index");
   return (
@@ -336,7 +347,7 @@ function FeaturesSection({
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {features.map((feature: any, index: number) => (
+          {features.map((feature: Feature, index: number) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -382,7 +393,7 @@ function DeviceCompatibilitySection() {
               name: t("deviceMobile"),
               desc: t("deviceMobileDesc"),
             },
-          ].map((device: any, index: number) => (
+          ].map((device: Device, index: number) => (
             <div
               key={index}
               className="text-center bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 hover:border-purple-500/30 transition-all duration-300"

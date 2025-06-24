@@ -1,11 +1,10 @@
-import { MdComment, MdSend, MdPerson } from "react-icons/md";
+import { MdComment, MdSend } from "react-icons/md";
 import { FaRegCommentDots } from "react-icons/fa";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 import UserCard from "@/components/UserCard";
 
 const CommentsSection = ({
@@ -31,7 +30,6 @@ const CommentsSection = ({
   const [isLoadingComments, setIsLoadingComments] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   useEffect(() => {
     const fetchComments = async () => {
@@ -110,9 +108,10 @@ const CommentsSection = ({
       } else {
         setError("Failed to add comment. Please try again.");
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error("Error adding comment");
-      setError(error.message || "Failed to add comment. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Failed to add comment. Please try again.";
+      setError(errorMessage);
     }
     setIsSubmitting(false);
     setNewComment("");

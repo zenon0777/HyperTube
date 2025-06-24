@@ -7,6 +7,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClientLayout children={children} />
+    <ClientLayout>
+      {children}
+    </ClientLayout>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
-import { setAPIProvider } from "@/app/store/apiProviderSlice";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -62,7 +61,7 @@ export default function ProvidersMenu() {
   const handleClose = () => {
     setAnchorEl(null);
   };
-  const { APIProvider, changeProvider } = useAPIProvider();
+  const { changeProvider } = useAPIProvider();
 
   return (
     <div>

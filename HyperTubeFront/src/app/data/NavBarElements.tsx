@@ -1,5 +1,4 @@
 import { Home, Movie } from "@mui/icons-material";
-import { AbstractIntlMessages } from 'next-intl';
 
 interface NavElement {
   name: string;

@@ -3,7 +3,6 @@ import { Info } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -11,59 +10,82 @@ import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { MovieSection } from "@/app/components/MovieSection/MovieSection";
-import { genres } from "@/app/data/NavBarElements";
-import { RootState, useAppSelector } from "@/app/store";
+import { getGenres } from "@/app/data/NavBarElements";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
-import { useRouter } from "next/navigation";
-import { getUserProfile } from "@/app/store/userSlice";
+
+interface MovieData {
+  id: number;
+  title: string;
+  backdrop_path?: string;
+  medium_cover_image?: string;
+  large_cover_image?: string;
+  poster_path?: string;
+  summary?: string;
+  overview?: string;
+  release_date?: string;
+  year?: number;
+  genres?: string[];
+  genre_ids?: number[];
+  rating?: number;
+  vote_average?: number;
+}
+
+interface TMDBMovieListResponse {
+  movies?: {
+    results: MovieData[];
+  };
+}
+
+interface YTSMovieListResponse {
+  data?: {
+    movies: MovieData[];
+  };
+}
 
 export default function Rootpage() {
-  const [movies, setMovies] = useState([]);
   const { APIProvider } = useAPIProvider();
-  const [popularMovies, setPopularMovies] = useState([]);
-  const [watchedMovies, setWatchedMovies] = useState([]);
-  const [topRatedMovies, setTopRatedMovies] = useState([]);
-  const [tvShows, setTvShows] = useState([]);
-  const [nowPlayingMovies, setNowPlayingMovies] = useState([]);
+  const [popularMovies, setPopularMovies] = useState<MovieData[]>([]);
+  const [topRatedMovies, setTopRatedMovies] = useState<MovieData[]>([]);
+  const [nowPlayingMovies, setNowPlayingMovies] = useState<MovieData[]>([]);
 
   useEffect(() => {
     const getTMDBFiltredMovies = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list`;
+        const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/tmdb_movie_list`;
         let popularMoviesUrl = baseUrl + "?popular";
         popularMoviesUrl += "?language=en-US&page=1&include_adult=false";
         let topRatedMoviesUrl = baseUrl + "?top_rated";
         topRatedMoviesUrl += "?language=en-US&page=1&include_adult=false";
-        let NowPlayingMoviesUrl =
+        const NowPlayingMoviesUrl =
           baseUrl +
           "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
         const response = await fetch(popularMoviesUrl, {
           credentials: "include",
         });
-        const data = await response.json();
+        const data: TMDBMovieListResponse = await response.json();
         console.log("Popular movies : --------> ", data.movies?.results);
-        setPopularMovies(data.movies?.results);
+        setPopularMovies(data.movies?.results || []);
         const response2 = await fetch(topRatedMoviesUrl, {
           credentials: "include",
         });
-        const data2 = await response2.json();
+        const data2: TMDBMovieListResponse = await response2.json();
         console.log("Top Rated movies : --------> ", data2.movies?.results);
-        setTopRatedMovies(data2.movies?.results);
+        setTopRatedMovies(data2.movies?.results || []);
         const response3 = await fetch(NowPlayingMoviesUrl, {
           credentials: "include",
         });
-        const data3 = await response3.json();
+        const data3: TMDBMovieListResponse = await response3.json();
         console.log("Now Playing movies : --------> ", data3.movies?.results);
-        setNowPlayingMovies(data3.movies?.results);
-        setMovies(data.movies?.results);
-      } catch (error: any) {
-        toast.error(error.message);
+        setNowPlayingMovies(data3.movies?.results || []);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        toast.error(message);
       }
     };
 
     const getYTSFiltredMovies = async () => {
       try {
-        let baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
+        const baseUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/yts_movie_list?page=1&limit=15`;
         let PopularMoviesUrl = baseUrl;
         let topRatedMoviesUrl = baseUrl;
         topRatedMoviesUrl += "&sort_by=rating&order_by=desc";
@@ -73,26 +95,32 @@ export default function Rootpage() {
         const response = await fetch(PopularMoviesUrl, {
           credentials: "include",
         });
-        const data = await response.json();
+        const data: YTSMovieListResponse = await response.json();
         console.log("Popular : --------> ", data);
-        setPopularMovies(data.data?.movies);
+        setPopularMovies(data.data?.movies || []);
         const response2 = await fetch(topRatedMoviesUrl, {
           credentials: "include",
         });
-        const data2 = await response2.json();
+        const data2: YTSMovieListResponse = await response2.json();
         console.log("Top Rated : --------> ", data2);
-        setTopRatedMovies(data2.data?.movies);
+        setTopRatedMovies(data2.data?.movies || []);
         const response3 = await fetch(nowPlayingMoviesUrl, {
           credentials: "include",
         });
-        const data3 = await response3.json();
+        const data3: YTSMovieListResponse = await response3.json();
         console.log("Now Playing : --------> ", data3);
-        setNowPlayingMovies(data3.data?.movies);
-      } catch (error: any) {
-        toast.error(error.message);
+        setNowPlayingMovies(data3.data?.movies || []);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        toast.error(message);
       }
     };
-    APIProvider === "TMDB" ? getTMDBFiltredMovies() : getYTSFiltredMovies();
+    
+    if (APIProvider === "TMDB") {
+      getTMDBFiltredMovies();
+    } else {
+      getYTSFiltredMovies();
+    }
     console.log("APIProvider : --------> :: ", APIProvider);
   }, [APIProvider]);
 
@@ -111,7 +139,7 @@ export default function Rootpage() {
           spaceBetween={20}
           className="h-full swiper-container"
         >
-          {nowPlayingMovies?.map((movie: any, index: number) => (
+          {nowPlayingMovies?.map((movie: MovieData, index: number) => (
             <SwiperSlide key={index}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -170,9 +198,10 @@ export default function Rootpage() {
                       {movie.release_date?.split("-")[0] || movie.year} |{" "}
                       {movie.genres?.map((genre: string) => genre).join(", ") ||
                         movie.genre_ids
-                          .map((id: number) => {
-                            const genre = genres.find(
-                              (genre: any) => genre.id === id
+                          ?.map((id: number) => {
+                            const genresList = getGenres((key: string) => key);
+                            const genre = genresList.find(
+                              (genre) => genre.id === id
                             );
                             return genre?.name;
                           })

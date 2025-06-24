@@ -32,8 +32,9 @@ export const getUserProfile = createAsyncThunk<UserProfile, void, { rejectValue:
     try {
       const userProfile = await authService.getUserProfile();
       return userProfile;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch user profile');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user profile';
+      return rejectWithValue(errorMessage);
     }
   }
 );

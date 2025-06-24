@@ -15,23 +15,23 @@ export interface GetInfinitePagesInterface<T> {
 
 export const fetcher = async <T>({
     queryKey,
-    pageParam, // to use after for loading more
-    signal, // to use after
-}: QueryFunctionContext<QueryKeyT>): Promise<any> => {
+    // pageParam, // to use after for loading more  
+    // signal, // to use after
+}: QueryFunctionContext<QueryKeyT>): Promise<T> => {
     const [url, params] = queryKey;
     try {
-        const response = await api.get(url, params);
-        return response;
+        const response = await api.get(url, params as Record<string, unknown>);
+        return response as T;
     } catch (error) {
-        throw new Error((error as AxiosError)?.response?.data?.message || (error as AxiosError)?.message);
+        const axiosError = error as AxiosError<{ message?: string }>;
+        throw new Error(axiosError?.response?.data?.message || axiosError?.message || 'An error occurred');
     }
 };
 
 export const useFetch = <T>(
     url: string | null,
-    params?: object,
-    config?: UseQueryOptions<T, Error, T, QueryKeyT>,
-    queryKey?: QueryKeyT
+    params?: Record<string, unknown>,
+    config?: UseQueryOptions<T, Error, T, QueryKeyT>
 ) => {
     const context = useQuery<T, Error, T, QueryKeyT>({
         queryKey: [url || '', params],
@@ -42,7 +42,7 @@ export const useFetch = <T>(
     return context;
 };
 
-export const useLoadMore = <T>(url: string | null, params?: object) => {
+export const useLoadMore = <T>(url: string | null, params?: Record<string, unknown>) => {
     const context = useInfiniteQuery<
         GetInfinitePagesInterface<T>,
         Error,
@@ -51,8 +51,8 @@ export const useLoadMore = <T>(url: string | null, params?: object) => {
     >({
         queryKey: [url || '', params],
         queryFn: fetcher,
-        getNextPageParam: (lastPage, pages) => lastPage.nextId,
-        getPreviousPageParam: (lastPage, pages) => lastPage.previousId,
+        getNextPageParam: (lastPage) => lastPage.nextId,
+        getPreviousPageParam: (lastPage) => lastPage.previousId,
         initialPageParam: null,
     });
 
@@ -63,7 +63,7 @@ export const useLoadMore = <T>(url: string | null, params?: object) => {
 const useGenericMutation = <T, S>(
   func: (data: T | S) => Promise<AxiosResponse<S>>,
   url: string,
-  params?: object,
+  params?: Record<string, unknown>,
   updater?: Updater<T, S>
 ) => {
   const queryClient = useQueryClient();
@@ -101,7 +101,7 @@ const useGenericMutation = <T, S>(
 
 export const usePost = <T, S>(
     url: string,
-    params?: object,
+    params?: Record<string, unknown>,
     updater?: Updater<T, S>
 ) => {
     const apiPost: (data: T | S) => Promise<AxiosResponse<S>> = (data) => api.post(url, data);
@@ -115,7 +115,7 @@ export const usePost = <T, S>(
 
 export const usePut = <T, S>(
   url: string,
-  params?: object,
+  params?: Record<string, unknown>,
   updater?: Updater<T, S>
 ) => {
   const apiPut: (data: T | S) => Promise<AxiosResponse<S>> = (data) => api.put(url, data);
@@ -129,10 +129,10 @@ export const usePut = <T, S>(
 
 export const useDelete = <T, S>(
   url: string,
-  params?: object,
+  params?: Record<string, unknown>,
   updater?: Updater<T, S>
 ) => {
-  const apiDelete: (data: T | S) => Promise<AxiosResponse<S>> = (data) => api.delete(url, data);
+  const apiDelete: (data: T | S) => Promise<AxiosResponse<S>> = () => api.delete(url);
   return useGenericMutation<T, S>(
     apiDelete,
     url,

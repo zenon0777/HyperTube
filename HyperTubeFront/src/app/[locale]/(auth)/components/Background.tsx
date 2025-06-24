@@ -1,5 +1,5 @@
 import MOVIE_DATA from '@/app/constant/MovieData';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface MovieTitle {
 	x: number;

@@ -23,7 +23,7 @@ export default function OAuthSuccessPage() {
                 const redirect = urlParams.get('redirect') || '/home';
                 router.push(redirect);
                 
-            } catch (error) {
+            } catch {
                 toast.error('Authentication failed');
                 router.push('/login');
             }

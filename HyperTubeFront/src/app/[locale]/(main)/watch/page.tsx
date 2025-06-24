@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+function constructMagnetLink(hash: string, displayName: string, trackers: string[]): string {
+  const trackersParam = trackers.map(tracker => `tr=${encodeURIComponent(tracker)}`).join('&');
+  return `magnet:?xt=urn:btih:${hash}&dn=${encodeURIComponent(displayName)}&${trackersParam}`;
+}
+
 export default function Home() {
   const torrentHash = "7D2E222138AEF25FFE38577E4CB9AD04E7D30356";
   const movieName = "Oppenheimer";
