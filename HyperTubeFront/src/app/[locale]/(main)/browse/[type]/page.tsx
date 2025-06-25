@@ -74,10 +74,33 @@ export default function Browse() {
   const orderOptions = [t('browse.filters.ascending'), t('browse.filters.descending')];
 
   // Memoize category IDs for stable dependency tracking
-  const categoryIds = useMemo(() => 
-    activeFilters.categories.map(cat => cat.id).join(','), 
+  const categoryIds = useMemo(() =>
+    activeFilters.categories.map(cat => cat.id).join(','),
     [activeFilters.categories]
   );
+
+  useEffect(() => {
+    const get_is_watched_movie = async () => {
+      await movies.forEach(async (movie: MovieData) => {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
+            {
+              credentials: "include",
+            }
+          );
+          if (!response.ok) throw new Error("Failed to fetch is watched movie");
+          const data = await response.json();
+          movie.is_watched = data.is_watched;
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to fetch is watched movie';
+          console.error("Error fetching is watched movie:", errorMessage);
+          toast.error("Could not load is watched movie.");
+        }
+      });
+    };
+    get_is_watched_movie();
+  }, [movies]);
 
   useEffect(() => {
     const getGenres = async () => {

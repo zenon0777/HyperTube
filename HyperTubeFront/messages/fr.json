@@ -110,6 +110,8 @@
     "viewAll": "Voir Tous"
   },
   "watchNow": "Regarder Maintenant",
+  "watched": "Regardé",
+  "unwatched": "Non regardé",
   "details": "Détails",
   "popularMovies": "Films Populaires",
   "topRatedMovies": "Films les Plus Notés",
@@ -142,6 +144,8 @@
     }
   },
   "movie": {
+    "watched": "Regardé",
+    "unwatched": "Non regardé",
     "ytsPage": "Page YTS",
     "visitSite": "Visiter le site",
     "likes": "J'aimes",

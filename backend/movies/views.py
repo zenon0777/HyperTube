@@ -256,6 +256,47 @@ def removeFavorite(request):
     else:
         return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
 
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def mark_as_watched(request, movie_id):
+    try:
+        movie = Movie.objects.get(movie_id=movie_id)
+    except Movie.DoesNotExist:
+        Movie.objects.create(movie_id=movie_id, is_watched=True)
+        return JsonResponse(
+            {"success": True, "message": "Movie not found, created new entry"},
+            status=200
+        )
+
+    movie.is_watched = True
+    movie.save()
+
+    return JsonResponse(
+        {"success": True, "message": "Movie marked as watched"},
+        status=200
+    )
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_is_movoie_watched(request, movie_id):
+    if not movie_id:
+        return JsonResponse(
+            {"success": False, "error": "movie_id is required"},
+            status=400
+        )
+    try:
+        movie = Movie.objects.get(movie_id=movie_id)
+    except Movie.DoesNotExist:
+        return JsonResponse(
+            {"success": True, "message": "Movie not found"},
+            status=200
+        )
+    return JsonResponse(
+        {"success": True, "is_watched": movie.is_watched},
+        status=200
+    )  
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def add_comment(request, movie_id):
@@ -297,8 +338,14 @@ def add_comment(request, movie_id):
 @permission_classes([IsAuthenticated])
 def get_movie_comments(request, movie_id):
 
-    movie = get_object_or_404(Movie, movie_id=movie_id)
-
+    
+    try:
+        movie = Movie.objects.get(movie_id=movie_id)
+    except Movie.DoesNotExist:
+        return JsonResponse(
+            {"success": True, "message": "Movie not in database"},
+            status=200
+        )
     comments_qs = (
         MoviComment.objects
         .select_related("user")
@@ -395,40 +442,6 @@ def yts_movie_list(request):
 
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"YTS API error: {str(e)}"}, status=500)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
-
-@csrf_exempt
-def trending_tv_shows(request):
-    if request.method == "GET":
-        try:
-            base_url = 'https://api.themoviedb.org/3/trending/tv/day?language=en-US'
-            query_params = request.GET.dict()
-            query_params["api_key"] = env("TMDB_API_KEY", default="Key not found")
-            query_string = "&".join(
-                f"{key}={value}" for key, value in query_params.items()
-            )
-            url = f"{base_url}?{query_string}"
-            headers = {
-                "accept": "application/json",
-                "Authorization": f"Bearer {env('TMDB_API_KEY')}",
-            }
-
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            data = response.json()
-            tv_shows = data
-            tv_show_list = tv_shows.get("results", [])
-            if not tv_show_list:
-                return JsonResponse(
-                    {"error": "No TV shows found in the response"}, status=404
-                )
-            return JsonResponse({"tv_shows": tv_shows}, status=200)
-
-        except requests.exceptions.RequestException as e:
-            return JsonResponse({"error": f"TMDB API error: {str(e)}"}, status=500)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     else:

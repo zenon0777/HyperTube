@@ -15,6 +15,7 @@ import {
   MdVideocam,
   MdCloudDownload,
   MdPhotoLibrary,
+  MdOutlineFavoriteBorder,
 } from "react-icons/md";
 import { FaTicketAlt, FaYoutube, FaUsers } from "react-icons/fa";
 import { TbLanguage, TbMagnet } from "react-icons/tb";
@@ -132,6 +133,7 @@ export default function Movie() {
   const [isError, setIsError] = useState(false);
   const [torrentHash, setTorrentHash] = useState<string | null>(null);
   const [isLoadingTorrent, setIsLoadingTorrent] = useState(false);
+  const [isWatched, setIsWatched] = useState(false);
 
   useEffect(() => {
     dispatch(getUserProfile());
@@ -338,6 +340,36 @@ export default function Movie() {
     return movies.length > 0;
   };
 
+  const markAsWatched = async (movie_id: string) => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/mark_as_watched/${movie_id}`, {
+        credentials: "include",
+        method: "POST",
+        body: JSON.stringify({ movie_id }),
+      });
+      toast.success("Movie marked as watched!");
+    } catch (error) {
+      console.error("Error marking movie as watched:", error);
+      toast.error("Failed to mark movie as watched.");
+    }
+  };
+
+  useEffect(() => {
+    const isWatched = async () => {
+      try {
+        if (!movieId) return;
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movieId}`, {
+          credentials: "include",
+        });
+        const data = await response.json();
+        setIsWatched(data.is_watched);
+      } catch (error) {
+        console.error("Error checking if movie is watched:", error);
+      }
+    };
+    isWatched();
+  }, [movieId]);
+
   const bestTrailerUrl = getBestTrailerUrl();
   const title = getTitle();
   const tagline = getTagline();
@@ -513,15 +545,17 @@ export default function Movie() {
               className="flex flex-wrap gap-3 sm:gap-4"
             >
               {isYTS === true &&
-              details?.torrents &&
-              details.torrents.length > 0 ? (
+                details?.torrents &&
+                details.torrents.length > 0 ? (
                 (() => {
                   const firstNon3DTorrent = getFirstNon3DTorrent(details.torrents);
                   return firstNon3DTorrent ? (
                     <Link
-                      href={`/watch/${
-                        firstNon3DTorrent.hash
-                      }?movieName=${encodeURIComponent(getTitle())}`}
+                      onClick={() => {
+                        markAsWatched(movieId as string);
+                      }}
+                      href={`/watch/${firstNon3DTorrent.hash
+                        }?movieName=${encodeURIComponent(getTitle())}`}
                       passHref
                     >
                       <motion.button
@@ -584,9 +618,12 @@ export default function Movie() {
                 </button>
               )}
               <button className="px-5 sm:px-7 py-2.5 sm:py-3 border-2 border-white/80 text-white/90 rounded-full flex items-center justify-center space-x-1.5 font-semibold text-sm sm:text-base hover:bg-white/20 hover:text-white transition transform hover:scale-105 active:scale-95">
-                {" "}
-                <span>{t("addToWatchlist")}</span>{" "}
-                <MdOutlineFavorite className="text-red-500 text-lg" />{" "}
+                <span>{isWatched ? t("watched") : t("unwatched")}</span>
+                {isWatched ? (
+                  <MdOutlineFavorite className="text-red-500 text-lg" />
+                ) : (
+                  <MdOutlineFavoriteBorder className="text-red-500 text-lg" />
+                )}
               </button>
             </motion.div>
           </motion.div>
@@ -650,12 +687,11 @@ export default function Movie() {
                             actor.url_small_image ||
                             (actor.profile_path
                               ? `${TMDB_IMAGE_BASE_URL}w185${actor.profile_path}`
-                              : `https://via.placeholder.com/128x192?text=${
-                                  actor.name
-                                    ?.split(" ")
-                                    .map((n: string) => n[0])
-                                    .join("") || "?"
-                                }`)
+                              : `https://via.placeholder.com/128x192?text=${actor.name
+                                ?.split(" ")
+                                .map((n: string) => n[0])
+                                .join("") || "?"
+                              }`)
                           }
                           alt={actor.name}
                           width={112}
@@ -696,54 +732,54 @@ export default function Movie() {
                       peers?: number;
                     };
                     return (
-                    <motion.div
-                      key={torrent.hash || index}
-                      className="p-4 bg-gray-800/50 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.3, delay: 1.0 + index * 0.1 }}
-                    >
-                      {" "}
-                      <div className="flex-grow">
-                        {" "}
-                        <span className="text-lg font-semibold text-orange-300">
-                          {torrent.quality}
-                        </span>{" "}
-                        <span className="text-gray-400 mx-2">|</span>{" "}
-                        <span className="text-gray-300">
-                          {torrent.type?.toUpperCase() || 'N/A'}
-                        </span>{" "}
-                        <span className="text-gray-400 mx-2">|</span>{" "}
-                        <span className="text-gray-300">
-                          {t("size")}: {torrent.size || 'N/A'}
-                        </span>{" "}
-                      </div>{" "}
-                      <div className="flex items-center gap-3 text-sm text-gray-400 mt-2 sm:mt-0">
-                        {" "}
-                        <span className="flex items-center gap-1">
-                          <BsLightningChargeFill className="text-green-500" />{" "}
-                          {torrent.seeds || 0} {t("seeds")}
-                        </span>{" "}
-                        <span className="flex items-center gap-1">
-                          <BsSpeedometer2 className="text-red-500" />{" "}
-                          {torrent.peers || 0} {t("peers")}
-                        </span>{" "}
-                      </div>{" "}
-                      <a
-                        href={`magnet:?xt=urn:btih:${
-                          torrent.hash
-                        }&dn=${encodeURIComponent(
-                          title
-                        )}&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 sm:mt-0 ml-auto sm:ml-4 px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-xs hover:bg-green-700 transition flex items-center gap-1.5"
+                      <motion.div
+                        key={torrent.hash || index}
+                        className="p-4 bg-gray-800/50 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 1.0 + index * 0.1 }}
                       >
                         {" "}
-                        <TbMagnet size={16} /> Magnet{" "}
-                      </a>{" "}
-                    </motion.div>
-                  )})}{" "}
+                        <div className="flex-grow">
+                          {" "}
+                          <span className="text-lg font-semibold text-orange-300">
+                            {torrent.quality}
+                          </span>{" "}
+                          <span className="text-gray-400 mx-2">|</span>{" "}
+                          <span className="text-gray-300">
+                            {torrent.type?.toUpperCase() || 'N/A'}
+                          </span>{" "}
+                          <span className="text-gray-400 mx-2">|</span>{" "}
+                          <span className="text-gray-300">
+                            {t("size")}: {torrent.size || 'N/A'}
+                          </span>{" "}
+                        </div>{" "}
+                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-2 sm:mt-0">
+                          {" "}
+                          <span className="flex items-center gap-1">
+                            <BsLightningChargeFill className="text-green-500" />{" "}
+                            {torrent.seeds || 0} {t("seeds")}
+                          </span>{" "}
+                          <span className="flex items-center gap-1">
+                            <BsSpeedometer2 className="text-red-500" />{" "}
+                            {torrent.peers || 0} {t("peers")}
+                          </span>{" "}
+                        </div>{" "}
+                        <a
+                          href={`magnet:?xt=urn:btih:${torrent.hash
+                            }&dn=${encodeURIComponent(
+                              title
+                            )}&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-2 sm:mt-0 ml-auto sm:ml-4 px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-xs hover:bg-green-700 transition flex items-center gap-1.5"
+                        >
+                          {" "}
+                          <TbMagnet size={16} /> Magnet{" "}
+                        </a>{" "}
+                      </motion.div>
+                    )
+                  })}{" "}
                 </div>{" "}
               </motion.section>
             )}
@@ -768,11 +804,11 @@ export default function Movie() {
                     {" "}
                     {[
                       details.large_screenshot_image1 ||
-                        details.medium_screenshot_image1,
+                      details.medium_screenshot_image1,
                       details.large_screenshot_image2 ||
-                        details.medium_screenshot_image2,
+                      details.medium_screenshot_image2,
                       details.large_screenshot_image3 ||
-                        details.medium_screenshot_image3,
+                      details.medium_screenshot_image3,
                     ]
                       .filter(Boolean)
                       .map((imgUrl, index) => (
@@ -1013,9 +1049,8 @@ export default function Movie() {
                     {" "}
                     <strong>IMDb:</strong>{" "}
                     <a
-                      href={`https://www.imdb.com/title/${
-                        details.imdb_id || details.imdb_code
-                      }/`}
+                      href={`https://www.imdb.com/title/${details.imdb_id || details.imdb_code
+                        }/`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-orange-400 hover:underline flex items-center gap-1"
@@ -1085,23 +1120,23 @@ export default function Movie() {
                   className="bg-gray-800/30 rounded-lg overflow-hidden shadow-lg hover:shadow-orange-500/30 transition-shadow duration-300 group"
                 >
                   <Link href={`${movie.id}`} className="block">
-                      <Image
-                        src={getSmallCoverImage(movie)}
-                        alt={movie.title_english || movie.title || 'Movie'}
-                        width={200}
-                        height={300}
-                        className="w-full h-auto aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="p-3">
+                    <Image
+                      src={getSmallCoverImage(movie)}
+                      alt={movie.title_english || movie.title || 'Movie'}
+                      width={200}
+                      height={300}
+                      className="w-full h-auto aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="p-3">
+                      {" "}
+                      <h3 className="text-sm font-semibold text-gray-100 truncate group-hover:text-orange-400 transition-colors">
                         {" "}
-                        <h3 className="text-sm font-semibold text-gray-100 truncate group-hover:text-orange-400 transition-colors">
-                          {" "}
-                          {movie.title_english || movie.title}{" "}
-                        </h3>{" "}
-                        <p className="text-xs text-gray-400">
-                          {movie.year || movie.release_date?.split("-")[0]}
-                        </p>{" "}
-                      </div>
+                        {movie.title_english || movie.title}{" "}
+                      </h3>{" "}
+                      <p className="text-xs text-gray-400">
+                        {movie.year || movie.release_date?.split("-")[0]}
+                      </p>{" "}
+                    </div>
                   </Link>
                 </motion.div>
               ))}
@@ -1113,11 +1148,11 @@ export default function Movie() {
           user={
             user.user
               ? {
-                  token: null,
-                  id: user.user.id,
-                  username: user.user.username,
-                  profile_picture: user.user.profile_picture,
-                }
+                token: null,
+                id: user.user.id,
+                username: user.user.username,
+                profile_picture: user.user.profile_picture,
+              }
               : { token: null }
           }
         />

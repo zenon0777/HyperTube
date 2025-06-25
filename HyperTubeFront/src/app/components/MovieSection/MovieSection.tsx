@@ -20,6 +20,7 @@ interface Movie {
   rating?: number;
   genres?: string[];
   genre_ids?: number[];
+  is_watched?: boolean;
 }
 
 interface Genre {
@@ -36,9 +37,7 @@ export const MovieSection = ({
 }) => {
   const router = useRouter();
   const handleMovieClick = (movieId: string | number) => {
-    if (typeof window !== "undefined") {
-      router.push(`/browse/movie/${movieId}`);
-    }
+    router.push(`/browse/movie/${movieId}`);
   };
 
   const t = useTranslations();
@@ -104,24 +103,50 @@ export const MovieSection = ({
                 viewport={{ once: true }}
                 className="relative group"
               >
-                <Image
-                  src={
-                    (movie.large_cover_image && movie.large_cover_image) ||
-                    (movie.poster_path &&
-                      `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
-                    `https://via.placeholder.com/300x450?text=${movie.name || movie.title
-                    }`
-                  }
-                  alt={movie.title || movie.name || "Movie"}
-                  width={300}
-                  height={400}
-                  priority
-                  className="xs:w-[180px] sm:w-[200px] md:[w-300px] lg:w-[300px] h-auto rounded-xl shadow-lg"
-                />
+                <div className="relative">
+                  <Image
+                    src={
+                      (movie.large_cover_image && movie.large_cover_image) ||
+                      (movie.poster_path &&
+                        `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
+                      `https://via.placeholder.com/300x450?text=${movie.name || movie.title
+                      }`
+                    }
+                    alt={movie.title || movie.name || "Movie"}
+                    width={300}
+                    height={400}
+                    priority
+                    className="xs:w-[180px] sm:w-[200px] md:[w-300px] lg:w-[300px] h-auto rounded-xl shadow-lg"
+                  />
+
+                  {/* {movie.is_watched && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg"
+                    >
+                      <span>✓</span>
+                      <span className="hidden sm:inline">Watched</span>
+                    </motion.div>
+                  )}
+                  
+                  {movie.is_watched === false && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="absolute top-2 right-2 bg-gray-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg"
+                    >
+                      <span>○</span>
+                      <span className="hidden sm:inline">Unwatched</span>
+                    </motion.div>
+                  )} */}
+                </div>
+
                 <div
                   className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-1 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
                   onClick={() => handleMovieClick(movie?.id)}
                 ></div>
+
                 <motion.div
                   initial={{ opacity: 1, y: 10 }}
                   whileHover={{ opacity: 1, y: 10 }}
@@ -152,6 +177,20 @@ export const MovieSection = ({
                         ? Number(movie.vote_average).toFixed(1)
                         : movie.rating}{" "}
                       <span className="text-yellow-400">★</span>
+                    </span>
+                  </motion.div>
+
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    className="mt-1"
+                  >
+                    <span className={`text-xs px-2 py-1 rounded-full ${movie.is_watched
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-gray-500/20 text-gray-400'
+                      }`}>
+                      {movie.is_watched ? '✓ Watched' : '○ Not Watched'}
                     </span>
                   </motion.div>
                 </motion.div>

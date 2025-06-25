@@ -14,6 +14,7 @@ import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { getGenres } from "@/app/data/NavBarElements";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { MdOutlineFavorite, MdOutlineFavoriteBorder } from "react-icons/md";
 
 interface MovieData {
   id: number;
@@ -30,6 +31,7 @@ interface MovieData {
   genre_ids?: number[];
   rating?: number;
   vote_average?: number;
+  is_watched?: boolean;
 }
 
 interface TMDBMovieListResponse {
@@ -85,7 +87,8 @@ export default function Home() {
         const data3: TMDBMovieListResponse = await response3.json();
         setNowPlayingMovies(data3.movies?.results || []);
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'An error occurred';
+        const message =
+          error instanceof Error ? error.message : "An error occurred";
         toast.error(message);
       }
     };
@@ -114,7 +117,8 @@ export default function Home() {
         const data3: YTSMovieListResponse = await response3.json();
         setNowPlayingMovies(data3.data?.movies || []);
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'An error occurred';
+        const message =
+          error instanceof Error ? error.message : "An error occurred";
         toast.error(message);
       }
     };
@@ -124,6 +128,119 @@ export default function Home() {
       getYTSFiltredMovies();
     }
   }, [isTMDB]);
+
+  useEffect(() => {
+    const get_is_watched = async () => {
+      try {
+        popularMovies.forEach((movie: MovieData) => {
+          try {
+            var res = fetch(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
+              {
+                credentials: "include",
+              }
+            );
+            res
+              .then((response) => {
+                if (response.ok) {
+                  return response.json();
+                }
+                // else {
+                //   throw new Error("Failed to fetch watched status");
+                // }
+              })
+              .then((data) => {
+                console.log("first :: ", data);
+                if (data.is_watched) {
+                  movie.is_watched = true;
+                }
+              })
+              .catch((error) => {
+                const message =
+                  error instanceof Error ? error.message : "An error occurred";
+                toast.error(message);
+              });
+          } catch (error: unknown) {
+            const message =
+              error instanceof Error ? error.message : "An error occurred";
+            toast.error(message);
+          }
+        });
+        topRatedMovies.forEach((movie: MovieData) => {
+          try {
+            var res = fetch(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
+              {
+                credentials: "include",
+              }
+            );
+            res
+              .then((response) => {
+                if (response.ok) {
+                  return response.json();
+                }
+                //  else {
+                //   throw new Error("Failed to fetch watched status");
+                // }
+              })
+              .then((data) => {
+                console.log("second :: ", data);
+                if (data.is_watched) {
+                  movie.is_watched = true;
+                }
+              })
+              .catch((error) => {
+                const message =
+                  error instanceof Error ? error.message : "An error occurred";
+                toast.error(message);
+              });
+          } catch (error: unknown) {
+            const message =
+              error instanceof Error ? error.message : "An error occurred";
+            toast.error(message);
+          }
+        });
+        nowPlayingMovies.forEach((movie: MovieData) => {
+          try {
+            var res = fetch(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
+              {
+                credentials: "include",
+              }
+            );
+            res
+              .then((response) => {
+                if (response.ok) {
+                  return response.json();
+                  // } else {
+                  //   throw new Error("Failed to fetch watched status");
+                }
+              })
+              .then((data) => {
+                console.log("third :: ", data);
+                if (data.is_watched) {
+                  movie.is_watched = true;
+                }
+              })
+              .catch((error) => {
+                const message =
+                  error instanceof Error ? error.message : "An error occurred";
+                toast.error(message);
+              });
+          } catch (error: unknown) {
+            const message =
+              error instanceof Error ? error.message : "An error occurred";
+            toast.error(message);
+          }
+        });
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : "An error occurred";
+        toast.error(message);
+      }
+    };
+    get_is_watched();
+  }, [popularMovies, topRatedMovies, nowPlayingMovies]);
 
   return (
     <div className="min-h-screen max-w-[1500px] mx-auto bg-gray-900 text-white w-full flex flex-col">
@@ -147,12 +264,11 @@ export default function Home() {
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="relative h-full flex items-center bg-cover bg-center text-white"
                 style={{
-                  backgroundImage: `url(${
-                    (movie.backdrop_path &&
+                  backgroundImage: `url(${(movie.backdrop_path &&
                       `https://image.tmdb.org/t/p/original${movie.backdrop_path}`) ||
                     (movie.medium_cover_image && movie.medium_cover_image) ||
                     `https://via.placeholder.com/1920x1080?text=${movie.title}`
-                  })`,
+                    })`,
                 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
@@ -214,13 +330,28 @@ export default function Home() {
                       transition={{ duration: 0.5, delay: 0.6 }}
                       className="flex gap-4"
                     >
-                      <button onClick={() => router.push(`browse/movie/${movie.id}`)} className="px-5 sm:px-6 py-2 sm:py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition transform hover:scale-105 active:scale-95">
+                      <button
+                        onClick={() => router.push(`browse/movie/${movie.id}`)}
+                        className="px-5 sm:px-6 py-2 sm:py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition transform hover:scale-105 active:scale-95"
+                      >
                         {t("watchNow")}
                       </button>
-                      <button onClick={() => router.push(`browse/movie/${movie.id}`)} className="px-5 sm:px-6 py-2 sm:py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-gray-200 hover:text-black transition transform hover:scale-105 active:scale-95">
+                      <button
+                        onClick={() => router.push(`browse/movie/${movie.id}`)}
+                        className="px-5 sm:px-6 py-2 sm:py-3 border-2 border-white text-white rounded-full font-semibold hover:bg-gray-200 hover:text-black transition transform hover:scale-105 active:scale-95"
+                      >
                         {t("details")} <Info />
                       </button>
+
                     </motion.div>
+                    <button className="px-5 sm:px-7 py-2.5 mt-8 sm:py-3 border-2 border-white/80 text-white/90 rounded-full flex items-center justify-center space-x-1.5 font-semibold text-sm sm:text-base hover:bg-white/20 hover:text-white transition transform hover:scale-105 active:scale-95">
+                      <span>{movie.is_watched ? t("watched") : t("unwatched")}</span>
+                      {movie.is_watched ? (
+                        <MdOutlineFavorite className="text-red-500 text-lg" />
+                      ) : (
+                        <MdOutlineFavoriteBorder className="text-red-500 text-lg" />
+                      )}
+                    </button>
                   </motion.div>
                   <motion.div
                     initial={{ opacity: 0, x: 50 }}

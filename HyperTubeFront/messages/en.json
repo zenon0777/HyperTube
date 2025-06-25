@@ -110,6 +110,8 @@
     "viewAll": "View All"
   },
   "watchNow": "Watch Now",
+  "watched": "Watched",
+  "unwatched": "Unwatched",
   "details": "Details",
   "popularMovies": "Popular Movies",
   "topRatedMovies": "Top Rated Movies",
@@ -142,6 +144,8 @@
     }
   },
   "movie": {
+    "watched": "Watched",
+    "unwatched": "Unwatched",
     "ytsPage": "YTS Page",
     "visitSite": "Visit Site",
     "likes": "Likes",

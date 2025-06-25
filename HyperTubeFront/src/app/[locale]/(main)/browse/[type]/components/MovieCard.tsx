@@ -5,6 +5,7 @@ import Image from "next/image";
 import { PlayArrow, InfoOutlined } from "@mui/icons-material";
 import { useRouter } from "next/navigation"; // For Next.js App Router
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 
 interface MovieData {
   // TMDB fields
@@ -16,7 +17,7 @@ interface MovieData {
   vote_average?: number;
   overview?: string;
   id?: string | number;
-  
+
   // YTS fields
   title_long?: string;
   medium_cover_image?: string;
@@ -25,9 +26,10 @@ interface MovieData {
   rating?: string | number;
   summary?: string;
   synopsis?: string;
-  
+
   // Generic fields
   poster?: string;
+  is_watched?: boolean;
 }
 
 interface MovieCardProps {
@@ -142,15 +144,6 @@ const MovieCard: React.FC<MovieCardProps> = ({
             >
               <PlayArrow fontSize="medium" />
             </button>
-            <button
-              onClick={() => {
-                router.push(`/browse/movie/${movieId}`);
-              }}
-              className="px-2 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-full flex items-center space-x-1 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
-              aria-label={`${t('browse.movieCard.details')} ${title}`}
-            >
-              <InfoOutlined fontSize="medium" />
-            </button>
           </div>
           <div className="p-3 pb-4 text-center">
             <h3 className="text-lg font-bold text-white drop-shadow-md whitespace-normal break-words">
@@ -169,6 +162,12 @@ const MovieCard: React.FC<MovieCardProps> = ({
         </h3>
         <div className="flex justify-between items-center text-xs text-gray-400 mt-1">
           <span>{year}</span>
+          <span className={`text-xs px-2 py-1 rounded-full ${movie.is_watched
+            ? 'bg-green-500/20 text-green-400'
+            : 'bg-gray-500/20 text-gray-400'
+            }`}>
+            {movie.is_watched ? '✓ Watched' : '○ Not Watched'}
+          </span>
           {rating !== "N/A" && rating !== 0 && (
             <span className="flex items-center">
               <span className="mr-1">⭐</span>
