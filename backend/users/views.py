@@ -265,7 +265,7 @@ class UserManagementView(APIView):
                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                unique_name = f"{timestamp}_{uuid.uuid4().hex[:8]}_{data['profile_picture'].name}"
                file_name = default_storage.save(f'profile_pictures/{unique_name}', data['profile_picture'])
-               user.profile_picture_url = f"{settings.AWS_S3_ENDPOINT_URL}/z-tube/profile_pictures/{unique_name}"
+               user.profile_picture_url = f"{settings.AWS_S3_ENDPOINT_URL}/z-tube-1/profile_pictures/{unique_name}"
 
            user.save()
            return Response({'message': 'User updated successfully'}, status=200)

@@ -28,11 +28,23 @@ interface UpdateProfileData {
 export const authService = {
   async register(userData: RegisterUserData) {
     try {
-      const response = await api.post("/auth/register/", userData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+			const formData = new FormData();
+			formData.append("username", userData.username);
+			formData.append("email", userData.email);
+			formData.append("password", userData.password);
+			formData.append("password2", userData.password2);
+			if (userData.first_name) {
+				formData.append("first_name", userData.first_name);
+			}
+			if (userData.last_name) {
+				formData.append("last_name", userData.last_name);
+			}
+			if (userData.profile_picture) {
+				formData.append("profile_picture", userData.profile_picture);
+			}	
+
+      const response = await api.post("/auth/register/", formData
+		);
       return response.data;
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'response' in error) {
