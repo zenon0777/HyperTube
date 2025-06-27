@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
         hostname: 'cdn.intra.42.fr',
       },{
         protocol: 'https',
-        hostname: 'z-tube.nyc3.digitaloceanspaces.com'
+        hostname: 'z-tube-1.nyc3.digitaloceanspaces.com'
       },{
         protocol: 'https',
         hostname: 'cdn.discordapp.com'
