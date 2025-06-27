@@ -195,68 +195,6 @@ def search_torrents(request):
     print("No torrent found")
     return JsonResponse({"error": "No torrent found"}, status=404)
 
-def setFavorite(request):
-    if request.method == "POST":
-        try:
-            movie_id = request.POST.get("movie_id")
-            user_id = request.POST.get("user_id")
-            if not movie_id or not user_id:
-                return JsonResponse({"error": "movie_id and user_id are required"}, status=400)
-
-            # Assuming you have a Movie model with a favorite field
-            from .models import Movie
-            movie, created = Movie.objects.get_or_create(movie_id=movie_id, user_id=user_id)
-            movie.favorite = True
-            movie.save()
-            return JsonResponse({"message": "Movie marked as favorite"}, status=200)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
-
-def getFavorite(request):
-    if request.method == "GET":
-        try:
-            user_id = request.GET.get("user_id")
-            if not user_id:
-                return JsonResponse({"error": "user_id is required"}, status=400)
-
-            # Assuming you have a Movie model with a favorite field
-            from .models import Movie
-            favorites = Movie.objects.filter(user_id=user_id, favorite=True)
-            favorite_movies = [movie.movie_id for movie in favorites]
-            return JsonResponse({"favorite_movies": favorite_movies}, status=200)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
-
-def removeFavorite(request):
-    if request.method == "POST":
-        try:
-            movie_id = request.POST.get("movie_id")
-            user_id = request.POST.get("user_id")
-            if not movie_id or not user_id:
-                return JsonResponse({"error": "movie_id and user_id are required"}, status=400)
-
-            # Assuming you have a Movie model with a favorite field
-            from .models import Movie
-            movie = Movie.objects.filter(movie_id=movie_id, user_id=user_id).first()
-            if movie:
-                movie.favorite = False
-                movie.save()
-                return JsonResponse({"message": "Movie removed from favorites"}, status=200)
-            else:
-                return JsonResponse({"error": "Movie not found"}, status=404)
-
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Only POST requests are allowed"}, status=405)
-
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def mark_as_watched(request, movie_id):
@@ -528,8 +466,7 @@ def tmdb_multi_search(request):
 @api_view (["GET"])
 def yts_movie_detail(request):
     if request.method == "GET":
-        try:    
-            # get base url from environment variable
+        try:
             base_url = env("YTS_API_BASE_URL", default="https://yts.mx/api/v2/")
             details_url = base_url + "movie_details.json"
             query_params = request.GET.dict()
@@ -537,7 +474,7 @@ def yts_movie_detail(request):
                 f"{key}={value}" for key, value in query_params.items()
             )
             url = f"{details_url}?{query_string}"
-            
+
             similar_url = f"{base_url}movie_suggestions.json?movie_id={query_params.get('movie_id', '')}"
             similar_response = requests.get(similar_url)
             similar_response.raise_for_status()
@@ -546,7 +483,7 @@ def yts_movie_detail(request):
                 similar_data = similar_data["data"]["movies"]
             else:
                 similar_data = {}
-        
+
             response = requests.get(url)
             response.raise_for_status()
             data = response.json()
@@ -628,3 +565,106 @@ def tmdb_movie_detail(request, id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_movie_detail(request, movie_id):
+    if request.method == "GET":
+        try:
+            movie = Movie.objects.get(movie_id=movie_id)
+            return JsonResponse({"movie": movie}, status=200)
+        except Movie.DoesNotExist:
+            return JsonResponse({"error": "Movie not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
+
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def comment_list(request):
+    """
+    List all comments or create a new comment.
+    """
+    if request.method == "GET":
+        comments = MoviComment.objects.select_related("user").order_by("-created_at")[:20]
+        data = [
+            {
+                "id": comment.id,
+                "content": comment.comment,
+                "author_username": comment.user.username,
+                "date": comment.created_at,
+            }
+            for comment in comments
+        ]
+        return JsonResponse(data, safe=False)
+
+    elif request.method == "POST":
+        movie_id = request.data.get("movie_id")
+        comment_text = request.data.get("comment")
+
+        if not all([movie_id, comment_text]):
+            return JsonResponse({"error": "movie_id and comment are required."}, status=400)
+
+        movie, created = Movie.objects.get_or_create(movie_id=movie_id)
+
+        comment = MoviComment.objects.create(
+            movie=movie, user=request.user, comment=comment_text
+        )
+
+        return JsonResponse(
+            {
+                "id": comment.id,
+                "content": comment.comment,
+                "author_username": comment.user.username,
+                "date": comment.created_at,
+            },
+            status=201,
+        )
+
+
+@api_view(["GET", "PATCH", "DELETE"])
+@permission_classes([IsAuthenticated])
+def comment_detail(request, comment_id):
+    """
+    Retrieve, update or delete a comment instance.
+    """
+    comment = get_object_or_404(MoviComment, pk=comment_id)
+
+    if request.method == "GET":
+        data = {
+            "id": comment.id,
+            "comment": comment.comment,
+            "author_username": comment.user.username,
+            "date_posted": comment.created_at,
+        }
+        return JsonResponse(data)
+
+    elif request.method == "PATCH":
+        if comment.user != request.user:
+            return JsonResponse({"error": "You are not authorized to edit this comment."}, status=403)
+        
+        comment_text = request.data.get("comment")
+        if not comment_text:
+            return JsonResponse({"error": "Comment content cannot be empty."}, status=400)
+        
+        comment.comment = comment_text
+        comment.save()
+        
+        data = {
+            "id": comment.id,
+            "comment": comment.comment,
+            "author_username": comment.user.username,
+            "date_posted": comment.created_at,
+        }
+        return JsonResponse(data)
+
+    elif request.method == "DELETE":
+        if comment.user != request.user:
+            return JsonResponse({"error": "You are not authorized to delete this comment."}, status=403)
+        
+        comment.delete()
+        return JsonResponse(status=204)
+
