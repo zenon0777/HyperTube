@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { AiOutlineGithub } from "react-icons/ai";
@@ -8,7 +10,7 @@ export default function Footer() {
     {
       title: "Quick Links",
       items: [
-        { label: "Home", href: "/" },
+        { label: "Home", href: "/home" },
         { label: "Movies", href: "/browse/movies" },
       ],
     }

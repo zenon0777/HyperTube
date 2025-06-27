@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { useRouter } from "next/navigation";
 import LanguageSwitcher from "../LanguageSwitcher";
@@ -15,10 +17,7 @@ function Header({ router }: { router: ReturnType<typeof useRouter> }) {
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl blur-lg opacity-50" />
           </div>
-          <span className="text-white">Tube</span>
-          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-            {t("free")}
-          </span>
+          <span className="text-white">Tube</span>  
         </div>
 
         <div className="flex items-center gap-4">

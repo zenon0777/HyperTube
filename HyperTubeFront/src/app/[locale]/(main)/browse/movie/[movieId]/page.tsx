@@ -277,7 +277,7 @@ export default function Movie() {
       return details.large_cover_image;
     if (APIProvider !== "YTS" && details?.poster_path)
       return `${TMDB_IMAGE_BASE_URL}original${details.poster_path}`;
-    return `https://via.placeholder.com/1920x1080?text=${encodeURIComponent(
+    return `https://placeholder.com/1920x1080?text=${encodeURIComponent(
       getTitle()
     )}`;
   };
@@ -286,7 +286,7 @@ export default function Movie() {
       return `${TMDB_IMAGE_BASE_URL}${size}${details.poster_path}`;
     if (APIProvider === "YTS" && details?.large_cover_image)
       return details.large_cover_image;
-    return `https://via.placeholder.com/300x450?text=${encodeURIComponent(
+    return `https://placeholder.com/300x450?text=${encodeURIComponent(
       getTitle()
     )}`;
   };
@@ -295,7 +295,7 @@ export default function Movie() {
       return movie.medium_cover_image;
     if (APIProvider !== "YTS" && movie?.poster_path)
       return `${TMDB_IMAGE_BASE_URL}w342${movie.poster_path}`;
-    return `https://via.placeholder.com/200x300?text=${encodeURIComponent(
+    return `https://placeholder.com/200x300?text=${encodeURIComponent(
       movie?.title || movie?.title_english || "Movie"
     )}`;
   };
@@ -687,7 +687,7 @@ export default function Movie() {
                             actor.url_small_image ||
                             (actor.profile_path
                               ? `${TMDB_IMAGE_BASE_URL}w185${actor.profile_path}`
-                              : `https://via.placeholder.com/128x192?text=${actor.name
+                              : `https://placeholder.com/128x192?text=${actor.name
                                 ?.split(" ")
                                 .map((n: string) => n[0])
                                 .join("") || "?"

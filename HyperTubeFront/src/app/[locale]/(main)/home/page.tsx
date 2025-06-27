@@ -134,7 +134,7 @@ export default function Home() {
       try {
         popularMovies.forEach((movie: MovieData) => {
           try {
-            var res = fetch(
+            const res = fetch(
               `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
               {
                 credentials: "include",
@@ -150,7 +150,6 @@ export default function Home() {
                 // }
               })
               .then((data) => {
-                console.log("first :: ", data);
                 if (data.is_watched) {
                   movie.is_watched = true;
                 }
@@ -168,7 +167,7 @@ export default function Home() {
         });
         topRatedMovies.forEach((movie: MovieData) => {
           try {
-            var res = fetch(
+            const res = fetch(
               `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
               {
                 credentials: "include",
@@ -184,7 +183,6 @@ export default function Home() {
                 // }
               })
               .then((data) => {
-                console.log("second :: ", data);
                 if (data.is_watched) {
                   movie.is_watched = true;
                 }
@@ -202,7 +200,7 @@ export default function Home() {
         });
         nowPlayingMovies.forEach((movie: MovieData) => {
           try {
-            var res = fetch(
+            const res = fetch(
               `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
               {
                 credentials: "include",
@@ -217,7 +215,6 @@ export default function Home() {
                 }
               })
               .then((data) => {
-                console.log("third :: ", data);
                 if (data.is_watched) {
                   movie.is_watched = true;
                 }
@@ -267,7 +264,7 @@ export default function Home() {
                   backgroundImage: `url(${(movie.backdrop_path &&
                       `https://image.tmdb.org/t/p/original${movie.backdrop_path}`) ||
                     (movie.medium_cover_image && movie.medium_cover_image) ||
-                    `https://via.placeholder.com/1920x1080?text=${movie.title}`
+                    `https://placehold.co/1920x1080?text=${movie.title}`
                     })`,
                 }}
               >
@@ -368,13 +365,13 @@ export default function Home() {
                         (movie.large_cover_image && movie.large_cover_image) ||
                         (movie.poster_path &&
                           `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
-                        `https://via.placeholder.com/300x450?text=${movie.title}`
+                        `https://placehold.co/300x450?text=${movie.title}`
                       }
                       alt={`${movie.title} Poster`}
                       width={300}
                       height={450}
                       priority={true}
-                      className="rounded-xl shadow-2xl shadow-black hover:scale-105 transition-transform duration-300"
+                      className="rounded-xl shadow-2xl shadow-black hover:scale-105 transition-transform duration-300 h-auto w-auto"
                     />
                   </motion.div>
                 </div>

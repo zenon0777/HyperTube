@@ -135,7 +135,7 @@ export default function SearchInput() {
         ? result.medium_cover_image
         : (result.poster_path &&
             `https://image.tmdb.org/t/p/w300${result.poster_path}`) ||
-          `https://via.placeholder.com/300x450?text=${title}`;
+          `https://placehold.co/300x450?text=${title}`;
     const year = result.year
       ? result.year
       : result?.release_date?.split("-")[0];

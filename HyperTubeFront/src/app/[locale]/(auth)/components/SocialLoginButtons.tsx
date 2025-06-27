@@ -39,7 +39,7 @@ export function SocialLoginButtons({ onOAuthLogin }: SocialLoginButtonsProps) {
                     alt="42 School"
                     width={50}
                     height={50}
-                    className="object-contain"
+                    className="object-contain w-auto h-auto"
                 />
             </button>
 

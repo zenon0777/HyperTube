@@ -1,5 +1,4 @@
 import Logout from "@mui/icons-material/Logout";
-import Settings from "@mui/icons-material/Settings";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
@@ -102,12 +101,6 @@ export default function ProfileMenu(props: user) {
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >        <MenuItem onClick={handleProfileClick}>
           <Avatar /> {t("navBar.profile")}
-        </MenuItem>
-        <MenuItem onClick={handleClose}>
-          <ListItemIcon>
-            <Settings fontSize="small" />
-          </ListItemIcon>
-          {t("navBar.settings")}
         </MenuItem>
         <MenuItem onClick={handleLogoutClick}>
           <ListItemIcon>

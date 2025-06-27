@@ -1,14 +1,12 @@
-"use client"; // Important for using useRouter and event handlers
+"use client";
 
 import React from "react";
 import Image from "next/image";
-import { PlayArrow, InfoOutlined } from "@mui/icons-material";
-import { useRouter } from "next/navigation"; // For Next.js App Router
+import { PlayArrow } from "@mui/icons-material";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
 
 interface MovieData {
-  // TMDB fields
   title?: string;
   name?: string;
   poster_path?: string;
@@ -104,25 +102,25 @@ const MovieCard: React.FC<MovieCardProps> = ({
       <div className="relative w-full aspect-[2/3]">
         {posterUrl ? (
           <Image
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             src={posterUrl}
             alt={`Poster for ${title}`}
-            layout="fill"
-            objectFit="cover"
+            fill
             className="transition-opacity duration-300 group-hover:opacity-60"
-            priority={false}
+            priority={true}
             unoptimized={provider === "YTS"}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "/placeholder-poster.png";
+              (e.target as HTMLImageElement).src = "https://placehold.co/500x750.png?text=No+Image";
               (e.target as HTMLImageElement).alt = "Image not available";
             }}
           />
         ) : (
           <div className="w-full h-full bg-gray-700 flex items-center justify-center">
             <Image
-              src="/placeholder-poster.png"
+              src="https://placehold.co/500x750.png?text=No+Image"
               alt="Image not available"
-              layout="fill"
-              objectFit="cover"
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
         )}

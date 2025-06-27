@@ -16,6 +16,7 @@ interface ProfilePictureUploadProps {
 				src={previewUrl}
 				alt="Profile preview"
 				fill
+				priority={true}
 				className="object-cover"
 			  />
 			</div>

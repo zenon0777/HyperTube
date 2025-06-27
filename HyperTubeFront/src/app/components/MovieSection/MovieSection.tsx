@@ -109,8 +109,7 @@ export const MovieSection = ({
                       (movie.large_cover_image && movie.large_cover_image) ||
                       (movie.poster_path &&
                         `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
-                      `https://via.placeholder.com/300x450?text=${movie.name || movie.title
-                      }`
+                      `https://placehold.co/300x450?text=${movie.name || movie.title}`
                     }
                     alt={movie.title || movie.name || "Movie"}
                     width={300}

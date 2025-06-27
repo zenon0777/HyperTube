@@ -148,9 +148,6 @@ export default function Browse() {
       }
 
       setIsLoading(true);
-      console.log(
-        `Fetching page ${page} for provider ${activeFilters.provider}`
-      );
 
       let newMovies: MovieData[] = [];
       let newTotalPages: number = 1;
@@ -288,7 +285,6 @@ export default function Browse() {
 
   const loadMoreItems = useCallback(() => {
     if (!isLoading && hasMore) {
-      console.log("Loading more items...");
       setPage((prevPage) => prevPage + 1);
     }
   }, [isLoading, hasMore]);
