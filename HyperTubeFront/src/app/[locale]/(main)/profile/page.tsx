@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const dispatch = useDispatch<AppDispatch>();
   const { user, loading, error } = useSelector((state: RootState) => state.user);
   const t = useTranslations("Profile");
+  const tValidation = useTranslations("Auth.validation");
   const [activeTab, setActiveTab] = useState<ActiveTab>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
@@ -53,7 +54,30 @@ export default function ProfilePage() {
     confirm_password: ""
   });
   const [profileFile, setProfileFile] = useState<File | null>(null);
+  const [formErrors, setFormErrors] = useState({
+    username: "",
+    email: "",
+    first_name: "",
+    last_name: ""
+  });
 
+  const validators = {
+    email: (value: string): string | null => {
+      if (!value.trim()) return tValidation('emailRequired');
+      if (!/\S+@\S+\.\S+/.test(value)) return tValidation('emailInvalid');
+      return null;
+    },
+
+    username: (value: string): string | null => {
+      if (!value.trim()) return tValidation('usernameRequired');
+      if (value.length < 3) return tValidation('usernameMinLength');
+      return null;
+    },
+
+    required: (value: string, fieldName: string): string | null => {
+      return !value.trim() ? `${fieldName} ${tValidation('fieldRequired')}` : null;
+    }
+  };
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) return t('passwordMinLength');
@@ -84,10 +108,19 @@ export default function ProfilePage() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(t("fileTooLarge") || "File size must be less than 5MB");
+        return;
+      }
+
       setProfileFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
         setProfileImage(e.target?.result as string);
+      };
+      reader.onerror = () => {
+        toast.error(t("fileReadError") || "Error reading file");
       };
       reader.readAsDataURL(file);
     }
@@ -98,6 +131,40 @@ export default function ProfilePage() {
       ...prev,
       [name]: value
     }));
+
+    if (formErrors[name as keyof typeof formErrors]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+  };
+
+  const validateProfileForm = (): boolean => {
+    const newErrors = {
+      username: "",
+      email: "",
+      first_name: "",
+      last_name: ""
+    };
+
+    // Validate each field
+    const emailError = validators.email(formData.email);
+    if (emailError) newErrors.email = emailError;
+
+    const usernameError = validators.username(formData.username);
+    if (usernameError) newErrors.username = usernameError;
+
+    const firstNameError = validators.required(formData.first_name, t('firstName'));
+    if (firstNameError) newErrors.first_name = firstNameError;
+
+    const lastNameError = validators.required(formData.last_name, t('lastName'));
+    if (lastNameError) newErrors.last_name = lastNameError;
+
+    setFormErrors(newErrors);
+
+    // Return true if no errors
+    return !Object.values(newErrors).some(error => error !== "");
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +187,6 @@ export default function ProfilePage() {
       return;
     }
 
-    // Validate the new password
     const passwordError = validatePassword(passwordData.new_password);
     if (passwordError) {
       toast.error(passwordError);
@@ -152,25 +218,40 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     if (!user?.id) return;
 
+    // Validate form before submitting
+    if (!validateProfileForm()) {
+      toast.error(t("pleaseFixErrors") || "Please fix the errors before saving");
+      return;
+    }
+
     try {
       const updateData = new FormData();
-      updateData.append('username', formData.username);
-      updateData.append('email', formData.email);
-      updateData.append('first_name', formData.first_name);
-      updateData.append('last_name', formData.last_name);
+
+      updateData.append('username', formData.username.trim());
+      updateData.append('email', formData.email.trim());
+      updateData.append('first_name', formData.first_name.trim());
+      updateData.append('last_name', formData.last_name.trim());
 
       if (profileFile) {
         updateData.append('profile_picture', profileFile);
       }
+      const response = await authService.updateProfile(user.id, updateData);
 
-      await authService.updateProfile(user.id, updateData);
-      dispatch(getUserProfile());
+      setProfileFile(null);
+
+      setTimeout(() => {
+        dispatch(getUserProfile());
+      }, 100);
+
       setIsEditing(false);
       toast.success(t("profileUpdatedSuccess"));
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || t("failedToUpdateProfile")
-        : t("failedToUpdateProfile");
+
+    } catch (error: any) {
+      console.error('Profile update error:', error);
+      const errorMessage = error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        t("failedToUpdateProfile");
       toast.error(errorMessage);
     }
   };
@@ -236,7 +317,7 @@ export default function ProfilePage() {
                 <h3 className="text-xl font-semibold text-white mb-1">
                   {user?.username || "User"}
                 </h3>
-              </div>              {/* Navigation Tabs */}
+              </div>
               <nav className="space-y-2">
                 {[
                   { id: 'profile', label: t('profileInfo'), icon: AccountCircle },
@@ -318,18 +399,27 @@ export default function ProfilePage() {
                           </label>
                         )}
                       </div>
-                    </div>                    {/* Form Fields */}
+                    </div>
+                    {/* Form Fields */}
                     <div className="space-y-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">{t("username")}</label>
                         {isEditing ? (
-                          <input
-                            type="text"
-                            name="username"
-                            value={formData.username}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              name="username"
+                              value={formData.username}
+                              onChange={handleInputChange}
+                              className={`w-full px-4 py-3 bg-gray-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${formErrors.username
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                                : 'border-gray-600 focus:border-orange-500 focus:ring-orange-500/20'
+                                }`}
+                            />
+                            {formErrors.username && (
+                              <p className="mt-1 text-sm text-red-400">{formErrors.username}</p>
+                            )}
+                          </div>
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
                             {user?.username || t("notSet")}
@@ -340,13 +430,21 @@ export default function ProfilePage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">{t("email")}</label>
                         {isEditing ? (
-                          <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                          />
+                          <div>
+                            <input
+                              type="email"
+                              name="email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              className={`w-full px-4 py-3 bg-gray-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${formErrors.email
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                                : 'border-gray-600 focus:border-orange-500 focus:ring-orange-500/20'
+                                }`}
+                            />
+                            {formErrors.email && (
+                              <p className="mt-1 text-sm text-red-400">{formErrors.email}</p>
+                            )}
+                          </div>
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
                             {user?.email || t("notSet")}
@@ -357,14 +455,22 @@ export default function ProfilePage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">{t("firstName")}</label>
                         {isEditing ? (
-                          <input
-                            type="text"
-                            name="first_name"
-                            value={formData.first_name}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                            placeholder={t("enterFirstName")}
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              name="first_name"
+                              value={formData.first_name}
+                              onChange={handleInputChange}
+                              className={`w-full px-4 py-3 bg-gray-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${formErrors.first_name
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                                : 'border-gray-600 focus:border-orange-500 focus:ring-orange-500/20'
+                                }`}
+                              placeholder={t("enterFirstName")}
+                            />
+                            {formErrors.first_name && (
+                              <p className="mt-1 text-sm text-red-400">{formErrors.first_name}</p>
+                            )}
+                          </div>
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
                             {user?.first_name || t("notSet")}
@@ -375,14 +481,22 @@ export default function ProfilePage() {
                       <div>
                         <label className="block text-sm font-medium text-gray-300 mb-2">{t("lastName")}</label>
                         {isEditing ? (
-                          <input
-                            type="text"
-                            name="last_name"
-                            value={formData.last_name}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all"
-                            placeholder={t("enterLastName")}
-                          />
+                          <div>
+                            <input
+                              type="text"
+                              name="last_name"
+                              value={formData.last_name}
+                              onChange={handleInputChange}
+                              className={`w-full px-4 py-3 bg-gray-700/50 border rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 transition-all ${formErrors.last_name
+                                ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                                : 'border-gray-600 focus:border-orange-500 focus:ring-orange-500/20'
+                                }`}
+                              placeholder={t("enterLastName")}
+                            />
+                            {formErrors.last_name && (
+                              <p className="mt-1 text-sm text-red-400">{formErrors.last_name}</p>
+                            )}
+                          </div>
                         ) : (
                           <div className="w-full px-4 py-3 bg-gray-700/30 border border-gray-600/50 rounded-xl text-white">
                             {user?.last_name || t("notSet")}

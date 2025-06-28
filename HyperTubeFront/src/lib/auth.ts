@@ -87,7 +87,7 @@ export const authService = {
 
   async updateProfile(userId: string, data: UpdateProfileData | FormData) {
     const config = data instanceof FormData 
-      ? { headers: { "Content-Type": "multipart/form-data" } }
+      ? { headers: {} }
       : {};
     const response = await api.patch(`/users/${userId}/`, data, config);
     return response.data;

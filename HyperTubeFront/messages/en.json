@@ -242,6 +242,10 @@
     "passwordUppercase": "Password must contain at least one uppercase letter",
     "passwordNumber": "Password must contain at least one number",
     "passwordSpecialChar": "Password must contain at least one special character",
+    "pleaseFixErrors": "Please fix the errors before saving",
+    "invalidFileType": "Please select a valid image file",
+    "fileTooLarge": "File size must be less than 5MB",
+    "fileReadError": "Error reading file",
     "errorLoadingProfile": "Error loading profile"
   },
   "Auth": {

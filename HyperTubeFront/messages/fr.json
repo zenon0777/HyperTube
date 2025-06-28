@@ -242,6 +242,10 @@
     "passwordUppercase": "Le mot de passe doit contenir au moins une lettre majuscule",
     "passwordNumber": "Le mot de passe doit contenir au moins un chiffre",
     "passwordSpecialChar": "Le mot de passe doit contenir au moins un caractère spécial",
+    "pleaseFixErrors": "Veuillez corriger les erreurs avant de sauvegarder",
+    "invalidFileType": "Veuillez sélectionner un fichier image valide",
+    "fileTooLarge": "La taille du fichier doit être inférieure à 5 Mo",
+    "fileReadError": "Erreur lors de la lecture du fichier",
     "errorLoadingProfile": "Erreur lors du chargement du profil"
   },
   "Auth": {
