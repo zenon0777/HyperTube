@@ -15,8 +15,6 @@ interface MovieData {
   vote_average?: number;
   overview?: string;
   id?: string | number;
-
-  // YTS fields
   title_long?: string;
   medium_cover_image?: string;
   large_cover_image?: string;
@@ -24,8 +22,6 @@ interface MovieData {
   rating?: string | number;
   summary?: string;
   synopsis?: string;
-
-  // Generic fields
   poster?: string;
   is_watched?: boolean;
 }
@@ -105,21 +101,23 @@ const MovieCard: React.FC<MovieCardProps> = ({
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             src={posterUrl}
             alt={`Poster for ${title}`}
-            fill
             className="transition-opacity duration-300 group-hover:opacity-60"
             priority={true}
+            fill
             unoptimized={provider === "YTS"}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = "https://placehold.co/500x750.png?text=No+Image";
+              (e.target as HTMLImageElement).src = "https://placehold.co/500x750.png";
               (e.target as HTMLImageElement).alt = "Image not available";
             }}
           />
         ) : (
           <div className="w-full h-full bg-gray-700 flex items-center justify-center">
             <Image
-              src="https://placehold.co/500x750.png?text=No+Image"
+              width={500}
+              height={750}
+              className="object-cover"
+              src="https://placehold.co/500x750.png"
               alt="Image not available"
-              fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>

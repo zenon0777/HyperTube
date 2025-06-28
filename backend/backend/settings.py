@@ -10,6 +10,8 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
+APPEND_SLASH = False
+
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='key-not-found')
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 

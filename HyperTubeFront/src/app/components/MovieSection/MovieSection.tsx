@@ -6,6 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useRouter } from 'next/navigation';
 import { getGenres } from "@/app/data/NavBarElements";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 interface Movie {
   id: string | number;
@@ -68,12 +69,12 @@ export const MovieSection = ({
             viewport={{ once: true }}
             className="flex items-center px-4 py-1 border-2 border-white rounded-full"
           >
-            <a
-              href="#"
+            <Link
+              href={`/browse/movie`}
               className="text-white text-sm sm:text-md relative group hover:text-[#FB9722] transition"
             >
               {t("movieSection.viewAll")}
-            </a>
+            </Link>
           </motion.div>
         </div>
 
@@ -109,7 +110,7 @@ export const MovieSection = ({
                       (movie.large_cover_image && movie.large_cover_image) ||
                       (movie.poster_path &&
                         `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
-                      `https://placehold.co/300x450?text=${movie.name || movie.title}`
+                      `https://placehold.co/300x450.png`
                     }
                     alt={movie.title || movie.name || "Movie"}
                     width={300}
@@ -117,28 +118,6 @@ export const MovieSection = ({
                     priority
                     className="xs:w-[180px] sm:w-[200px] md:[w-300px] lg:w-[300px] h-auto rounded-xl shadow-lg"
                   />
-
-                  {/* {movie.is_watched && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg"
-                    >
-                      <span>✓</span>
-                      <span className="hidden sm:inline">Watched</span>
-                    </motion.div>
-                  )}
-                  
-                  {movie.is_watched === false && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="absolute top-2 right-2 bg-gray-600 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 shadow-lg"
-                    >
-                      <span>○</span>
-                      <span className="hidden sm:inline">Unwatched</span>
-                    </motion.div>
-                  )} */}
                 </div>
 
                 <div
@@ -186,8 +165,8 @@ export const MovieSection = ({
                     className="mt-1"
                   >
                     <span className={`text-xs px-2 py-1 rounded-full ${movie.is_watched
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-gray-500/20 text-gray-400'
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-gray-500/20 text-gray-400'
                       }`}>
                       {movie.is_watched ? '✓ Watched' : '○ Not Watched'}
                     </span>
