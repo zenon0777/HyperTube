@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Mail, ArrowRight, Film } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'react-toastify';
 import { authService } from '@/lib/auth';
 import { FormInput } from '../components/FormInput';
@@ -10,6 +11,7 @@ export default function PasswordResetRequest() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const router = useRouter();
+  const t = useTranslations('Auth.resetPassword');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,11 +19,11 @@ export default function PasswordResetRequest() {
 
     try {
       await authService.requestPasswordReset(email);
-      toast.success('Password reset link has been sent to your email');
+      toast.success(t('resetLinkSent'));
       router.push('/login');
     } catch (error: unknown) {
       console.log('Password reset request error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send reset email. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : t('resetFailed');
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -37,9 +39,9 @@ export default function PasswordResetRequest() {
           </div>
         </div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent mb-2">
-          Reset Password
+          {t('title')}
         </h1>
-        <p className="text-gray-400">Enter your email to receive a reset link</p>
+        <p className="text-gray-400">{t('subtitle')}</p>
       </div>
 
       <div className="mt-8 backdrop-blur-md bg-gray-800/30 p-8 rounded-2xl shadow-2xl border border-gray-700/50">
@@ -48,10 +50,10 @@ export default function PasswordResetRequest() {
             id="email"
             name="email"
             type="email"
-            label="Email"
+            label={t('email')}
             value={email}
             Icon={Mail}
-            placeholder="Enter your email"
+            placeholder={t('enterEmail')}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
           />
 
@@ -61,7 +63,7 @@ export default function PasswordResetRequest() {
             className="w-full relative group bg-gradient-to-r from-orange-500 to-orange-400 text-white py-3 px-4 rounded-xl hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200 overflow-hidden"
           >
             <span className={`flex items-center justify-center gap-2 transition-all duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-              Send Reset Link
+              {t('sendResetLink')}
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-200" />
             </span>
             {isLoading && (
@@ -77,7 +79,7 @@ export default function PasswordResetRequest() {
               onClick={() => router.push('/login')}
               className="text-orange-400 hover:text-orange-300 font-medium transition-colors duration-200"
             >
-              Back to Login
+              {t('backToLogin')}
             </button>
           </div>
         </form>

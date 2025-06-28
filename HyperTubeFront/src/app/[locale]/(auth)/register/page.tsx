@@ -1,11 +1,14 @@
 "use client";
 import { User, Mail, Lock, Film, ArrowRight } from "lucide-react";
+import { useTranslations } from 'next-intl';
 import { FormInput } from "../components/FormInput";
 import { ProfilePictureUpload } from "../components/ProfilePictureUpload";
 import { SocialLoginButtons } from "../components/SocialLoginButtons";
 import { useRegistrationForm } from "../hooks/useRegistrationForm";
 
 export default function RegisterPage() {
+	const t = useTranslations('Auth.register');
+	
 	const {
 		// State
 		step,
@@ -37,7 +40,7 @@ export default function RegisterPage() {
 					</div>
 				</div>
 				<h1 className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent mb-2">
-					Join MovieTube
+					{t('title')}
 				</h1>
 			</div>
 			<div className="mt-8 backdrop-blur-sm bg-gray-800/50 p-8 rounded-2xl shadow-2xl border border-gray-700/50">		  {/* Step indicator */}
@@ -61,14 +64,14 @@ export default function RegisterPage() {
 
 				<form onSubmit={handleSubmit} className="space-y-6">
 					{step === 1 ? (
-						<>				<FormInput
+						<>						<FormInput
 							id="username"
 							name="username"
 							type="text"
-							label="Username"
+							label={t('username')}
 							value={formData.username}
 							Icon={User}
-							placeholder="Choose a username"
+							placeholder={t('chooseUsername')}
 							onChange={handleChange}
 							error={errors.username}
 						/>
@@ -77,10 +80,10 @@ export default function RegisterPage() {
 									id="first_name"
 									name="first_name"
 									type="text"
-									label="First Name"
+									label={t('firstName')}
 									value={formData.first_name}
 									Icon={User}
-									placeholder="First name"
+									placeholder={t('enterFirstName')}
 									onChange={handleChange}
 									error={errors.first_name}
 								/>
@@ -89,10 +92,10 @@ export default function RegisterPage() {
 									id="last_name"
 									name="last_name"
 									type="text"
-									label="Last Name"
+									label={t('lastName')}
 									value={formData.last_name}
 									Icon={User}
-									placeholder="Last name"
+									placeholder={t('enterLastName')}
 									onChange={handleChange}
 									error={errors.last_name}
 								/>
@@ -101,10 +104,10 @@ export default function RegisterPage() {
 								id="email"
 								name="email"
 								type="email"
-								label="Email Address"
+								label={t('email')}
 								value={formData.email}
 								Icon={Mail}
-								placeholder="Enter your email"
+								placeholder={t('enterEmail')}
 								onChange={handleChange}
 								error={errors.email}
 							/>
@@ -112,10 +115,10 @@ export default function RegisterPage() {
 								id="password"
 								name="password"
 								type={showPassword ? "text" : "password"}
-								label="Password"
+								label={t('password')}
 								value={formData.password}
 								Icon={Lock}
-								placeholder="Create a password"
+								placeholder={t('enterPassword')}
 								onChange={handleChange}
 								showPasswordToggle
 								showPassword={showPassword}
@@ -127,10 +130,10 @@ export default function RegisterPage() {
 								id="password2"
 								name="password2"
 								type={showConfirmPassword ? "text" : "password"}
-								label="Confirm Password"
+								label={t('confirmPassword')}
 								value={formData.password2}
 								Icon={Lock}
-								placeholder="Confirm your password"
+								placeholder={t('confirmPasswordPlaceholder')}
 								onChange={handleChange}
 								showPasswordToggle
 								showPassword={showConfirmPassword}
@@ -142,10 +145,10 @@ export default function RegisterPage() {
 						</>) : (<>
 							<div className="text-center mb-4">
 								<h3 className="text-lg font-medium text-gray-200 mb-2">
-									Profile Picture
+									{t('profilePicture')}
 								</h3>
 								<p className="text-sm text-gray-400">
-									Please upload a profile picture to complete your registration.
+									{t('uploadPhoto')}
 								</p>
 							</div>
 
@@ -198,7 +201,7 @@ export default function RegisterPage() {
 							className={`flex items-center justify-center gap-2 transition-all duration-200 ${isLoading ? "opacity-0" : "opacity-100"
 								}`}
 						>
-							{step === 1 ? "Continue" : "Create Account"}
+							{step === 1 ? t('next') : t('createAccount')}
 							<ArrowRight
 								size={20}
 								className="group-hover:translate-x-1 transition-transform duration-200"
@@ -213,13 +216,13 @@ export default function RegisterPage() {
 					{/* OAuth Login - Show only on step 1 */}
 					{step === 1 && <SocialLoginButtons onOAuthLogin={handleOAuthLogin} />}					{/* Sign In Link */}
 					<div className="text-center text-sm pt-4">
-						<span className="text-gray-400">Already have an account? </span>
+						<span className="text-gray-400">{t('alreadyHaveAccount')} </span>
 						<button
 							type="button"
 							onClick={navigateToLogin}
 							className="text-orange-400 hover:text-orange-300 font-medium transition-colors duration-200"
 						>
-							Sign in
+							{t('signInHere')}
 						</button>
 					</div>
 				</form>

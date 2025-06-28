@@ -238,5 +238,86 @@
     "failedToChangePassword": "Échec du changement de mot de passe",
     "passwordsDontMatch": "Les nouveaux mots de passe ne correspondent pas !",    "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères !",
     "errorLoadingProfile": "Erreur lors du chargement du profil"
+  },
+  "Auth": {
+    "login": {
+      "title": "MovieTube",
+      "subtitle": "Votre portail vers un divertissement infini",
+      "username": "Nom d'utilisateur",
+      "password": "Mot de passe",
+      "enterUsername": "Entrez votre nom d'utilisateur",
+      "enterPassword": "Entrez votre mot de passe",
+      "forgotPassword": "Mot de passe oublié ?",
+      "signIn": "Se connecter",
+      "noAccount": "Vous n'avez pas de compte ?",
+      "signUpNow": "Inscrivez-vous maintenant",
+      "loginFailed": "Échec de la connexion. Veuillez réessayer."
+    },
+    "register": {
+      "title": "Rejoignez MovieTube",
+      "username": "Nom d'utilisateur",
+      "firstName": "Prénom",
+      "lastName": "Nom de famille",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "chooseUsername": "Choisissez un nom d'utilisateur",
+      "enterFirstName": "Prénom",
+      "enterLastName": "Nom de famille",
+      "enterEmail": "Entrez votre email",
+      "enterPassword": "Créez un mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "profilePicture": "Photo de profil",
+      "uploadPhoto": "Télécharger une photo",
+      "next": "Suivant",
+      "createAccount": "Créer un compte",
+      "alreadyHaveAccount": "Vous avez déjà un compte ?",
+      "signInHere": "Connectez-vous ici",
+      "registrationSuccess": "Inscription réussie ! Bienvenue sur MovieTube.",
+      "registrationFailed": "Échec de l'inscription. Veuillez réessayer.",
+      "uploadPhotoRequired": "Veuillez télécharger une photo de profil pour terminer l'inscription.",
+      "correctFieldsError": "Veuillez corriger les champs en surbrillance et réessayer.",
+      "connectionError": "Échec de l'inscription. Veuillez vérifier votre connexion et réessayer."
+    },
+    "resetPassword": {
+      "title": "Réinitialiser le mot de passe",
+      "subtitle": "Entrez votre email pour recevoir un lien de réinitialisation",
+      "email": "Email",
+      "enterEmail": "Entrez votre email",
+      "sendResetLink": "Envoyer le lien de réinitialisation",
+      "backToLogin": "Retour à la connexion",
+      "resetLinkSent": "Le lien de réinitialisation a été envoyé à votre email",
+      "resetFailed": "Échec de l'envoi de l'email de réinitialisation. Veuillez réessayer."
+    },
+    "confirmReset": {
+      "title": "Définir un nouveau mot de passe",
+      "subtitle": "Entrez votre nouveau mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "enterNewPassword": "Entrez le nouveau mot de passe",
+      "confirmNewPassword": "Confirmez le nouveau mot de passe",
+      "resetPasswordButton": "Réinitialiser le mot de passe",
+      "passwordsNoMatch": "Les mots de passe ne correspondent pas",
+      "resetSuccess": "Le mot de passe a été réinitialisé avec succès",
+      "resetFailed": "Échec de la réinitialisation du mot de passe. Veuillez réessayer."
+    },
+    "common": {
+      "loading": "Chargement...",
+      "or": "ou",
+      "continueWith": "Continuer avec"
+    },
+    "validation": {
+      "emailRequired": "L'email est requis",
+      "emailInvalid": "Veuillez entrer un email valide",
+      "usernameRequired": "Le nom d'utilisateur est requis",
+      "usernameMinLength": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+      "fieldRequired": "est requis",
+      "passwordMinLength": "Doit contenir au moins 8 caractères",
+      "passwordUppercase": "Doit contenir une majuscule",
+      "passwordNumber": "Doit contenir un chiffre",
+      "passwordSpecialChar": "Doit contenir un caractère spécial",
+      "confirmPasswordRequired": "Veuillez confirmer votre mot de passe",
+      "passwordsNoMatch": "Les mots de passe ne correspondent pas"
+    }
   }
 }

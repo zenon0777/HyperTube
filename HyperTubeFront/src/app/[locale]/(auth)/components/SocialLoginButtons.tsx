@@ -1,4 +1,5 @@
 import { Github, Chrome } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 const DiscordIcon = ({ className }: { className?: string }) => (
@@ -17,6 +18,8 @@ interface SocialLoginButtonsProps {
 }
 
 export function SocialLoginButtons({ onOAuthLogin }: SocialLoginButtonsProps) {
+    const t = useTranslations('Auth.common');
+    
     return (
         <div className="mt-4">
             <div className="relative">
@@ -24,7 +27,7 @@ export function SocialLoginButtons({ onOAuthLogin }: SocialLoginButtonsProps) {
                     <span className="w-full border-t border-gray-700" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                    <span className="bg-gray-800 px-2 text-gray-400">Or continue with</span>
+                    <span className="bg-gray-800 px-2 text-gray-400">{t('or')} {t('continueWith').toLowerCase()}</span>
                 </div>
             </div>
 
@@ -33,7 +36,7 @@ export function SocialLoginButtons({ onOAuthLogin }: SocialLoginButtonsProps) {
                 onClick={() => onOAuthLogin('42')}
                 className="mt-4 w-full flex items-center justify-center gap-3 bg-gray-700/50 text-white py-3 px-4 rounded-xl hover:bg-gray-700/70 transition-colors"
             >
-                <span>Continue with</span>
+                <span>{t('continueWith')}</span>
                 <Image
                     src="/42.png"
                     alt="42 School"
@@ -48,7 +51,7 @@ export function SocialLoginButtons({ onOAuthLogin }: SocialLoginButtonsProps) {
                     type="button"
                     onClick={() => onOAuthLogin('github')}
                     className="flex items-center justify-center p-3 bg-gray-700/50 text-white rounded-xl hover:bg-gray-700/70 transition-colors"
-                    title="Continue with GitHub"
+                    title={`${t('continueWith')} GitHub`}
                 >
                     <Github className="w-5 h-5" />
                 </button>
@@ -57,14 +60,14 @@ export function SocialLoginButtons({ onOAuthLogin }: SocialLoginButtonsProps) {
                     type="button"
                     onClick={() => onOAuthLogin('google')}
                     className="flex items-center justify-center p-3 bg-gray-700/50 text-white rounded-xl hover:bg-gray-700/70 transition-colors"
-                    title="Continue with Google"
+                    title={`${t('continueWith')} Google`}
                 >
                     <Chrome className="w-5 h-5" />
                 </button>                <button
                     type="button"
                     onClick={() => onOAuthLogin('discord')}
                     className="flex items-center justify-center p-3 bg-gray-700/50 text-white rounded-xl hover:bg-gray-700/70 transition-colors"
-                    title="Continue with Discord"
+                    title={`${t('continueWith')} Discord`}
                 >
                     <DiscordIcon className="w-5 h-5" />
                 </button>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { authService } from "@/lib/auth";
 import { toast } from "react-toastify";
 
@@ -34,6 +35,10 @@ interface FormErrors {
 }
 
 export const useRegistrationForm = () => {
+	const router = useRouter();
+	const t = useTranslations('Auth.register');
+	const tValidation = useTranslations('Auth.validation');
+	
 	const [step, setStep] = useState(1);
 	const [showPassword, setShowPassword] = useState(false);
 	const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -51,37 +56,35 @@ export const useRegistrationForm = () => {
 		profile_picture: null,
 	});
 
-	const router = useRouter();
-
 	// Reusable validation functions
 	const validators = {
 		email: (value: string): string | null => {
-			if (!value.trim()) return "Email is required";
-			if (!/\S+@\S+\.\S+/.test(value)) return "Please enter a valid email";
+			if (!value.trim()) return tValidation('emailRequired');
+			if (!/\S+@\S+\.\S+/.test(value)) return tValidation('emailInvalid');
 			return null;
 		},
 
 		username: (value: string): string | null => {
-			if (!value.trim()) return "Username is required";
-			if (value.length < 3) return "Username must be at least 3 characters";
+			if (!value.trim()) return tValidation('usernameRequired');
+			if (value.length < 3) return tValidation('usernameMinLength');
 			return null;
 		},
 
 		required: (value: string, fieldName: string): string | null => {
-			return !value.trim() ? `${fieldName} is required` : null;
+			return !value.trim() ? `${fieldName} ${tValidation('fieldRequired')}` : null;
 		},
 
 		password: (password: string): string | null => {
-			if (password.length < 8) return "Must be at least 8 chars";
-			if (!/[A-Z]/.test(password)) return "Must contain uppercase";
-			if (!/[0-9]/.test(password)) return "Must contain number";
-			if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return "Must contain special char";
+			if (password.length < 8) return tValidation('passwordMinLength');
+			if (!/[A-Z]/.test(password)) return tValidation('passwordUppercase');
+			if (!/[0-9]/.test(password)) return tValidation('passwordNumber');
+			if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return tValidation('passwordSpecialChar');
 			return null;
 		},
 
 		passwordConfirmation: (password: string, confirmPassword: string): string | null => {
-			if (!confirmPassword) return "Please confirm your password";
-			if (password !== confirmPassword) return "Passwords don't match";
+			if (!confirmPassword) return tValidation('confirmPasswordRequired');
+			if (password !== confirmPassword) return tValidation('passwordsNoMatch');
 			return null;
 		}
 	};
@@ -96,10 +99,10 @@ export const useRegistrationForm = () => {
 		const usernameError = validators.username(formData.username);
 		if (usernameError) newErrors.username = usernameError;
 
-		const firstNameError = validators.required(formData.first_name, "First name");
+		const firstNameError = validators.required(formData.first_name, t('firstName'));
 		if (firstNameError) newErrors.first_name = firstNameError;
 
-		const lastNameError = validators.required(formData.last_name, "Last name");
+		const lastNameError = validators.required(formData.last_name, t('lastName'));
 		if (lastNameError) newErrors.last_name = lastNameError;
 
 		const passwordError = validators.password(formData.password);
@@ -114,7 +117,7 @@ export const useRegistrationForm = () => {
 
 	const validateStep2 = () => {
 		if (!formData.profile_picture) {
-			toast.error("Please upload a profile picture to complete registration.");
+			toast.error(t('uploadPhotoRequired'));
 			return false;
 		}
 		return true;
@@ -202,7 +205,7 @@ export const useRegistrationForm = () => {
 		try {
 			const submissionData = createSubmissionData();
 			await authService.register(submissionData);
-			toast.success("Account created successfully! Welcome to MovieTube!");
+			toast.success(t('registrationSuccess'));
 			router.push("/home");
 		} catch (error: unknown) {
 			setErrors({});
@@ -213,13 +216,13 @@ export const useRegistrationForm = () => {
 				// Field-specific errors - go back to step 1
 				setErrors(backendErrors);
 				setStep(1);
-				toast.error("Please correct the highlighted fields and try again.");
+				toast.error(t('correctFieldsError'));
 			} else {
 				// General error handling
 				const errorResponse = error as { response?: { data?: { message?: string } }; message?: string };
 				const errorMessage = errorResponse.response?.data?.message ||
 					errorResponse.message ||
-					"Registration failed. Please check your connection and try again.";
+					t('connectionError');
 				toast.error(errorMessage);
 			}
 		} finally {

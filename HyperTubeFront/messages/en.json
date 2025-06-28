@@ -238,5 +238,86 @@
     "failedToChangePassword": "Failed to change password",
     "passwordsDontMatch": "New passwords don't match!",    "passwordTooShort": "Password must be at least 8 characters long!",
     "errorLoadingProfile": "Error loading profile"
+  },
+  "Auth": {
+    "login": {
+      "title": "MovieTube",
+      "subtitle": "Your gateway to endless entertainment",
+      "username": "Username",
+      "password": "Password",
+      "enterUsername": "Enter username",
+      "enterPassword": "Enter password",
+      "forgotPassword": "Forgot password?",
+      "signIn": "Sign In",
+      "noAccount": "Don't have an account?",
+      "signUpNow": "Sign up now",
+      "loginFailed": "Login failed. Please try again."
+    },
+    "register": {
+      "title": "Join MovieTube",
+      "username": "Username",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "chooseUsername": "Choose a username",
+      "enterFirstName": "First name",
+      "enterLastName": "Last name",
+      "enterEmail": "Enter your email",
+      "enterPassword": "Create a password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "profilePicture": "Profile Picture",
+      "uploadPhoto": "Upload a photo",
+      "next": "Next",
+      "createAccount": "Create Account",
+      "alreadyHaveAccount": "Already have an account?",
+      "signInHere": "Sign in here",
+      "registrationSuccess": "Registration successful! Welcome to MovieTube.",
+      "registrationFailed": "Registration failed. Please try again.",
+      "uploadPhotoRequired": "Please upload a profile picture to complete registration.",
+      "correctFieldsError": "Please correct the highlighted fields and try again.",
+      "connectionError": "Registration failed. Please check your connection and try again."
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email to receive a reset link",
+      "email": "Email",
+      "enterEmail": "Enter your email",
+      "sendResetLink": "Send Reset Link",
+      "backToLogin": "Back to Login",
+      "resetLinkSent": "Password reset link has been sent to your email",
+      "resetFailed": "Failed to send reset email. Please try again."
+    },
+    "confirmReset": {
+      "title": "Set New Password",
+      "subtitle": "Enter your new password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "enterNewPassword": "Enter new password",
+      "confirmNewPassword": "Confirm new password",
+      "resetPasswordButton": "Reset Password",
+      "passwordsNoMatch": "Passwords do not match",
+      "resetSuccess": "Password has been reset successfully",
+      "resetFailed": "Password reset failed. Please try again."
+    },
+    "common": {
+      "loading": "Loading...",
+      "or": "or",
+      "continueWith": "Continue with"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email",
+      "usernameRequired": "Username is required",
+      "usernameMinLength": "Username must be at least 3 characters",
+      "fieldRequired": "is required",
+      "passwordMinLength": "Must be at least 8 chars",
+      "passwordUppercase": "Must contain uppercase",
+      "passwordNumber": "Must contain number",
+      "passwordSpecialChar": "Must contain special char",
+      "confirmPasswordRequired": "Please confirm your password",
+      "passwordsNoMatch": "Passwords don't match"
+    }
   }
 }

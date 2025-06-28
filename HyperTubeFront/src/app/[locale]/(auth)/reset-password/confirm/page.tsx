@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Lock, ArrowRight, Film } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { toast } from 'react-toastify';
 import { authService } from '@/lib/auth';
 import { FormInput } from '../../components/FormInput';
@@ -16,6 +17,7 @@ export default function PasswordResetConfirm() {
   });
   
   const router = useRouter();
+  const t = useTranslations('Auth.confirmReset');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -27,7 +29,7 @@ export default function PasswordResetConfirm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.password2) {
-      toast.error('Passwords do not match');
+      toast.error(t('passwordsNoMatch'));
       return;
     }
     
@@ -38,11 +40,11 @@ export default function PasswordResetConfirm() {
       const token = params.get('token');
       const user = params.get('user');
       await authService.resetPassword(token!, formData.password, formData.password2 , user!);
-      toast.success('Password has been reset successfully');
+      toast.success(t('resetSuccess'));
       router.push('/login');
     } catch (error: unknown) {
       console.log('Password reset error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Password reset failed. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : t('resetFailed');
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -58,9 +60,9 @@ export default function PasswordResetConfirm() {
           </div>
         </div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent mb-2">
-          Set New Password
+          {t('title')}
         </h1>
-        <p className="text-gray-400">Enter your new password</p>
+        <p className="text-gray-400">{t('subtitle')}</p>
       </div>
 
       <div className="mt-8 backdrop-blur-md bg-gray-800/30 p-8 rounded-2xl shadow-2xl border border-gray-700/50">
@@ -69,10 +71,10 @@ export default function PasswordResetConfirm() {
             id="password"
             name="password"
             type={showPassword ? 'text' : 'password'}
-            label="New Password"
+            label={t('newPassword')}
             value={formData.password}
             Icon={Lock}
-            placeholder="Enter new password"
+            placeholder={t('enterNewPassword')}
             onChange={handleChange}
             showPasswordToggle
             showPassword={showPassword}
@@ -83,10 +85,10 @@ export default function PasswordResetConfirm() {
             id="password2"
             name="password2"
             type={showConfirmPassword ? 'text' : 'password'}
-            label="Confirm Password"
+            label={t('confirmPassword')}
             value={formData.password2}
             Icon={Lock}
-            placeholder="Confirm new password"
+            placeholder={t('confirmNewPassword')}
             onChange={handleChange}
             showPasswordToggle
             showPassword={showConfirmPassword}
@@ -99,7 +101,7 @@ export default function PasswordResetConfirm() {
             className="w-full relative group bg-gradient-to-r from-orange-500 to-orange-400 text-white py-3 px-4 rounded-xl hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:ring-offset-gray-800 transition-all duration-200 overflow-hidden"
           >
             <span className={`flex items-center justify-center gap-2 transition-all duration-200 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-              Reset Password
+              {t('resetPasswordButton')}
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform duration-200" />
             </span>
             {isLoading && (
