@@ -92,8 +92,8 @@ export const authService = {
     const response = await api.patch(`/users/${userId}/`, data, config);
     return response.data;
   },
-  async changePassword(passwordData: { old_password: string; new_password: string }) {
-    const response = await api.post("/auth/change-password/", passwordData);
+  async changePassword(passwordData: { old_password: string; new_password: string; new_password2: string }) {
+    const response = await api.post("/password/change/", passwordData);
     return response.data;
   },
 

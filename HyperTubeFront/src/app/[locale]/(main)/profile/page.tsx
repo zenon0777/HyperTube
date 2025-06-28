@@ -54,6 +54,15 @@ export default function ProfilePage() {
   });
   const [profileFile, setProfileFile] = useState<File | null>(null);
 
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) return t('passwordMinLength');
+    if (!/[A-Z]/.test(password)) return t('passwordUppercase');
+    if (!/[0-9]/.test(password)) return t('passwordNumber');
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) return t('passwordSpecialChar');
+    return null;
+  };
+
   useEffect(() => {
     if (!user) {
       dispatch(getUserProfile());
@@ -111,15 +120,18 @@ export default function ProfilePage() {
       return;
     }
 
-    if (passwordData.new_password.length < 8) {
-      toast.error(t("passwordTooShort"));
+    // Validate the new password
+    const passwordError = validatePassword(passwordData.new_password);
+    if (passwordError) {
+      toast.error(passwordError);
       return;
     }
 
     try {
       await authService.changePassword({
         old_password: passwordData.old_password,
-        new_password: passwordData.new_password
+        new_password: passwordData.new_password,
+        new_password2: passwordData.confirm_password
       });
 
       setPasswordData({
