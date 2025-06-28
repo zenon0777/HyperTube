@@ -212,6 +212,25 @@ export default function ProfilePage() {
     }
   };
 
+  const parseBackendErrors = (errorResponse: { data?: Record<string, string | string[]> }) => {
+    const newErrors = {
+      username: "",
+      email: "",
+      first_name: "",
+      last_name: ""
+    };
+
+    if (errorResponse?.data) {
+      Object.entries(errorResponse.data).forEach(([field, error]) => {
+        if (field in newErrors) {
+          newErrors[field as keyof typeof newErrors] = Array.isArray(error) ? error[0] : error;
+        }
+      });
+    }
+
+    return newErrors;
+  };
+
   const handleSaveProfile = async () => {
     if (!user?.id) return;
 
@@ -232,7 +251,8 @@ export default function ProfilePage() {
       if (profileFile) {
         updateData.append('profile_picture', profileFile);
       }
-      authService.updateProfile(user.id, updateData);
+      
+      await authService.updateProfile(user.id, updateData);
 
       setProfileFile(null);
 
@@ -243,8 +263,15 @@ export default function ProfilePage() {
       setIsEditing(false);
       toast.success(t("profileUpdatedSuccess"));
 
-    } catch{
-      toast.error(t("failedToUpdateProfile"));
+    } catch (error: unknown) {
+      const backendErrors = parseBackendErrors((error as { response?: { data?: Record<string, string | string[]> } }).response || {});
+
+      if (Object.keys(backendErrors).some(key => backendErrors[key as keyof typeof backendErrors] !== "")) {
+        setFormErrors(backendErrors);
+        toast.error(t("pleaseFixErrors") || "Please fix the errors before saving");
+      } else {
+        toast.error(t("failedToUpdateProfile"));
+      }
     }
   };
   const handleEditProfile = () => {

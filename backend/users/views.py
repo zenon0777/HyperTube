@@ -250,11 +250,26 @@ class UserManagementView(APIView):
            user = User.objects.get(id=id)
            if request.user != user:
                return Response({'error': 'Permission denied'}, status=403)
+           
            data = request.data
+           errors = {}
+
            if 'username' in data:
-               user.username = data['username']
+               new_username = data['username'].strip()
+               if new_username != user.username and User.objects.filter(username=new_username).exists():
+                   errors['username'] = 'A user with this username already exists.'
+               else:
+                   user.username = new_username
+
            if 'email' in data:
-               user.email = data['email']
+               new_email = data['email'].strip()
+               if new_email != user.email and User.objects.filter(email=new_email).exists():
+                   errors['email'] = 'A user with this email already exists.'
+               else:
+                   user.email = new_email
+           if errors:
+               return Response(errors, status=400)
+
            if 'first_name' in data:
                user.first_name = data['first_name']
            if 'last_name' in data:
