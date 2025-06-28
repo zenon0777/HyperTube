@@ -2,10 +2,10 @@ import { MdComment, MdSend } from "react-icons/md";
 import { FaRegCommentDots } from "react-icons/fa";
 import { motion } from "framer-motion";
 import React, { useState, useEffect } from "react";
-import api from "@/lib/axios";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
 import UserCard from "@/components/UserCard";
+import api from "@/lib/axios";
 
 const CommentsSection = ({
   movieId,
@@ -34,19 +34,17 @@ const CommentsSection = ({
   useEffect(() => {
     const fetchComments = async () => {
       try {
-        const response = await fetch(
+        const response = await api.get(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/${movieId}/comments/`,
           {
-            method: "GET",
             headers: {
               "Content-Type": "application/json",
             },
-            credentials: "include",
           }
         );
 
-        if (response.ok) {
-          const data = await response.json();
+        if (response.status === 200) {
+          const data = await response.data;
           setComments(data.comments || []);
         }
       } catch (error) {
@@ -82,12 +80,6 @@ const CommentsSection = ({
         `/movies/${movieId}/comments/add/`,
         {
           comment: newComment.trim(),
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
         }
       );
 
@@ -193,7 +185,6 @@ const CommentsSection = ({
         )}
       </div>
 
-      {/* Comments List */}
       <div className="space-y-4">
         {isLoadingComments ? (
           <div className="flex items-center justify-center py-8">
@@ -211,12 +202,12 @@ const CommentsSection = ({
           comments.map((comment, index) => (
             <motion.div
               key={comment.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="p-4 bg-gray-800/30 rounded-lg hover:bg-gray-700/30 transition-colors"
+              className="p-5 bg-gray-800/40 rounded-xl hover:bg-gray-700/40 transition-colors shadow-sm"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-4">
                 {comment.user?.id && (
                   <UserCard
                     user={{
@@ -230,15 +221,12 @@ const CommentsSection = ({
                 )}
 
                 <div className="flex-grow">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
-                        {formatDate(comment.created_at)}
-                      </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-sm text-gray-400">
+                      <span>{formatDate(comment.created_at)}</span>
                     </div>
                   </div>
-
-                  <p className="text-gray-300 leading-relaxed">
+                  <p className="text-gray-200 leading-relaxed text-sm sm:text-base">
                     {comment.comment}
                   </p>
                 </div>

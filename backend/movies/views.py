@@ -554,15 +554,8 @@ def tmdb_movie_detail(request, id):
                     {"error": "No movie found for the given ID"}, status=404
                 )
             return JsonResponse({"movie": movie}, status=200)
-
         except requests.exceptions.RequestException as e:
             return JsonResponse({"error": f"TMDB API error: {str(e)}"}, status=500)
-        except environ.ImproperlyConfigured:
-            return JsonResponse(
-                {"error": "Environment variable TMDB_API_KEY is not set"}, status=500
-            )
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Only GET requests are allowed"}, status=405)
 

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import api from "@/lib/axios";
 
 interface Movie {
   id: number;
@@ -29,11 +30,11 @@ function PopularMoviesSection() {
   useEffect(() => {
     const fetchPopularMovies = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies`
+        const res = await api.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/`
         );
-        if (!res.ok) throw new Error("Failed to fetch movies");
-        const data: MoviesResponse = await res.json();
+        if (res.status !== 200) throw new Error("Failed to fetch movies");
+        const data: MoviesResponse = await res.data;
         setPopularMovies(data.movies.results);
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : "Failed to fetch movies";
@@ -76,6 +77,7 @@ function PopularMoviesSection() {
                     src={`https://image.tmdb.org/t/p/w500${movie.backdrop_path}`}
                     alt={movie.title}
                     fill
+                    priority
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover"
                   />

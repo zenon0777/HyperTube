@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import MoviesList from "./components/MovieList";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { useTranslations } from "next-intl";
+import api from "@/lib/axios";
 
 export interface CategoryOptions {
   id: string;
@@ -71,11 +72,13 @@ export default function Browse() {
 
   const qualityOptions = ["480p", "720p", "1080p", "2160p"];
   const yearOptions = ["2020", "2021", "2022", "2023", "2024"];
-  const orderOptions = [t('browse.filters.ascending'), t('browse.filters.descending')];
+  const orderOptions = [
+    t("browse.filters.ascending"),
+    t("browse.filters.descending"),
+  ];
 
-  // Memoize category IDs for stable dependency tracking
-  const categoryIds = useMemo(() =>
-    activeFilters.categories.map(cat => cat.id).join(','),
+  const categoryIds = useMemo(
+    () => activeFilters.categories.map((cat) => cat.id).join(","),
     [activeFilters.categories]
   );
 
@@ -83,19 +86,14 @@ export default function Browse() {
     const get_is_watched_movie = async () => {
       await movies.forEach(async (movie: MovieData) => {
         try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
-            {
-              credentials: "include",
-            }
+          const response = await api(
+            `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}/`
           );
-          if (!response.ok) throw new Error("Failed to fetch is watched movie");
-          const data = await response.json();
+          if (!response) throw new Error("Failed to fetch is watched movie");
+          const data = await response.data;
           movie.is_watched = data.is_watched;
         } catch (err: unknown) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to fetch is watched movie';
-          console.error("Error fetching is watched movie:", errorMessage);
-          toast.error("Could not load is watched movie.");
+          return err;
         }
       });
     };
@@ -110,7 +108,8 @@ export default function Browse() {
         const data = await response.json();
         setCategoryOptions(data.genres || []);
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch genres';
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch genres";
         console.error("Error fetching genres:", errorMessage);
         toast.error("Could not load genre options.");
         setCategoryOptions([]);
@@ -177,12 +176,10 @@ export default function Browse() {
               url += "&sort_by=popularity.desc";
             }
           }
-          const response = await fetch(url, {
-            credentials: "include",
-          });
-          if (!response.ok)
+          const response = await api(url);
+          if (response.status !== 200)
             throw new Error(`TMDB API Error: ${response.statusText}`);
-          const data = await response.json();
+          const data = await response.data;
           newMovies = data.movies?.results || [];
           newTotalPages = data.movies?.total_pages || 1;
           success = true;
@@ -205,12 +202,10 @@ export default function Browse() {
               url += "&order_by=desc";
             }
           }
-          const response = await fetch(url, {
-            credentials: "include",
-          });
-          if (!response.ok)
+          const response = await api(url);
+          if (response.status !== 200)
             throw new Error(`YTS API Error: ${response.statusText}`);
-          const data = await response.json();
+          const data = await response.data;
           newMovies = data.data?.movies || [];
           const movieCount = data.data?.movie_count || 0;
           newTotalPages = Math.ceil(movieCount / 20) || 1;
@@ -224,7 +219,8 @@ export default function Browse() {
           setHasMore(page < newTotalPages && newMovies.length > 0);
         }
       } catch (err: unknown) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch movies';
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch movies";
         toast.error(`Error fetching movies: ${errorMessage}`);
         setHasMore(false);
       } finally {
@@ -241,7 +237,7 @@ export default function Browse() {
     activeFilters.orderBy,
     categoryIds,
     activeFilters.provider,
-    hasMore
+    hasMore,
   ]);
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -301,7 +297,9 @@ export default function Browse() {
               >
                 <div className="flex items-center space-x-2">
                   <FilterList className="text-orange-500 group-hover:rotate-45 transition-transform" />
-                  <h2 className="text-lg font-semibold">{t('browse.filters.quality')}</h2>
+                  <h2 className="text-lg font-semibold">
+                    {t("browse.filters.quality")}
+                  </h2>
                 </div>
                 {openSections.quality ? (
                   <Remove className="text-orange-500" />
@@ -340,7 +338,9 @@ export default function Browse() {
             >
               <div className="flex items-center space-x-2">
                 <CalendarMonth className="text-orange-500 group-hover:scale-110 transition-transform" />
-                <h2 className="text-lg font-semibold">{t('browse.filters.releaseYear')}</h2>
+                <h2 className="text-lg font-semibold">
+                  {t("browse.filters.releaseYear")}
+                </h2>
               </div>
               {openSections.years ? (
                 <Remove className="text-orange-500" />
@@ -377,7 +377,9 @@ export default function Browse() {
             >
               <div className="flex items-center space-x-2">
                 <Sort className="text-orange-500 group-hover:rotate-180 transition-transform" />
-                <h2 className="text-lg font-semibold">{t('browse.filters.orderBy')}</h2>
+                <h2 className="text-lg font-semibold">
+                  {t("browse.filters.orderBy")}
+                </h2>
               </div>
               {openSections.orderBy ? (
                 <Remove className="text-orange-500" />
@@ -414,7 +416,9 @@ export default function Browse() {
             >
               <div className="flex items-center space-x-2">
                 <Category className="text-orange-500 group-hover:scale-110 transition-transform" />
-                <h2 className="text-lg font-semibold">{t('browse.filters.categories')}</h2>
+                <h2 className="text-lg font-semibold">
+                  {t("browse.filters.categories")}
+                </h2>
               </div>
               {openSections.categories ? (
                 <Remove className="text-orange-500" />
@@ -447,7 +451,7 @@ export default function Browse() {
             )}
             {openSections.categories && categoryOptions.length === 0 && (
               <p className="p-4 text-gray-400">
-                {t('browse.filters.loadingCategories')}
+                {t("browse.filters.loadingCategories")}
               </p>
             )}
           </div>

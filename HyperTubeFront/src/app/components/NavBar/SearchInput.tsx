@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { useTranslations } from "next-intl";
+import api from "@/lib/axios";
 
 interface MovieResult {
   id: number;
@@ -44,24 +45,18 @@ export default function SearchInput() {
         TMDB: `${baseUrl}tmdb_multi_search?query=${searchTerm}`,
       };
 
-      const res = await fetch(
-        endpoints[APIProvider as keyof typeof endpoints],
-        {
-          credentials: "include",
-        }
+      const res = await api.get(
+        endpoints[APIProvider as keyof typeof endpoints]
       );
-      if (!res.ok) throw new Error(`No movies found on ${APIProvider}`);
-
-      const data = await res.json();
-      console.log("search data ====> ::: ", data);
+      const data = await res.data;
       if (isYTS) {
         setResults(data.data?.movies || []);
       } else {
         setResults(data.movies?.results || []);
       }
     } catch (error: unknown) {
-      console.log("error ====> ::: ", error);
       setResults([]);
+      return error;
     } finally {
       setIsLoading(false);
     }
@@ -134,8 +129,8 @@ export default function SearchInput() {
       isYTS
         ? result.medium_cover_image
         : (result.poster_path &&
-            `https://image.tmdb.org/t/p/w300${result.poster_path}`) ||
-          `https://placehold.co/300x450?text=${title}`;
+          `https://image.tmdb.org/t/p/w300${result.poster_path}`) ||
+        `https://placehold.co/300x450.png`;
     const year = result.year
       ? result.year
       : result?.release_date?.split("-")[0];
@@ -146,9 +141,8 @@ export default function SearchInput() {
     return (
       <div
         key={`${result.id}-${index}`}
-        className={`flex w-auto items-center gap-3 p-3 cursor-pointer border-b border-gray-700/50 last:border-b-0 transition-all ${
-          isActive ? "bg-gray-700 text-orange-400" : "hover:bg-gray-700/50"
-        }`}
+        className={`flex w-auto items-center gap-3 p-3 cursor-pointer border-b border-gray-700/50 last:border-b-0 transition-all ${isActive ? "bg-gray-700 text-orange-400" : "hover:bg-gray-700/50"
+          }`}
         onClick={() => {
           router.push(`/browse/movie/${id}`);
           setSearch("");
@@ -160,7 +154,7 @@ export default function SearchInput() {
             fill
             sizes="100px"
             className="rounded-md object-cover"
-            src={posterUrl || "/placeholder-image.png"}
+            src={posterUrl || "https://placehold.co/48x64.png"}
             alt={title}
           />
         </div>

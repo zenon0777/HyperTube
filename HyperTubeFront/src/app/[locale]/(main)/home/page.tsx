@@ -15,6 +15,7 @@ import { getGenres } from "@/app/data/NavBarElements";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { MdOutlineFavorite, MdOutlineFavoriteBorder } from "react-icons/md";
+import api from "@/lib/axios";
 
 interface MovieData {
   id: number;
@@ -71,20 +72,14 @@ export default function Home() {
         const nowPlayingMoviesUrl =
           baseUrl +
           "?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&with_release_type=2|3&release_date.gte={min_date}&release_date.lte={max_date}";
-        const response = await fetch(popularMoviesUrl, {
-          credentials: "include",
-        });
-        const data: TMDBMovieListResponse = await response.json();
+        const response = await api.get(popularMoviesUrl);
+        const data: TMDBMovieListResponse = await response.data;
         setPopularMovies(data.movies?.results || []);
-        const response2 = await fetch(topRatedMoviesUrl, {
-          credentials: "include",
-        });
-        const data2: TMDBMovieListResponse = await response2.json();
+        const response2 = await api.get(topRatedMoviesUrl);
+        const data2: TMDBMovieListResponse = await response2.data;
         setTopRatedMovies(data2.movies?.results || []);
-        const response3 = await fetch(nowPlayingMoviesUrl, {
-          credentials: "include",
-        });
-        const data3: TMDBMovieListResponse = await response3.json();
+        const response3 = await api.get(nowPlayingMoviesUrl);
+        const data3: TMDBMovieListResponse = await response3.data;
         setNowPlayingMovies(data3.movies?.results || []);
       } catch (error: unknown) {
         const message =
@@ -101,20 +96,14 @@ export default function Home() {
         popularMoviesUrl += "&sort_by=download_count&order_by=desc";
         let nowPlayingMoviesUrl = baseUrl;
         nowPlayingMoviesUrl += "&sort_by=date_added&order_by=desc";
-        const response = await fetch(popularMoviesUrl, {
-          credentials: "include",
-        });
-        const data: YTSMovieListResponse = await response.json();
+        const response = await api.get(popularMoviesUrl);
+        const data: YTSMovieListResponse = await response.data;
         setPopularMovies(data.data?.movies || []);
-        const response2 = await fetch(topRatedMoviesUrl, {
-          credentials: "include",
-        });
-        const data2: YTSMovieListResponse = await response2.json();
+        const response2 = await api.get(topRatedMoviesUrl);
+        const data2: YTSMovieListResponse = await response2.data;
         setTopRatedMovies(data2.data?.movies || []);
-        const response3 = await fetch(nowPlayingMoviesUrl, {
-          credentials: "include",
-        });
-        const data3: YTSMovieListResponse = await response3.json();
+        const response3 = await api.get(nowPlayingMoviesUrl);
+        const data3: YTSMovieListResponse = await response3.data;
         setNowPlayingMovies(data3.data?.movies || []);
       } catch (error: unknown) {
         const message =
@@ -134,20 +123,14 @@ export default function Home() {
       try {
         popularMovies.forEach((movie: MovieData) => {
           try {
-            const res = fetch(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
-              {
-                credentials: "include",
-              }
+            const res = api.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}/`
             );
             res
               .then((response) => {
-                if (response.ok) {
-                  return response.json();
+                if (response.data) {
+                  return response.data;
                 }
-                // else {
-                //   throw new Error("Failed to fetch watched status");
-                // }
               })
               .then((data) => {
                 if (data.is_watched) {
@@ -155,85 +138,66 @@ export default function Home() {
                 }
               })
               .catch((error) => {
-                const message =
-                  error instanceof Error ? error.message : "An error occurred";
-                toast.error(message);
+                console.log(error);
               });
           } catch (error: unknown) {
-            const message =
-              error instanceof Error ? error.message : "An error occurred";
-            toast.error(message);
+            console.log(error);
           }
         });
         topRatedMovies.forEach((movie: MovieData) => {
           try {
-            const res = fetch(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
-              {
-                credentials: "include",
-              }
+            const res = api.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}/`
             );
             res
               .then((response) => {
-                if (response.ok) {
-                  return response.json();
+                if (response.data) {
+                  return response.data;
                 }
-                //  else {
-                //   throw new Error("Failed to fetch watched status");
-                // }
               })
               .then((data) => {
                 if (data.is_watched) {
                   movie.is_watched = true;
                 }
+                if (data.success) {
+                  return
+                }
               })
               .catch((error) => {
-                const message =
-                  error instanceof Error ? error.message : "An error occurred";
-                toast.error(message);
+                console.log(error);
               });
           } catch (error: unknown) {
-            const message =
-              error instanceof Error ? error.message : "An error occurred";
-            toast.error(message);
+            console.log(error);
           }
         });
         nowPlayingMovies.forEach((movie: MovieData) => {
           try {
-            const res = fetch(
-              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}`,
-              {
-                credentials: "include",
-              }
+            const res = api.get(
+              `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movie.id}/`
             );
             res
               .then((response) => {
-                if (response.ok) {
-                  return response.json();
-                  // } else {
-                  //   throw new Error("Failed to fetch watched status");
+                if (response.data) {
+                  return response.data;
                 }
               })
               .then((data) => {
                 if (data.is_watched) {
                   movie.is_watched = true;
                 }
+                if (data.success) {
+                  return true;
+                }
               })
               .catch((error) => {
-                const message =
-                  error instanceof Error ? error.message : "An error occurred";
-                toast.error(message);
+                console.log(error);
               });
           } catch (error: unknown) {
-            const message =
-              error instanceof Error ? error.message : "An error occurred";
-            toast.error(message);
+            console.log(error);
           }
         });
       } catch (error: unknown) {
-        const message =
-          error instanceof Error ? error.message : "An error occurred";
-        toast.error(message);
+        console.log(error);
       }
     };
     get_is_watched();
@@ -262,7 +226,7 @@ export default function Home() {
                 className="relative h-full flex items-center bg-cover bg-center text-white"
                 style={{
                   backgroundImage: `url(${(movie.backdrop_path &&
-                      `https://image.tmdb.org/t/p/original${movie.backdrop_path}`) ||
+                    `https://image.tmdb.org/t/p/original${movie.backdrop_path}`) ||
                     (movie.medium_cover_image && movie.medium_cover_image) ||
                     `https://placehold.co/1920x1080?text=${movie.title}`
                     })`,
@@ -365,7 +329,7 @@ export default function Home() {
                         (movie.large_cover_image && movie.large_cover_image) ||
                         (movie.poster_path &&
                           `https://image.tmdb.org/t/p/original${movie.poster_path}`) ||
-                        `https://placehold.co/300x450?text=${movie.title}`
+                        'https://placehold.co/300x450.png'
                       }
                       alt={`${movie.title} Poster`}
                       width={300}
@@ -383,7 +347,6 @@ export default function Home() {
 
       <MovieSection title={t("popularMovies")} movies={popularMovies} />
       <MovieSection title={t("topRatedMovies")} movies={topRatedMovies} />
-      {/* <MovieSection title={t("watchedMovies")} movies={WatchedMovies} /> */}
     </div>
   );
 }

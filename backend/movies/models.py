@@ -13,14 +13,12 @@ class Movie(models.Model):
         return self.movie_id
 
 class MoviComment(models.Model):
-    # “One movie → many comments”
     movie = models.ForeignKey(
         Movie,
         on_delete=models.CASCADE,
         related_name="comments"
     )
 
-    # “One user → many comments”
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

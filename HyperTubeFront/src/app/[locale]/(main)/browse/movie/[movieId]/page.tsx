@@ -1,5 +1,6 @@
 "use client";
 
+import { YouTubeEmbed } from "@next/third-parties/google";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
@@ -17,7 +18,7 @@ import {
   MdPhotoLibrary,
   MdOutlineFavoriteBorder,
 } from "react-icons/md";
-import { FaTicketAlt, FaYoutube, FaUsers } from "react-icons/fa";
+import { FaTicketAlt, FaUsers, FaYoutube } from "react-icons/fa";
 import { TbLanguage, TbMagnet } from "react-icons/tb";
 import { useEffect, useState } from "react";
 import { BiCameraMovie, BiSolidMoviePlay } from "react-icons/bi";
@@ -28,9 +29,13 @@ import { RootState, AppDispatch } from "@/app/store";
 import { getUserProfile } from "@/app/store/userSlice";
 import { useAPIProvider } from "@/app/hooks/useAPIProvider";
 import { getTorrentHashForTMDBMovie } from "@/api/torrent/torrentHelper";
-import { getFirstNon3DTorrent, filterOut3DTorrents } from "@/utils/torrentUtils";
+import {
+  getFirstNon3DTorrent,
+  filterOut3DTorrents,
+} from "@/utils/torrentUtils";
 import { toast } from "react-toastify";
 import { useTranslations } from "next-intl";
+import api from "@/lib/axios";
 
 const formatRuntime = (minutes: number | undefined | null) => {
   if (minutes === undefined || minutes === null || minutes <= 0) return "N/A";
@@ -166,16 +171,8 @@ export default function Movie() {
           : `${baseUrl}/${movieId}`;
 
       try {
-        const response = await fetch(fullUrl, {
-          method: "GET",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (!response.ok)
-          throw new Error(
-            `Network response was not ok: ${response.statusText}`
-          );
-        const data = await response.json();
+        const response = await api.get(fullUrl);
+        const data = response.data;
         if (data?.movie) {
           setDetails(data.movie);
         } else throw new Error("Movie data not found in response");
@@ -200,7 +197,9 @@ export default function Movie() {
       ) {
         setIsLoadingTorrent(true);
         try {
-          const hash = await getTorrentHashForTMDBMovie(details as unknown as Record<string, unknown>);
+          const hash = await getTorrentHashForTMDBMovie(
+            details as unknown as Record<string, unknown>
+          );
           setTorrentHash(hash);
         } catch {
           toast.error("Could not load torrent hash.");
@@ -228,7 +227,11 @@ export default function Movie() {
     if (APIProvider === "YTS" && details?.yt_trailer_code) {
       return `https://www.youtube.com/embed/${details.yt_trailer_code}`;
     }
-    if (APIProvider !== "YTS" && details?.videos?.results && details.videos.results.length > 0) {
+    if (
+      APIProvider !== "YTS" &&
+      details?.videos?.results &&
+      details.videos.results.length > 0
+    ) {
       const videos = details.videos.results;
       const officialTrailer = videos.find(
         (v) => v.type === "Trailer" && v.official && v.site === "YouTube"
@@ -259,7 +262,9 @@ export default function Movie() {
   const getGenres = () => {
     if (details?.genres && Array.isArray(details.genres)) {
       if (APIProvider === "YTS") return details.genres.join(", ");
-      return details.genres.map((g) => (typeof g === 'string' ? g : g.name)).join(", ");
+      return details.genres
+        .map((g) => (typeof g === "string" ? g : g.name))
+        .join(", ");
     }
     return "N/A";
   };
@@ -277,31 +282,29 @@ export default function Movie() {
       return details.large_cover_image;
     if (APIProvider !== "YTS" && details?.poster_path)
       return `${TMDB_IMAGE_BASE_URL}original${details.poster_path}`;
-    return `https://placeholder.com/1920x1080?text=${encodeURIComponent(
-      getTitle()
-    )}`;
+    return `https://placehold.co/600x400.png`;
   };
   const getPosterUrl = (size: string = "w500") => {
     if (APIProvider !== "YTS" && details?.poster_path)
       return `${TMDB_IMAGE_BASE_URL}${size}${details.poster_path}`;
     if (APIProvider === "YTS" && details?.large_cover_image)
       return details.large_cover_image;
-    return `https://placeholder.com/300x450?text=${encodeURIComponent(
-      getTitle()
-    )}`;
+    return `https://placehold.co/600x400.png`;
   };
   const getSmallCoverImage = (movie: MovieDetails) => {
     if (APIProvider === "YTS" && movie?.medium_cover_image)
       return movie.medium_cover_image;
     if (APIProvider !== "YTS" && movie?.poster_path)
       return `${TMDB_IMAGE_BASE_URL}w342${movie.poster_path}`;
-    return `https://placeholder.com/200x300?text=${encodeURIComponent(
-      movie?.title || movie?.title_english || "Movie"
-    )}`;
+    return `https://placehold.co/600x400.png`;
   };
 
   const getSpokenLanguages = () => {
-    if (APIProvider !== "YTS" && details?.spoken_languages && details.spoken_languages.length > 0) {
+    if (
+      APIProvider !== "YTS" &&
+      details?.spoken_languages &&
+      details.spoken_languages.length > 0
+    ) {
       return details.spoken_languages
         .map((lang) => lang.english_name || lang.name)
         .filter(Boolean)
@@ -342,11 +345,12 @@ export default function Movie() {
 
   const markAsWatched = async (movie_id: string) => {
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/mark_as_watched/${movie_id}`, {
-        credentials: "include",
-        method: "POST",
-        body: JSON.stringify({ movie_id }),
-      });
+      await api.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/mark_as_watched/${movie_id}`,
+        {
+          movie_id: movie_id,
+        }
+      );
       toast.success("Movie marked as watched!");
     } catch (error) {
       console.error("Error marking movie as watched:", error);
@@ -358,10 +362,10 @@ export default function Movie() {
     const isWatched = async () => {
       try {
         if (!movieId) return;
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movieId}`, {
-          credentials: "include",
-        });
-        const data = await response.json();
+        const response = await api.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/is_watched/${movieId}/`
+        );
+        const data = await response.data;
         setIsWatched(data.is_watched);
       } catch (error) {
         console.error("Error checking if movie is watched:", error);
@@ -388,9 +392,7 @@ export default function Movie() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white p-8 text-center">
         <MdInfoOutline className="text-6xl text-red-500 mb-4" />
         <h1 className="text-3xl font-bold mb-2">{t("error")}</h1>
-        <p className="text-lg text-gray-400">
-          {t("errorDescription")}
-        </p>
+        <p className="text-lg text-gray-400">{t("errorDescription")}</p>
         {APIProvider && movieId && (
           <button
             onClick={() =>
@@ -545,17 +547,20 @@ export default function Movie() {
               className="flex flex-wrap gap-3 sm:gap-4"
             >
               {isYTS === true &&
-                details?.torrents &&
-                details.torrents.length > 0 ? (
+              details?.torrents &&
+              details.torrents.length > 0 ? (
                 (() => {
-                  const firstNon3DTorrent = getFirstNon3DTorrent(details.torrents);
+                  const firstNon3DTorrent = getFirstNon3DTorrent(
+                    details.torrents
+                  );
                   return firstNon3DTorrent ? (
                     <Link
                       onClick={() => {
                         markAsWatched(movieId as string);
                       }}
-                      href={`/watch/${firstNon3DTorrent.hash
-                        }?movieName=${encodeURIComponent(getTitle())}`}
+                      href={`/watch/${
+                        firstNon3DTorrent.hash
+                      }?movieName=${encodeURIComponent(getTitle())}`}
                       passHref
                     >
                       <motion.button
@@ -643,19 +648,12 @@ export default function Movie() {
                   <FaYoutube /> {t("officialTrailer")}
                 </h2>
                 <div className="aspect-video rounded-lg overflow-hidden shadow-xl bg-black">
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    src={bestTrailerUrl}
-                    title={`${title} Trailer`}
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  ></iframe>
+                  <YouTubeEmbed
+                    videoid={bestTrailerUrl.split("/").pop() as string}
+                  />
                 </div>
               </motion.section>
             )}
-
             {details?.cast && details.cast.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 20 }}
@@ -668,121 +666,124 @@ export default function Movie() {
                 </h2>{" "}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
                   {" "}
-                  {details.cast
-                    .slice(0, 10)
-                    .map((actor, index: number) => (
-                      <motion.div
-                        key={actor.imdb_code || actor.id || index}
-                        className="flex flex-col items-center text-center bg-gray-800/30 p-3 rounded-lg hover:bg-gray-700/50 transition-colors"
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{
-                          duration: 0.3,
-                          delay: 0.9 + index * 0.05,
-                        }}
-                      >
-                        {" "}
-                        <Image
-                          src={
-                            actor.url_small_image ||
-                            (actor.profile_path
-                              ? `${TMDB_IMAGE_BASE_URL}w185${actor.profile_path}`
-                              : `https://placeholder.com/128x192?text=${actor.name
-                                ?.split(" ")
-                                .map((n: string) => n[0])
-                                .join("") || "?"
-                              }`)
-                          }
-                          alt={actor.name}
-                          width={112}
-                          height={160}
-                          className="rounded-md object-cover mb-2 shadow-lg border-2 border-gray-700"
-                        />{" "}
-                        <p className="font-semibold text-sm sm:text-base text-gray-200 line-clamp-1">
-                          {actor.name}
-                        </p>{" "}
-                        <p className="text-xs sm:text-sm text-gray-400 line-clamp-1">
-                          {actor.character_name || actor.character}
-                        </p>{" "}
-                      </motion.div>
-                    ))}{" "}
+                  {details.cast.slice(0, 10).map((actor, index: number) => (
+                    <motion.div
+                      key={actor.imdb_code || actor.id || index}
+                      className="flex flex-col items-center text-center bg-gray-800/30 p-3 rounded-lg hover:bg-gray-700/50 transition-colors"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.9 + index * 0.05,
+                      }}
+                    >
+                      {" "}
+                      <Image
+                        src={
+                          actor.url_small_image ||
+                          (actor.profile_path
+                            ? `${TMDB_IMAGE_BASE_URL}w185${actor.profile_path}`
+                            : `https://placehold.co/600x400.png`)
+                        }
+                        alt={actor.name}
+                        width={112}
+                        height={160}
+                        className="rounded-md object-cover mb-2 shadow-lg border-2 border-gray-700 h-auto w-auto"
+                      />{" "}
+                      <p className="font-semibold text-sm sm:text-base text-gray-200 line-clamp-1">
+                        {actor.name}
+                      </p>{" "}
+                      <p className="text-xs sm:text-sm text-gray-400 line-clamp-1">
+                        {actor.character_name || actor.character}
+                      </p>{" "}
+                    </motion.div>
+                  ))}{" "}
                 </div>{" "}
               </motion.section>
             )}
 
-            {APIProvider === "YTS" && details?.torrents && details.torrents.length > 0 && filterOut3DTorrents(details.torrents).length > 0 && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.9 }}
-              >
-                {" "}
-                <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <MdCloudDownload /> {t("availableTorrents")}
-                </h2>{" "}
-                <div className="space-y-4">
+            {APIProvider === "YTS" &&
+              details?.torrents &&
+              details.torrents.length > 0 &&
+              filterOut3DTorrents(details.torrents).length > 0 && (
+                <motion.section
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.9 }}
+                >
                   {" "}
-                  {filterOut3DTorrents(details.torrents).map((torrentData, index: number) => {
-                    const torrent = torrentData as {
-                      hash: string;
-                      quality: string;
-                      type?: string;
-                      size?: string;
-                      seeds?: number;
-                      peers?: number;
-                    };
-                    return (
-                      <motion.div
-                        key={torrent.hash || index}
-                        className="p-4 bg-gray-800/50 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: 1.0 + index * 0.1 }}
-                      >
-                        {" "}
-                        <div className="flex-grow">
-                          {" "}
-                          <span className="text-lg font-semibold text-orange-300">
-                            {torrent.quality}
-                          </span>{" "}
-                          <span className="text-gray-400 mx-2">|</span>{" "}
-                          <span className="text-gray-300">
-                            {torrent.type?.toUpperCase() || 'N/A'}
-                          </span>{" "}
-                          <span className="text-gray-400 mx-2">|</span>{" "}
-                          <span className="text-gray-300">
-                            {t("size")}: {torrent.size || 'N/A'}
-                          </span>{" "}
-                        </div>{" "}
-                        <div className="flex items-center gap-3 text-sm text-gray-400 mt-2 sm:mt-0">
-                          {" "}
-                          <span className="flex items-center gap-1">
-                            <BsLightningChargeFill className="text-green-500" />{" "}
-                            {torrent.seeds || 0} {t("seeds")}
-                          </span>{" "}
-                          <span className="flex items-center gap-1">
-                            <BsSpeedometer2 className="text-red-500" />{" "}
-                            {torrent.peers || 0} {t("peers")}
-                          </span>{" "}
-                        </div>{" "}
-                        <a
-                          href={`magnet:?xt=urn:btih:${torrent.hash
-                            }&dn=${encodeURIComponent(
-                              title
-                            )}&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-2 sm:mt-0 ml-auto sm:ml-4 px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-xs hover:bg-green-700 transition flex items-center gap-1.5"
-                        >
-                          {" "}
-                          <TbMagnet size={16} /> Magnet{" "}
-                        </a>{" "}
-                      </motion.div>
-                    )
-                  })}{" "}
-                </div>{" "}
-              </motion.section>
-            )}
+                  <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
+                    <MdCloudDownload /> {t("availableTorrents")}
+                  </h2>{" "}
+                  <div className="space-y-4">
+                    {" "}
+                    {filterOut3DTorrents(details.torrents).map(
+                      (torrentData, index: number) => {
+                        const torrent = torrentData as {
+                          hash: string;
+                          quality: string;
+                          type?: string;
+                          size?: string;
+                          seeds?: number;
+                          peers?: number;
+                        };
+                        return (
+                          <motion.div
+                            key={torrent.hash || index}
+                            className="p-4 bg-gray-800/50 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: 1.0 + index * 0.1,
+                            }}
+                          >
+                            {" "}
+                            <div className="flex-grow">
+                              {" "}
+                              <span className="text-lg font-semibold text-orange-300">
+                                {torrent.quality}
+                              </span>{" "}
+                              <span className="text-gray-400 mx-2">|</span>{" "}
+                              <span className="text-gray-300">
+                                {torrent.type?.toUpperCase() || "N/A"}
+                              </span>{" "}
+                              <span className="text-gray-400 mx-2">|</span>{" "}
+                              <span className="text-gray-300">
+                                {t("size")}: {torrent.size || "N/A"}
+                              </span>{" "}
+                            </div>{" "}
+                            <div className="flex items-center gap-3 text-sm text-gray-400 mt-2 sm:mt-0">
+                              {" "}
+                              <span className="flex items-center gap-1">
+                                <BsLightningChargeFill className="text-green-500" />{" "}
+                                {torrent.seeds || 0} {t("seeds")}
+                              </span>{" "}
+                              <span className="flex items-center gap-1">
+                                <BsSpeedometer2 className="text-red-500" />{" "}
+                                {torrent.peers || 0} {t("peers")}
+                              </span>{" "}
+                            </div>{" "}
+                            <a
+                              href={`magnet:?xt=urn:btih:${
+                                torrent.hash
+                              }&dn=${encodeURIComponent(
+                                title
+                              )}&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mt-2 sm:mt-0 ml-auto sm:ml-4 px-4 py-2 bg-green-600 text-white rounded-md font-semibold text-xs hover:bg-green-700 transition flex items-center gap-1.5"
+                            >
+                              {" "}
+                              <TbMagnet size={16} /> Magnet{" "}
+                            </a>{" "}
+                          </motion.div>
+                        );
+                      }
+                    )}{" "}
+                  </div>{" "}
+                </motion.section>
+              )}
 
             <motion.section
               initial={{ opacity: 0, y: 20 }}
@@ -804,11 +805,11 @@ export default function Movie() {
                     {" "}
                     {[
                       details.large_screenshot_image1 ||
-                      details.medium_screenshot_image1,
+                        details.medium_screenshot_image1,
                       details.large_screenshot_image2 ||
-                      details.medium_screenshot_image2,
+                        details.medium_screenshot_image2,
                       details.large_screenshot_image3 ||
-                      details.medium_screenshot_image3,
+                        details.medium_screenshot_image3,
                     ]
                       .filter(Boolean)
                       .map((imgUrl, index) => (
@@ -827,6 +828,7 @@ export default function Movie() {
                             alt={`Screenshot ${index + 1}`}
                             width={780}
                             height={439}
+                            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                             className="rounded-lg shadow-xl object-cover w-full h-auto aspect-video"
                           />{" "}
                         </motion.div>
@@ -834,7 +836,8 @@ export default function Movie() {
                   </div>
                 )}{" "}
               {APIProvider !== "YTS" &&
-                details?.images?.backdrops && details.images.backdrops.length > 0 && (
+                details?.images?.backdrops &&
+                details.images.backdrops.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {" "}
                     {details.images.backdrops
@@ -868,47 +871,57 @@ export default function Movie() {
               ) &&
                 !(
                   APIProvider !== "YTS" &&
-                  details?.images?.backdrops && details.images.backdrops.length > 0
+                  details?.images?.backdrops &&
+                  details.images.backdrops.length > 0
                 ) && (
-                  <p className="text-gray-400">{t("noGalleryImagesAvailable")}</p>
+                  <p className="text-gray-400">
+                    {t("noGalleryImagesAvailable")}
+                  </p>
                 )}{" "}
             </motion.section>
 
-            {APIProvider !== "YTS" && details?.images?.logos && details.images.logos.length > 0 && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1.15 }}
-              >
-                <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
-                  <MdVideocam /> {t("titleLogos")}
-                </h2>
-                <div className="flex overflow-x-auto space-x-4 pb-4 -mb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800/50">
-                  {details.images.logos.slice(0, 10).map(
-                    (
-                      logo // Show up to 10 logos
-                    ) =>
-                      logo.file_path && (
-                        <div
-                          key={logo.file_path}
-                          className="flex-shrink-0 p-3 bg-gray-800/30 rounded-lg h-28 flex items-center justify-center"
-                        >
-                          <Image
-                            src={`${TMDB_IMAGE_BASE_URL}w300${logo.file_path}`}
-                            alt={`${title} Logo ${logo.iso_639_1 || ""}`}
-                            width={300}
-                            height={112}
-                            className={`max-h-24 max-w-[250px] object-contain filter ${logo.iso_639_1 === 'en' ? '' : 'brightness-0 invert'}`}
-                          />
-                        </div>
-                      )
-                  )}
-                </div>
-              </motion.section>
-            )}
+            {APIProvider !== "YTS" &&
+              details?.images?.logos &&
+              details.images.logos.length > 0 && (
+                <motion.section
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.15 }}
+                >
+                  <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 text-orange-400 flex items-center gap-2">
+                    <MdVideocam /> {t("titleLogos")}
+                  </h2>
+                  <div className="flex overflow-x-auto space-x-4 pb-4 -mb-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800/50">
+                    {details.images.logos.slice(0, 10).map(
+                      (
+                        logo // Show up to 10 logos
+                      ) =>
+                        logo.file_path && (
+                          <div
+                            key={logo.file_path}
+                            className="flex-shrink-0 p-3 bg-gray-800/30 rounded-lg h-28 flex items-center justify-center"
+                          >
+                            <Image
+                              src={`${TMDB_IMAGE_BASE_URL}w300${logo.file_path}`}
+                              alt={`${title} Logo ${logo.iso_639_1 || ""}`}
+                              width={300}
+                              height={112}
+                              className={`max-h-24 max-w-[250px] object-contain filter ${
+                                logo.iso_639_1 === "en"
+                                  ? ""
+                                  : "brightness-0 invert"
+                              }`}
+                            />
+                          </div>
+                        )
+                    )}
+                  </div>
+                </motion.section>
+              )}
 
             {APIProvider === "TMDB" &&
-              details?.production_companies && details.production_companies.length > 0 && (
+              details?.production_companies &&
+              details.production_companies.length > 0 && (
                 <motion.section
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -932,7 +945,7 @@ export default function Movie() {
                             alt={company.name}
                             width={200}
                             height={48}
-                            className="h-12 max-w-[150px] object-contain mb-2 filter brightness-0 invert"
+                            className="h-auto w-auto max-w-[150px] object-contain mb-2 filter brightness-0 invert"
                           />
                         ) : (
                           <div className="h-12 flex items-center justify-center mb-2 text-gray-500">
@@ -1006,7 +1019,8 @@ export default function Movie() {
                 {details?.original_title &&
                   details.original_title !== title && (
                     <li>
-                      <strong>{t("originalTitle")}:</strong> {details.original_title}
+                      <strong>{t("originalTitle")}:</strong>{" "}
+                      {details.original_title}
                     </li>
                   )}{" "}
                 <li>
@@ -1024,19 +1038,25 @@ export default function Movie() {
                       <strong>{t("mpaRating")}:</strong> {details.mpa_rating}
                     </li>
                   )}{" "}
-                {APIProvider !== "YTS" && details?.budget && details.budget > 0 && (
-                  <li>
-                    <strong>{t("budget")}:</strong> ${details.budget.toLocaleString()}
-                  </li>
-                )}{" "}
-                {APIProvider !== "YTS" && details?.revenue && details.revenue > 0 && (
-                  <li>
-                    <strong>{t("revenue")}:</strong> $
-                    {details.revenue.toLocaleString()}
-                  </li>
-                )}{" "}
                 {APIProvider !== "YTS" &&
-                  details?.production_countries && details.production_countries.length > 0 && (
+                  details?.budget &&
+                  details.budget > 0 && (
+                    <li>
+                      <strong>{t("budget")}:</strong> $
+                      {details.budget.toLocaleString()}
+                    </li>
+                  )}{" "}
+                {APIProvider !== "YTS" &&
+                  details?.revenue &&
+                  details.revenue > 0 && (
+                    <li>
+                      <strong>{t("revenue")}:</strong> $
+                      {details.revenue.toLocaleString()}
+                    </li>
+                  )}{" "}
+                {APIProvider !== "YTS" &&
+                  details?.production_countries &&
+                  details.production_countries.length > 0 && (
                     <li>
                       <strong>{t("production")}:</strong>{" "}
                       {details.production_countries
@@ -1049,8 +1069,9 @@ export default function Movie() {
                     {" "}
                     <strong>IMDb:</strong>{" "}
                     <a
-                      href={`https://www.imdb.com/title/${details.imdb_id || details.imdb_code
-                        }/`}
+                      href={`https://www.imdb.com/title/${
+                        details.imdb_id || details.imdb_code
+                      }/`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-orange-400 hover:underline flex items-center gap-1"
@@ -1087,18 +1108,19 @@ export default function Movie() {
                     </a>{" "}
                   </li>
                 )}{" "}
-                {APIProvider === "YTS" && details?.like_count && details.like_count > 0 && (
-                  <li>
-                    <strong>{t("likes")}:</strong>{" "}
-                    {details.like_count.toLocaleString()}
-                  </li>
-                )}{" "}
+                {APIProvider === "YTS" &&
+                  details?.like_count &&
+                  details.like_count > 0 && (
+                    <li>
+                      <strong>{t("likes")}:</strong>{" "}
+                      {details.like_count.toLocaleString()}
+                    </li>
+                  )}{" "}
               </ul>{" "}
             </div>{" "}
           </motion.aside>
         </div>
 
-        {/* Similar Movies Section */}
         {hasSimilarMovies() && (
           <motion.section
             className="mt-10"
@@ -1111,35 +1133,37 @@ export default function Movie() {
               <BiSolidMoviePlay /> {t("youMightAlsoLike")}{" "}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-6">
-              {getSimilarMoviesArray().slice(0, 6).map((movie, index: number) => (
-                <motion.div
-                  key={movie.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 1.4 + index * 0.05 }}
-                  className="bg-gray-800/30 rounded-lg overflow-hidden shadow-lg hover:shadow-orange-500/30 transition-shadow duration-300 group"
-                >
-                  <Link href={`${movie.id}`} className="block">
-                    <Image
-                      src={getSmallCoverImage(movie)}
-                      alt={movie.title_english || movie.title || 'Movie'}
-                      width={200}
-                      height={300}
-                      className="w-full h-auto aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="p-3">
-                      {" "}
-                      <h3 className="text-sm font-semibold text-gray-100 truncate group-hover:text-orange-400 transition-colors">
+              {getSimilarMoviesArray()
+                .slice(0, 6)
+                .map((movie, index: number) => (
+                  <motion.div
+                    key={movie.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 1.4 + index * 0.05 }}
+                    className="bg-gray-800/30 rounded-lg overflow-hidden shadow-lg hover:shadow-orange-500/30 transition-shadow duration-300 group"
+                  >
+                    <Link href={`${movie.id}`} className="block">
+                      <Image
+                        src={getSmallCoverImage(movie)}
+                        alt={movie.title_english || movie.title || "Movie"}
+                        width={200}
+                        height={300}
+                        className="w-full h-auto aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="p-3">
                         {" "}
-                        {movie.title_english || movie.title}{" "}
-                      </h3>{" "}
-                      <p className="text-xs text-gray-400">
-                        {movie.year || movie.release_date?.split("-")[0]}
-                      </p>{" "}
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+                        <h3 className="text-sm font-semibold text-gray-100 truncate group-hover:text-orange-400 transition-colors">
+                          {" "}
+                          {movie.title_english || movie.title}{" "}
+                        </h3>{" "}
+                        <p className="text-xs text-gray-400">
+                          {movie.year || movie.release_date?.split("-")[0]}
+                        </p>{" "}
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
             </div>
           </motion.section>
         )}
@@ -1148,11 +1172,11 @@ export default function Movie() {
           user={
             user.user
               ? {
-                token: null,
-                id: user.user.id,
-                username: user.user.username,
-                profile_picture: user.user.profile_picture,
-              }
+                  token: null,
+                  id: user.user.id,
+                  username: user.user.username,
+                  profile_picture: user.user.profile_picture,
+                }
               : { token: null }
           }
         />

@@ -1,3 +1,4 @@
+import api from '@/lib/axios';
 /**
  * Interface for torrent data returned from the API
  */
@@ -55,33 +56,26 @@ export async function fetchTorrentForMovie(title: string, year?: string | number
     const params = new URLSearchParams({
       title: title.trim(),
     });
-    
+
     if (year) {
       params.append('year', year.toString());
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/search_torrents?${params.toString()}`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    const response = await api.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/search_torrents?${params.toString()}`
     );
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       throw new Error(`Failed to fetch torrent: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    
+    const data = await response.data;
+
     if (data.torrent) {
       console.log(`Found torrent for "${title}" (${year}):`, data.torrent);
       return data.torrent;
     }
-    
+
     return null;
   } catch (error) {
     console.log('Error fetching torrent for movie:', error);
@@ -110,7 +104,7 @@ export async function getTorrentHashForTMDBMovie(movieData: TMDBMovieData): Prom
     console.log(`Searching torrent for TMDB movie: "${title}" (${year})`);
 
     const torrentData = await fetchTorrentForMovie(title, year);
-    
+
     if (torrentData && torrentData.magnet) {
       const hash = extractHashFromMagnet(torrentData.magnet);
       if (hash) {

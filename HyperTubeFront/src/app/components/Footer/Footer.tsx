@@ -32,6 +32,7 @@ export default function Footer() {
           width={1920}
           height={1080}
           quality={90}
+          priority
           className="opacity-50 object-cover w-full h-full"
         />
       </div>
