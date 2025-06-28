@@ -213,7 +213,7 @@ export default function ProfilePage() {
                     className="w-20 h-20 rounded-full overflow-hidden border-3 border-orange-500/50 mx-auto mb-4"
                   >
                     <Image
-                      src={profileImage || "/default-avatar.png"}
+                      src={profileImage || "/default-avatar.svg"}
                       alt="Profile"
                       width={80}
                       height={80}
@@ -283,7 +283,7 @@ export default function ProfilePage() {
                           className="w-32 h-32 rounded-full overflow-hidden border-4 border-orange-500/50 shadow-2xl"
                         >
                           <Image
-                            src={profileImage || "/default-avatar.png"}
+                            src={profileImage || "/default-avatar.svg"}
                             alt="Profile Picture"
                             width={128}
                             height={128}
