@@ -207,11 +207,8 @@ export default function ProfilePage() {
       });
 
       toast.success(t("passwordChangedSuccess"));
-    } catch (error: unknown) {
-      const errorMessage = error && typeof error === 'object' && 'response' in error
-        ? (error as { response?: { data?: { error?: string } } }).response?.data?.error || t("failedToChangePassword")
-        : t("failedToChangePassword");
-      toast.error(errorMessage);
+    } catch {
+      toast.error(t("failedToChangePassword"));
     }
   };
 
@@ -235,7 +232,7 @@ export default function ProfilePage() {
       if (profileFile) {
         updateData.append('profile_picture', profileFile);
       }
-      const response = await authService.updateProfile(user.id, updateData);
+      authService.updateProfile(user.id, updateData);
 
       setProfileFile(null);
 
@@ -246,13 +243,8 @@ export default function ProfilePage() {
       setIsEditing(false);
       toast.success(t("profileUpdatedSuccess"));
 
-    } catch (error: any) {
-      console.error('Profile update error:', error);
-      const errorMessage = error?.response?.data?.error ||
-        error?.response?.data?.message ||
-        error?.message ||
-        t("failedToUpdateProfile");
-      toast.error(errorMessage);
+    } catch{
+      toast.error(t("failedToUpdateProfile"));
     }
   };
   const handleEditProfile = () => {

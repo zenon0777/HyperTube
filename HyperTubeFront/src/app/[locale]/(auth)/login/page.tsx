@@ -41,8 +41,7 @@ export default function RegisterPage() {
 			await authService.login(formData);
 			await dispatch(getUserProfile()).unwrap();
 			router.push('/home');
-		} catch (error: unknown) {
-			console.log('Login error:', error);
+		} catch (error: unknown) {;
 			const errorMessage = error instanceof Error ? error.message : t('loginFailed');
 			toast.error(errorMessage);
 		} finally {

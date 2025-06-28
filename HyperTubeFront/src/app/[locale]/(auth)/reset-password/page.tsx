@@ -22,7 +22,6 @@ export default function PasswordResetRequest() {
       toast.success(t('resetLinkSent'));
       router.push('/login');
     } catch (error: unknown) {
-      console.log('Password reset request error:', error);
       const errorMessage = error instanceof Error ? error.message : t('resetFailed');
       toast.error(errorMessage);
     } finally {
