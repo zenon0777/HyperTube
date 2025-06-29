@@ -15,7 +15,7 @@ APPEND_SLASH = False
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='key-not-found')
 DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
-ALLOWED_HOSTS = [env('DJANGO_ALLOWED_HOSTS', default='')]
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=[])
 
 INSTALLED_APPS = [
     'django.contrib.admin',
