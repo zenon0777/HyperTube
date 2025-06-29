@@ -5,12 +5,12 @@ services:
     build:
       context: ./HyperTubeFront
       args:
-        - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
-        - OPENSUBTITLES_API_KEY=xGtzjiW9FG4nKur7XgDpM8nlkldxV9hX
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+        - OPENSUBTITLES_API_KEY=${OPENSUBTITLES_API_KEY}
     ports:
       - '3000:3000'
     environment:
-      - INTERNAL_BACKEND_URL=http://backend:8000
+      - INTERNAL_BACKEND_URL=${INTERNAL_BACKEND_URL}
     depends_on:
       - backend
     networks:
