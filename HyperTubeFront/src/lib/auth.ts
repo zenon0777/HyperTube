@@ -135,7 +135,7 @@ export const authService = {
   // OAuth login method
   initiateOAuth(provider: string) {
     if (typeof window !== 'undefined') {
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/${provider}/`;
+      window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/${provider}/`;
     }
   },
 

@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
 
 	try {
 		// Attempt to refresh the token
-		const refreshResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/token/refresh/`, {
+		const refreshResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token/refresh/`, {
 			method: 'POST',
 			headers: {
 				cookie: request.headers.get('cookie') || '',

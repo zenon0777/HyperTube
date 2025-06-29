@@ -6,7 +6,7 @@ interface QueueItem {
 }
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: process.env.INTERNAL_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -70,7 +70,7 @@ api.interceptors.response.use(
       try {
         // Attempt to refresh the token
         const refreshResponse = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/token/refresh/`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/token/refresh/`,
           {},
           {
             withCredentials: true,

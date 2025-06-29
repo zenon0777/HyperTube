@@ -1,39 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createIntlMiddleware from 'next-intl/middleware';
 
-// Routes that are public and do not require authentication
+const LOCALES = ['en', 'fr'];
+const DEFAULT_LOCALE = 'en';
+
 const PUBLIC_PAGES = ['/', '/login', '/register', '/reset-password'];
 
-// Initialize next-intl middleware
 const intlMiddleware = createIntlMiddleware({
-  locales: ['en', 'fr'],
-  defaultLocale: 'en',
-  localePrefix: 'always', // Ensures all paths have a locale prefix (e.g., /en/about)
+  locales: LOCALES,
+  defaultLocale: DEFAULT_LOCALE,
+  localePrefix: 'always',
 });
 
-// The main middleware function that handles both i18n and authentication
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Strip the locale prefix from the pathname to check against the public pages list
-  const pathnameWithoutLocale = pathname.replace(/^\/(en|fr)/, '') || '/';
-
-  const isPublicPage = PUBLIC_PAGES.some((p) =>
-    p === '/' ? pathnameWithoutLocale === p : pathnameWithoutLocale.startsWith(p)
-  );
-
-  // First, let the i18n middleware handle the request
   const i18nResponse = intlMiddleware(request);
 
-  // If the page is public, no authentication is needed.
-  // Return the response from the i18n middleware.
+  if (i18nResponse.status === 307 || i18nResponse.status === 308) {
+    return i18nResponse;
+  }
+  
+  const pathnameWithLocale = request.nextUrl.pathname;
+  const pathSegments = pathnameWithLocale.split('/').filter(Boolean);
+  const potentialLocale = pathSegments[0];
+
+  const isLocalePresent = LOCALES.includes(potentialLocale);
+  const pathWithoutLocale = isLocalePresent ? `/${pathSegments.slice(1).join('/')}` : pathnameWithLocale;
+
+  const isPublicPage = PUBLIC_PAGES.some((p) =>
+    p === '/' ? pathWithoutLocale === p || pathWithoutLocale === '' : pathWithoutLocale.startsWith(p)
+  );
+
   if (isPublicPage) {
     return i18nResponse;
   }
 
-  // For protected pages, perform an authentication check
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me/`, {
+    const backendUrl = process.env.INTERNAL_BACKEND_URL || process.env.NEXT_PUBLIC_BACKEND_URL;
+    console.log(`[Middleware] Auth check for "${pathnameWithLocale}" at: ${backendUrl}/auth/me/`);
+    
+    const res = await fetch(`${backendUrl}/auth/me/`, {
       headers: {
         cookie: request.headers.get('cookie') || '',
       },
@@ -41,40 +46,32 @@ export async function middleware(request: NextRequest) {
       cache: 'no-store',
     });
 
-    // If the token is valid, allow the request to proceed
     if (res.ok) {
       return i18nResponse;
     }
 
-    // Extract locale for redirect URLs
-    const locale = pathname.split('/')[1] || 'en';
-
-    // If the token needs to be refreshed (e.g., 401 Unauthorized)
+    const locale = isLocalePresent ? potentialLocale : DEFAULT_LOCALE;
+    
     if (res.status === 401) {
+      console.log(`[Middleware] Auth failed with 401 for "${pathnameWithLocale}". Redirecting to refresh.`);
       const refreshUrl = new URL('/auth/token/refresh', request.url);
-      refreshUrl.searchParams.set('redirect', pathname);
+      refreshUrl.searchParams.set('redirect', pathnameWithLocale);
       return NextResponse.redirect(refreshUrl);
     }
 
-    // If the token is invalid and cannot be refreshed, redirect to the login page
+    console.log(`[Middleware] Auth failed for "${pathnameWithLocale}". Redirecting to login.`);
     const loginUrl = new URL(`/${locale}/login`, request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    loginUrl.searchParams.set('redirect', pathnameWithLocale);
     return NextResponse.redirect(loginUrl);
 
   } catch (err) {
-    console.error('Middleware auth check failed:', err);
-    // In case of a network error or other exception, redirect to login
-    const locale = pathname.split('/')[1] || 'en';
-    const loginUrl = new URL(`/${locale}/login`, request.url);
+    console.error(`[Middleware] Auth check fetch failed for "${pathnameWithLocale}":`, err);
+    const pathLocale = LOCALES.includes(pathSegments[0]) ? pathSegments[0] : DEFAULT_LOCALE;
+    const loginUrl = new URL(`/${pathLocale}/login`, request.url);
     return NextResponse.redirect(loginUrl);
   }
 }
 
 export const config = {
-  // This matcher excludes routes that should not be processed by the middleware.
-  // - api: API routes
-  // - auth: Authentication-related API routes
-  // - _next: Next.js internal files
-  // - files with extensions (e.g., .ico, .svg)
   matcher: ['/((?!api|auth|_next|.*\\..*).*)'],
 };

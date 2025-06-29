@@ -1,11 +1,13 @@
-import axios from "axios";
 import CustomReactPlayer from '@/components/Video/CustomReactPlayer';
 import { fetchSubtitlesForMovie, extractMovieInfoFromName } from '@/api/subtitles/movieSubtitles';
+import api from "@/lib/axios";
 
+// This function runs on the server
 const initStream = async (torrentHash: string, movieName: string) => {
   try {
-    const { data } = await axios.get(
-      `http://localhost:8000/stream/init/`,
+    // `api` will now correctly use http://backend:8000 inside Docker
+    const { data } = await api.get(
+      `${process.env.INTERNAL_BACKEND_URL}/stream/init/`, // No need for full URL, axios `baseURL` handles it
       {
         params: {
           torrent_hash: torrentHash,
@@ -40,19 +42,21 @@ export default async function WatchPage({
     );
   }
 
-  // console.log(`Attempting to stream: Torrent Hash = ${torrentHash}, Movie Name = ${movieName}`);
-
   const streamId = await initStream(torrentHash, movieName);
 
   const movieInfo = extractMovieInfoFromName(movieName);
   const preferredLanguage = locale === 'fr' ? 'fr' : 'en';
   const tracks = await fetchSubtitlesForMovie(movieInfo, preferredLanguage);
 
+  // This URL is for the client (browser), so it must use the public URL
+  const streamUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/stream/?stream_id=${streamId}`;
+
   return (
     <div className="w-full h-screen flex justify-center items-center bg-black text-white">
       {streamId ? (
         <CustomReactPlayer 
-          streamUrl={`http://localhost:8000/stream/?stream_id=${streamId}`}
+          // Use the dynamically generated streamUrl
+          streamUrl={streamUrl} 
           tracks={tracks}
           movieId={torrentHash}
         />

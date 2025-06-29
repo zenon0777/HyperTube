@@ -65,6 +65,7 @@ function InfoSection() {
                             alt="Z-tube Interface"
                             width={600}
                             height={400}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                             className="rounded-2xl shadow-2xl w-auto h-auto"
                         />
                         <div className="absolute inset-0 bg-gradient-to-tr from-orange-500/20 to-pink-500/20 rounded-2xl" />
