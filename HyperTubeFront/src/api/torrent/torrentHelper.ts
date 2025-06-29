@@ -65,9 +65,9 @@ export async function fetchTorrentForMovie(title: string, year?: string | number
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/movies/search_torrents?${params.toString()}`
     );
 
-    if (response.status !== 200) {
-      throw new Error(`Failed to fetch torrent: ${response.statusText}`);
-    }
+    // if (response.data) {
+    //   throw new Error(`Failed to fetch torrent: ${response.statusText}`);
+    // }
 
     const data = await response.data;
 
@@ -78,7 +78,7 @@ export async function fetchTorrentForMovie(title: string, year?: string | number
 
     return null;
   } catch (error) {
-    console.log('Error fetching torrent for movie:', error);
+    console.log('Error fetching torrent for movie', error);
     return null;
   }
 }
