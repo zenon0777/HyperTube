@@ -1,3 +1,4 @@
+
 from django.http import HttpResponse, StreamingHttpResponse
 import requests
 import libtorrent as lt
@@ -9,6 +10,61 @@ import tempfile
 import threading
 from pathlib import Path
 import mimetypes
+
+SAVE_PATH = './_Movies'
+TORRENT_FILES_PATH = '/tmp/torrent_files'
+
+BROWSER_COMPATIBLE_FORMATS = {'.mp4', '.webm', '.ogg'}
+CONVERSION_FORMATS = {'.mkv', '.avi', '.mov', '.wmv', '.flv', '.m4v'}
+
+import datetime
+
+def cleanup_old_movies(directory=SAVE_PATH, days=30):
+    now = datetime.datetime.now().timestamp()
+    cutoff = now - days * 86400
+    removed_files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            try:
+                stat = os.stat(file_path)
+                file_age = min(stat.st_atime, stat.st_mtime, stat.st_ctime)
+                if file_age < cutoff:
+                    os.remove(file_path)
+                    removed_files.append(file_path)
+            except Exception as e:
+                print(f"[Cleanup] Failed to remove {file_path}: {e}")
+    removed_dirs = []
+    for root, dirs, files in os.walk(directory, topdown=False):
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            try:
+                if not os.listdir(dir_path):
+                    os.rmdir(dir_path)
+                    removed_dirs.append(dir_path)
+            except Exception as e:
+                print(f"[Cleanup] Failed to remove directory {dir_path}: {e}")
+    if removed_files:
+        print(f"[Cleanup] Removed {len(removed_files)} old movie files:")
+        for f in removed_files:
+            print(f"  - {f}")
+    else:
+        print("[Cleanup] No old movie files found.")
+    if removed_dirs:
+        print(f"[Cleanup] Removed {len(removed_dirs)} empty directories:")
+        for d in removed_dirs:
+            print(f"  - {d}")
+
+def start_cleanup_timer(interval=30, file_age=30, directory=SAVE_PATH):
+    def run():
+        while True:
+            try:
+                cleanup_old_movies(directory=directory)
+            except Exception as e:
+                print(f"[Cleanup] Timer error: {e}")
+            time.sleep(3600)
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
 
 
 SAVE_PATH = './_Movies'
@@ -102,6 +158,11 @@ class TorrentStream:
         self.end_byte = None
         self.piece_size = None
         self.converter = VideoConverter()
+
+        try:
+            start_cleanup_timer()
+        except Exception as e:
+            print(f"[Cleanup] Error starting cleanup timer: {e}")
 
     def init_torrent_file(self, torrent_url):
         response = requests.get(torrent_url)
