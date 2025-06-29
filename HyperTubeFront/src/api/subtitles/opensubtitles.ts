@@ -67,7 +67,7 @@ interface OpenSubtitlesResponse {
 
 class OpenSubtitlesService {
   private readonly baseUrl = 'https://api.opensubtitles.com/api/v1';
-  private readonly apiKey = "xGtzjiW9FG4nKur7XgDpM8nlkldxV9hX";
+  private readonly apiKey = process.env.OPENSUBTITLES_API_KEY || '';
 
   private async makeRequest(endpoint: string, params: Record<string, string | number> = {}) {
     if (!this.apiKey) {
